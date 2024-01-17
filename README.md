@@ -36,7 +36,7 @@ RxpsG installation:
 
 4. Under RStudio copy and paste the following command to INSTALL THE REQUIRED LIBRARIES: 
                         
-   install.packages(c("digest", "import", "latticeExtra", "memoise", "minpack.lm", "signal"), 
+   install.packages(c("digest", "import", "latticeExtra", "minpack.lm", "signal", "SparseM"), 
                repos = "https://cloud.r-project.org", dependencies=TRUE)                                    
 
    
@@ -47,8 +47,12 @@ RxpsG installation:
    install.packages("C:/Path-To-Tar.Gz/RxpsG_3.1.tar.gz", type = "source", dependencies=TRUE)
 
    where Path-To-Tar.Gz is the path to the dowloaded RxpsG_2.3-2.tar.gz file.
+
+   N.B. if installation blocks when
+   ** testing if installed package can be loaded from temporary location
+   control if behind the RStudio window a GUI is waiting for your response  
    
-6. To run RxpsG, in RStudio select the PACKAGE pain (generally on the right of the RStudio console) 
+7. To run RxpsG, in RStudio select the PACKAGE pain (generally on the right of the RStudio console) 
    and select the RxpsG package. This should automatically load and run the software.
 
 ------------------------------------------------------------------------------------------
