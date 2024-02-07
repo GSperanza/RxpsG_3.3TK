@@ -1,0 +1,258 @@
+[,XPSSample-method
+                    get subset of XPSSample
+asList              asList function for XPSCoreLine
+asList,XPSCoreLine-method
+                    asList
+AsymmGauss          AsymmGauss function
+AsymmGaussLorentz   AsymmGaussLorentz function
+AsymmGaussLorentzProd
+                    AsymmGaussLorentzProd function
+AsymmGaussVoigt     Gaussian-Voigt
+AsymmLorentz        AsymmGaussLorentz function
+AsymmVoigt          AsymmVoigt
+baseline-class      Class "baseline"
+baseSpline          Spline Baseline
+c,XPSSample-method
+                    combine
+Derivative          Derivative function
+DoniachSunjic       DoniachSunjic function
+DoniachSunjicGauss
+                    DoniachSunjicGauss function
+DoniachSunjicGaussTail
+                    DoniachSunjicGauss function
+DoniachSunjicTail   DoniachSunjic function
+ElementCheck        ElementCheck
+ExpDecay            Eponential decay function
+findMaxPos          findMaxPos
+findXIndex          findXIndex
+findY               findY
+findYIndex          findYIndex
+FitCompLbl          FitCompLbl
+fitComponents-class
+                    Class "fitComponents"
+FitLin              FitLin
+Gauss               Gauss function
+GaussLorentzProd    GaussLorentzProd function
+GaussLorentzSum     GaussLorentzSum function
+Generic             Generic
+getElementValue     getElementValue
+GetHvalue           GetHvalue
+getMaxOfComponents
+                    getMaxOfComponents Get Max of
+                    Components
+getMaxOfComponents,XPSCoreLine-method
+                    getMaxOfComponents
+getParam            getParam
+getParam,fitComponents-method
+                    getParam
+hasBaseline         hasBaseline
+hasBaseline,XPSCoreLine-method
+                    hasBaseline
+hasBoundaries       hasBoundaries
+hasBoundaries,XPSCoreLine-method
+                    hasBoundaries
+hasComponents       hasComponents
+hasComponents,XPSCoreLine-method
+                    hasComponents
+hasFit              hasFit
+hasFit,XPSCoreLine-method
+                    hasFit
+hasRegionToFit      hasRegionToFit
+hasRegionToFit,XPSCoreLine-method
+                    hasRegionToFit
+HillSigmoid         HillSigmoid function
+IniElement          IniElement
+Initialize          Initialize
+Linear              linear function
+Lorentz             Lorentz function
+LPShirley           LPShirley combination of a Shirley and
+                    linear Baselines
+MakeTable           MakeTable
+MinDist             MinDist
+nlsModel            nlsModel
+plot                'plot' function to plot XPSCoreLine or
+                    XPSSample objects
+plot,XPSCoreLine,missing-method
+                    plot
+plot,XPSSample,missing-method
+                    'plot'
+PowerDecay          Power decay function
+printCell           printCell
+read.scienta        read.scienta function reads file data
+                    in .pxt Scienta format
+read.vamas          read.vamas
+readGenplot         readGenplot
+Sech2               Sech2 function
+setAsData.Frame     setAsData.Frame function for
+                    XPSCoreLine
+setAsData.Frame,XPSCoreLine-method
+                    setAsData.Frame
+setAsMatrix         setAsMatrix function for XPSCoreLine
+setAsMatrix,XPSCoreLine-method
+                    setAsMatrix
+setParam            setParam
+setParam,fitComponents-method
+                    setParam
+Shirley0            Shirley0 Classic Shirley background
+Shirley2P           Shirley2P a two parameter Shirley
+                    function
+Shirley3P           Shirley3P three parameter Shirley
+                    background
+show,XPSCoreLine-method
+                    show
+show,XPSSample-method
+                    show
+showListParam       showListParam
+showTableElement    showTableElement
+Sigmoid             Sigmoid function
+SimplifiedDoniachSunjic
+                    SimplifiedDoniachSunjic function
+sortComponents      sortComponents Sort the XPSCoreline Fit
+                    Components
+sortComponents,XPSCoreLine-method
+                    sortComponents
+Tougaard2P          Tougaard2P two parameter Togaard
+                    Baseline
+Tougaard3P          Tougaard3P three parameter Togaard
+                    Baseline
+Tougaard4P          @title Tougaard4P four parameters
+                    Tougaard Baseline @description
+                    Tougaard4P is a Tougaard Baseline
+                    defined usinf the four parameters B, C,
+                    C' and D Tougaard4p = Integral BT/[(C +
+                    C'*T^2)^2 + D*T^2] * J(E)dT J(T) = the
+                    measured spectrum B*T/[(C + C'*T^2)^2 +
+                    D*T^2] = Modified Universal Cross
+                    Section T=energy loss = E'-E see R.
+                    Hesse et al., Surf. Interface Anal.
+                    (2011), 43, 1514 This function is
+                    called by XPSAnalysisGUI
+VBFermi             VBFermi function
+VBtop               VBtop function
+Voigt               Voigt function
+xps                 xps is the main interface of the
+                    Package RxpsG
+XPSaddFitComponent
+                    XPSaddFitComponent adds a fit component
+                    to the XPSCoreLine
+XPSAgreement        XPSAgreement
+XPSAnalReport       XPSAnalReport provides information
+                    about a Core Line fit
+XPSAnalysis         XPSAnalysis to analyze XPS-Corelines
+                    and XPS spectra in general
+XPSAnnotate         XPSAnnotate is graphic function to add
+                    text to lattice plots
+XPSapplyshift       XPSapplyshift
+XPSapplyshift,XPSCoreLine-method
+                    XPSapplyshift
+XPSapplyshift,XPSSample-method
+                    'XPSapplyshift'
+XPSbaseline         XPSbaseline Baseline definition for
+                    XPSCoreLine object.
+XPSbaseline,XPSCoreLine-method
+                    XPSbaseline
+XPScalc             XPScalc function to calculate the
+                    element concentrations
+XPScalc,XPSCoreLine-method
+                    XPScalc
+XPSCnvDcnv          XPSCnvDcnv concolution, deconvolution
+                    functions
+XPSCompare          XPSCompare is used to compare Core-Line
+                    spectra
+XPScompEngine       XPScompare allows compare Core-Line and
+                    their best fits
+XPSConstrain        XPSConstrain function to set fit
+                    constraints
+XPSConstraints      XPSConstraints is a user interface to
+                    add a fit constraints
+XPSCoreLine-class   Class "XPSCoreLine"
+XPSCoreLineList     XPSCoreLineList provides the XPS-Sample
+                    Core-Lines
+XPSCustomPlot       Function to generate personalized plot
+XPSDepthProfile     XPSDepthProfile reconstruction of Depth
+                    Profiles
+XPSDiff             XPSDiff for spectra differentiation
+XPSElemTab          XPSElemTab
+XPSEshift           XPSEShift
+XPSExportAscii      XPSExportAscii
+XPSExtract          XPSExtract extract a portion of
+                    spectrum from a XPS survey
+XPSFilter           XPSFilter smoothing functions to remove
+                    noise from spectra.
+XPSfitAlgorithms    XPSfitAlgorithms
+XPSFitInfo          XPSFitInfo
+XPSFitLM            XPSFitLM
+XPSFitParam         XPSFitParam
+XPSFitParamInfo     XPSFitParamInfo to describe a Core-Line
+                    best fit
+XPSFNameList        XPSFNameList
+XPSImport.Ascii     XPSImport.Ascii function
+XPSInterpDecim      XPSInterpDecim function to interpolate
+                    or decimate spectral data
+XPSLattAnnotate     XPSLattAnnotate
+XPSModFit           XPSModFit performs the fit of a Core
+                    Line
+XPSMoveBaseLine     XPSMoveBaseLine
+XPSMoveComp         XPSMoveComp
+XPSovEngine         XPSovEngine
+XPSOverlay          XPSOverlay
+XPSpkgCtrl          XPSpkgCtrl
+XPSpkgCtrl,XPSCoreLine-method
+                    XPSpkgCtrl
+XPSpkgCtrl,XPSSample-method
+                    'XPSpkgCtrl'
+XPSPreferences      XPSPreferences
+XPSProcessCoreLine
+                    XPSProcessCoreLine
+XPSQuant            XPSQuant
+XPSquantify         'XPSquantify'
+XPSquantify,XPSSample-method
+                    'XPSquantify'
+XPSread             '.pxt' and '.vms' format Data
+XPSRead.Oldscienta
+                    XPSRead.Oldscienta
+XPSremove           XPSremove Rests selected processing
+                    elements from XPSCoreLine
+XPSremove,XPSCoreLine-method
+                    XPSremove
+XPSReport           Provides information about a Core Line
+                    fit
+XPSResetAnalysis    XPSResetAnalysis
+XPSresidualPlot     'XPSresidualPlot' function for objects
+                    of class 'XPSCoreLine'
+XPSresidualPlot,XPSCoreLine-method
+                    'XPSresidualPlot' method for objects of
+                    class 'XPSCoreLine'
+XPSSample-class     Class "XPSSample"
+XPSSampleInfo       XPSSampleInfo
+XPSSaveData         XPSSaveData
+XPSSaveRetrieveBkp
+                    XPSSaveRetrieveBkp
+XPSSetCoreLine      XPSSetCoreLine
+XPSSetFNameCLine    XPSSetFNameCLine
+XPSSetGraphDev      XPSSetGraphDev
+XPSsetRegionToFit   XPSsetRegionToFit Definition of the
+                    Region to Fit
+XPSsetRegionToFit,XPSCoreLine-method
+                    getMaxOfComponents
+XPSsetRSF           XPSsetRSF set the value of the RSF
+XPSsetRSF,XPSCoreLine-method
+                    XPSsetRSF
+XPSSetWD            XPSSetWD
+XPSSetWinSize       XPSSetWinSize
+XPSSpectList        XPSSpectList
+XPSSpectNameChange
+                    XPSSpectNameChange
+XPSSplit            XPSSplit
+XPSSprucingGUI      XPSSprucingGUI
+XPSSurveyElementIdentify
+                    XPSSurveyElementIdentify
+XPSSwitch.BE.KE     XPSSwitch.BE.KE
+XPSTwoScalePlot     XPSTwoScalePlot
+XPSVBFermi          XPSVBFermi
+XPSVBTop            XPSVBTop
+XPSVmsCorr          XPSVmsCorr
+XPSZoomCur          XPSZoomCur
+Ycomponent          Ycomponent
+Ycomponent,fitComponents-method
+                    Ycomponent
