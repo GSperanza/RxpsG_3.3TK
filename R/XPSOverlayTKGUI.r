@@ -1290,7 +1290,7 @@ XPSOverlay <- function(){
                    })
 
      #If FitComp = Multicolor building the widget to change FitComp colors
-     if (XPSSettings$General[8] == "FC.PolyChrome"){
+     if (XPSSettings$General[8] == "PolyChromeFC"){
          for(ii in 1:20){
              FCcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=FitColors$CompColor[ii])
              tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
@@ -1310,7 +1310,7 @@ XPSOverlay <- function(){
          }
      }
      #If FitComp = Singlecolor building the widget to change the Baseline FitComp and Fit colors
-     if (XPSSettings$General[8] == "FC.MonoChrome"){
+     if (XPSSettings$General[8] == "MonoChromeFC"){
           FCcolor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$CompColor[1])
           tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
           tkbind(FCcolor, "<Double-1>", function( ){
@@ -1321,6 +1321,7 @@ XPSOverlay <- function(){
                            CtrlPlot()
                        })
      }
+
      #Fit Color
      FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
      tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
@@ -1335,7 +1336,7 @@ XPSOverlay <- function(){
      T3F_BW_Col <- ttklabelframe(T3group3, text="COLOR", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_BW_Col, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-     BWCOL <- tclVar("ReinBow")
+     BWCOL <- tclVar("RainBow")
      T3_BW_Col <- ttkcombobox(T3F_BW_Col, width = 15, textvariable = BWCOL, values = c("MonoChrome", "ReinBow"))
      tkbind(T3_BW_Col, "<<ComboboxSelected>>", function(){
                            if(tclvalue(BWCOL) == "MonoChrome") {

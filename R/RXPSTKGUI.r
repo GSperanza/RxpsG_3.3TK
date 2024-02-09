@@ -5,7 +5,6 @@
 #' @description xps() activates the RxpsG front-end to use
 #'   all the functions to load raw data perform the spectral
 #'   analysis and plot raw and analyzed spectra
-#' @parameter activeFName 
 #' @examples
 #'  \dontrun{
 #'  xps()
@@ -753,8 +752,9 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
    XPSSettings$General[6] <- Gdev
    
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
-      tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
       XPSSetWD()
+      tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory",
+                   title="SET THE WORKING DIR!", parent=MainWindow, icon="error")
    } else {
       setwd(XPSSettings$General[7])
    }
