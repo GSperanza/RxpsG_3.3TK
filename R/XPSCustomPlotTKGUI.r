@@ -13,10 +13,9 @@
 #' @export
 #'
 
-XPSCustomPlot <- function(){
+XPSCustomPlot <- function(){                      
 
    CtrlPlot <- function(){
-
             logTicks <- function (lim, loc = c(1, 5)) {
                ii <- floor(log10(range(lim))) + c(-1, 2)
                main <- 10^(ii[1]:ii[2])
@@ -152,7 +151,7 @@ XPSCustomPlot <- function(){
             }
             NData <- length(SampData$x)
             EndLngth <- as.numeric(tclvalue(ErrEnds)) #Amplitude of the limiting ending bars
-            colr <- tclvalue(SpectCol)
+            colr <- SpectCol
             LinWdt <- tclvalue(SpectLwd)
             graph <<- do.call(xyplot, args = Plot_Args)
             plot(graph)
@@ -447,6 +446,45 @@ XPSCustomPlot <- function(){
    }
 #---- End CustomPltAnnotate ----
 
+
+
+#---- Routine for drawing Custom Axis ----
+   CustomAx <- function(CustomDta){
+               AxItems <- c("Ticks starting from:", "Tick step: ", "Number of Ticks: ")
+               AxisData <- list(Info=AxItems, Data = rep("?", 3))
+               AxisData <- as.data.frame(AxisData, , stringsAsFactors=FALSE)
+               RowNames <- c("Start", "Step", "N.Ticks")
+               ColNames <- c("Info", "Data")
+               Title <- "CUSTOM SCALE"
+               AxisData <- DFrameTable(Data=AxisData, Title=Title, ColNames=ColNames,
+                                        RowNames=RowNames, Width=c(20, 10), Env=environment())
+               AxisData <- as.numeric(unlist(AxisData[[2]]))
+
+               if (AxisData[1]=="?" || AxisData[1]=="" || AxisData[1]==" " || is.na(AxisData[1])){
+                   tkmessageBox(message="Please Start value required!", title="WARNING", icon="warning")
+                   return()
+               }
+               if (AxisData[2]=="?" || AxisData[2]=="" || AxisData[2]==" " || is.na(AxisData[2])){
+                   tkmessageBox(message="Please Step value required!", title="WARNING", icon="warning")
+                   return()
+               if (AxisData[3]=="?" || AxisData[3]=="" || AxisData[3]==" " || is.na(AxisData[3])){
+                   tkmessageBox(message="Please N. Major Ticks  required!", title="WARNING", icon="warning")
+                   return()
+               }
+               } else {
+                   End <- AxisData[1]+AxisData[2]*AxisData[3]
+                   AXstp <- seq(from=AxisData[1], to=End, by=AxisData[2])
+                   Ticklabels <- as.character(round(AXstp,digits=1))
+                   if (CustomDta[[3]] == "X") {
+                       Plot_Args$scales$x <<- list(at=AXstp, labels=Ticklabels)
+                   } else if (CustomDta[[3]] == "Y") {
+                       Plot_Args$scales$y <<- list(at=AXstp, labels=Ticklabels)
+                   }
+                   CtrlPlot()
+                   Plot_Args$scales$relation <<- "same"
+               }
+   }
+
    setRange <- function(){
                x1 <- as.numeric(tclvalue(XMIN))
                y1 <- as.numeric(tclvalue(YMIN))
@@ -495,43 +533,89 @@ XPSCustomPlot <- function(){
                Plot_Args$ylim <<- Ylim
    }
 
-#--- Routine for drawing Custom Axis
-   CustomAx <- function(CustomDta){
-               AxItems <- c("Ticks starting from:", "Tick step: ", "Number of Ticks: ")
-               AxisData <- list(Info=AxItems, Data = rep("?", 3))
-               AxisData <- as.data.frame(AxisData, , stringsAsFactors=FALSE)
-               RowNames <- c("Start", "Step", "N.Ticks")
-               ColNames <- c("Info", "Data")
-               Title <- "CUSTOM SCALE"
-               AxisData <- DFrameTable(Data=AxisData, Title=Title, ColNames=ColNames,
-                                        RowNames=RowNames, Width=c(20, 10), Env=environment())
-               AxisData <- as.numeric(unlist(AxisData[[2]]))
+   ResetPlot <- function(){
+               tclvalue(REVAX) <- TRUE
+               tclvalue(NORM) <- FALSE
+               tclvalue(RngIdx) <- "Original XYrange"
+               tclvalue(BLineONOFF) <- FALSE
+               tclvalue(FCompONOFF) <- FALSE
+               tclvalue(FitONOFF) <- FALSE
+               tclvalue(FCLblOnOff) <- FALSE
+               tclvalue(LegOnOff) <- FALSE
 
-               if (AxisData[1]=="?" || AxisData[1]=="" || AxisData[1]==" " || is.na(AxisData[1])){
-                   tkmessageBox(message="Please Start value required!", title="WARNING", icon="warning")
-                   return()
+               NonNull <- which(!sapply(FName[[SpectIndx]]@.Data, is.null))
+               if (max(NonNull) < 4){
+                   OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
+                                          y=FName[[SpectIndx]]@.Data[[2]])
                }
-               if (AxisData[2]=="?" || AxisData[2]=="" || AxisData[2]==" " || is.na(AxisData[2])){
-                   tkmessageBox(message="Please Step value required!", title="WARNING", icon="warning")
-                   return()
-               if (AxisData[3]=="?" || AxisData[3]=="" || AxisData[3]==" " || is.na(AxisData[3])){
-                   tkmessageBox(message="Please N. Major Ticks  required!", title="WARNING", icon="warning")
-                   return()
+               if (max(NonNull) == 4){
+                   OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
+                                          y=FName[[SpectIndx]]@.Data[[2]],
+                                          err=FName[[SpectIndx]]@.Data[[4]])
+                   ErrData <<- TRUE
                }
-               } else {
-                   End <- AxisData[1]+AxisData[2]*AxisData[3]
-                   AXstp <- seq(from=AxisData[1], to=End, by=AxisData[2])
-                   Ticklabels <- as.character(round(AXstp,digits=1))
-                   if (CustomDta[[3]] == "X") {
-                       Plot_Args$scales$x <<- list(at=AXstp, labels=Ticklabels)
-                   } else if (CustomDta[[3]] == "Y") {
-                       Plot_Args$scales$y <<- list(at=AXstp, labels=Ticklabels)
-                   }
-                   CtrlPlot()
-                   Plot_Args$scales$relation <<- "same"
-               }
-   }
+               SampData <<- OrigData
 
+               NComp <<- length(FName[[SpectIndx]]@Components)
+               SampData <<- OrigData
+               NColS <<- ncol(SampData)
+               SetErrBars <<- NULL
+	              Plot_Args$x	<<- formula("y ~ x")
+               Plot_Args$data <<- SampData
+               Plot_Args$groups	<<- rep(1, length(SampData$x))
+
+               setRange() #set Plot_Args$xlim, Plot_Args$ylim ranges
+
+#               Xlim <<- sort(range(SampData$x))
+#               Ylim <<- sort(range(SampData$y))
+#               wdth <- Xlim[2]-Xlim[1]
+#               Xlim[1] <<- Xlim[1]-wdth/15
+#               Xlim[2] <<- Xlim[2]+wdth/15
+#               wdth <- Ylim[2]-Ylim[1]
+#               Ylim[1] <<- Ylim[1]-wdth/15
+#               Ylim[2] <<- Ylim[2]+wdth/15
+#               if (tclvalue(REVAX) == "1") {   #reverse scale if checkbox TRUE
+#                   Xlim <<- sort(Xlim, decreasing=TRUE)
+#                   Plot_Args$xlim <<- Xlim
+#               }
+#               Plot_Args$ylim <<- Ylim
+
+               Plot_Args$type <<-"l"
+               Plot_Args$pch <<- 1
+               Plot_Args$cex <<- 1
+               Plot_Args$lty <<- "solid"
+               Plot_Args$lwd <<- 1
+               Plot_Args$type <<- "l"
+               Plot_Args$background <<- "transparent"
+               Plot_Args$col <<- "black"
+               Plot_Args$main <<- list(label <- SpectName,cex=1.4)
+               Plot_Args$xlab <<- list(label=FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
+               Plot_Args$ylab <<- list(label=FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
+               Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), relation="same",
+                                         x=list(log=FALSE), y=list(log=FALSE))
+               Plot_Args$xscale.components <<- xscale.components.subticks
+               Plot_Args$yscale.components <<- yscale.components.subticks
+               Plot_Args$las <<- 0
+               Plot_Args$auto.key <<- FALSE
+               Plot_Args$grid <<- FALSE
+
+               Xlabel <<- FName[[SpectIndx]]@units[1]
+               Ylabel <<- FName[[SpectIndx]]@units[2]
+               AutoKey_Args <<- list(space="top",
+                                    text=SpectName,
+                                    cex = 1,
+                                    type= "l",
+                                    lines=TRUE,
+                                    points=FALSE,
+                                    border=FALSE,
+                                    list(corner=NULL,x=NULL,y=NULL)
+                                   )
+               tclvalue(Tsize) <<- "1.4"      #Titile size
+               tclvalue(AxNumSize) <<- "1"     #axis label size
+               tclvalue(LbSize) <<- "1.2"       #axis scale size
+  }
+
+#---- Set plot options ----
    SetXYplotData <- function() {
                NComp <- length(FName[[SpectIndx]]@Components)
                select <- ""
@@ -591,24 +675,24 @@ XPSCustomPlot <- function(){
                tmp <- asList(FName[[SpectIndx]],select=select) #from coreline FName[[SpectIndx]] extract the selecteed regions
                X <- tmp$x # x list
                Y <- tmp$y # y list
-
-               if (length(Xlim)==0 || length(Ylim)==0){
-                  Xlim  <<- sort(range(X, na.rm=TRUE))
-                  Ylim  <<- sort(range(Y, na.rm=TRUE))
-                  wdth <- Xlim[2]-Xlim[1]
-                  Xlim[1] <<- Xlim[1]-wdth/15
-                  Xlim[2] <<- Xlim[2]+wdth/15
-                  wdth <- Ylim[2]-Ylim[1]
-                  Ylim[1] <<- Ylim[1]-wdth/15
-                  Ylim[2] <<- Ylim[2]+wdth/15
-                  if (tclvalue(REVAX) == "1") {   #reverse scale if checkbox TRUE
-                      Xlim <<- sort(Xlim, decreasing=TRUE)
-                      Plot_Args$xlim <<- Xlim
-                  } else {
-                      Xlim <<- sort(Xlim, decreasing=FALSE)
-                      Plot_Args$xlim <<- Xlim
-                  }
-               }
+               setRange()
+#               if (length(Xlim)==0 || length(Ylim)==0){
+#                  Xlim  <<- sort(range(X, na.rm=TRUE))
+#                  Ylim  <<- sort(range(Y, na.rm=TRUE))
+#                  wdth <- Xlim[2]-Xlim[1]
+#                  Xlim[1] <<- Xlim[1]-wdth/15
+#                  Xlim[2] <<- Xlim[2]+wdth/15
+#                  wdth <- Ylim[2]-Ylim[1]
+#                  Ylim[1] <<- Ylim[1]-wdth/15
+#                  Ylim[2] <<- Ylim[2]+wdth/15
+#                  if (tclvalue(REVAX) == "1") {   #reverse scale if checkbox TRUE
+#                      Xlim <<- sort(Xlim, decreasing=TRUE)
+#                      Plot_Args$xlim <<- Xlim
+#                  } else {
+#                      Xlim <<- sort(Xlim, decreasing=FALSE)
+#                      Plot_Args$xlim <<- Xlim
+#                  }
+#               }
                Ylength <- lapply(Y, length)
                Ylength <- as.array(as.integer(Ylength))
                grps <- list()
@@ -621,59 +705,76 @@ XPSCustomPlot <- function(){
                df <- data.frame(x = unname(unlist(X)), y = unname(unlist(Y)) )
                Plot_Args$data <<- df
                Plot_Args$groups <<- unlist(grps)
-               if (tclvalue(LineOnOff) == "ON") {
-                  LTy <- grep(tclvalue(SpectLty), LineTypes)
+               
+               if (tclvalue(LineOnOff) == "ON") {         #Plot Spect-Lines ON
+                  LTy <- grep(tclvalue(SpectLty), LType)
                   Plot_Args$type <<- "l"
-                  Plot_Args$col <<- tclvalue(SpectCol)
+                  Plot_Args$col <<- SpectCol
                   Plot_Args$lty <<- LTy
                   Plot_Args$lwd <<- as.numeric(tclvalue(SpectLwd))
-                  if (tclvalue(BLineONOFF) == "1") {
-                     LTy <- grep(tclvalue(BLineLty), LineTypes)
-                     Plot_Args$col <<- c(Plot_Args$col, tclvalue(BLineCol))
+                  if (tclvalue(BLineONOFF) == "1") {      #Plot Base-Line ON
+                     LTy <- grep(tclvalue(BLineLty), LType)
+                     Plot_Args$col <<- c(Plot_Args$col, FitColors$BaseColor[1])
                      Plot_Args$lty <<- c(Plot_Args$lty, LTy)
                      Plot_Args$lwd <<- c(Plot_Args$lwd, as.numeric(tclvalue(BLineLwd)))
                   }
-                  if (tclvalue (FCompONOFF) == "1") {
-                     LTy <- grep(tclvalue(FCompLty), LineTypes)
-                     Plot_Args$col <<- c(Plot_Args$col, rep(tclvalue(FCompCol), NComp))
-                     Plot_Args$lty <<- c(Plot_Args$lty, rep(LTy, NComp))
-                     Plot_Args$lwd <<- c(Plot_Args$lwd, rep(as.numeric(tclvalue(FCompLw)), NComp))
+                  if (tclvalue (FCompONOFF) == "1") {     #Plot Fit-Components ON
+                      if (XPSSettings$General[8] == "PolyChromeFC"){
+                          LTy <- grep(tclvalue(FCompLty), LType)
+                          Plot_Args$col <<- c(Plot_Args$col, FitColors$CompColor[1:NComp])
+                          Plot_Args$lty <<- c(Plot_Args$lty, rep(LTy, NComp))
+                          Plot_Args$lwd <<- c(Plot_Args$lwd, rep(as.numeric(tclvalue(FCompLw)), NComp))
+                      }
+                      if (XPSSettings$General[8] == "MonoChromeFC"){
+                          LTy <- grep(tclvalue(FCompLty), LType)
+                          Plot_Args$col <<- c(Plot_Args$col, rep(FitColors$CompColor[1], NComp))
+                          Plot_Args$lty <<- c(Plot_Args$lty, rep(LTy, NComp))
+                          Plot_Args$lwd <<- c(Plot_Args$lwd, rep(as.numeric(tclvalue(FCompLw)), NComp))
+                      }
                   }
-                  if (tclvalue(FitONOFF) == "1") {
-                     LTy <- grep(tclvalue(FitLty), LineTypes)
-                     Plot_Args$col <<- c(Plot_Args$col, tclvalue(FitCol))
+                  if (tclvalue(FitONOFF) == "1") {        #Plot Fit ON
+                     LTy <- grep(tclvalue(FitLty), LType)
+                     Plot_Args$col <<- c(Plot_Args$col, FitColors$FitColor[1])
                      Plot_Args$lty <<- c(Plot_Args$lty, LTy)
                      Plot_Args$lwd <<- c(Plot_Args$lwd, as.numeric(tclvalue(FitLw)))
                   }
                   if (tclvalue(LegOnOff) == "1"){
                       Plot_Args$auto.key <<-AutoKey_Args
-                      Plot_Args$par.settings$superpose.line$col <<- tclvalue(SpectCol)
-                      Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LineTypes)
+                      Plot_Args$par.settings$superpose.line$col <<- SpectCol
+                      Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LType)
                   }
                }
                if ( tclvalue(SymOnOff) == "ON") {
                   Plot_Args$type  <<-"p"
-                  Plot_Args$col <<- tclvalue(SpectCol)
+                  Plot_Args$col <<- SpectCol
                   Plot_Args$pch <<- STypeIndx[grep(tclvalue(SpectSym),SType)]
                   Plot_Args$cex <<- as.numeric(tclvalue(SpectSymSiz))
                   if (tclvalue(BLineONOFF)=="1") {
-                     Plot_Args$col <<- c(Plot_Args$col, tclvalue(BLineCol))
+                     Plot_Args$col <<- c(Plot_Args$col, FitColors$BaseColor[1])
                      Plot_Args$pch <<- c(Plot_Args$pch, STypeIndx[grep(tclvalue(BLineSym), SType)])
                      Plot_Args$cex <<- c(Plot_Args$cex, as.numeric(tclvalue(BLSymSiz)))
                   }
                   if (tclvalue(FCompONOFF)=="1") {
-                     Plot_Args$col <<- c(Plot_Args$col, rep(tclvalue(FCompCol), NComp))
-                     Plot_Args$pch <<- c(Plot_Args$pch, rep(STypeIndx[grep(tclvalue(FCompSym), SType)], NComp))
-                     Plot_Args$cex <<- c(Plot_Args$cex, rep(tclvalue(FCompSySiz), NComp))
+                      if (XPSSettings$General[8] == "PolyChromeFC"){
+                          Plot_Args$col <<- c(Plot_Args$col, FitColors$CompColor[1:NComp])
+                          Plot_Args$pch <<- c(Plot_Args$pch, rep(STypeIndx[grep(tclvalue(FCompSym), SType)], NComp))
+                          Plot_Args$cex <<- c(Plot_Args$cex, rep(tclvalue(FCompSySiz), NComp))
+                      }
+                      if (XPSSettings$General[8] == "MonoChromeFC"){
+                          LTy <- grep(tclvalue(FCompLty), LType)
+                          Plot_Args$col <<- c(Plot_Args$col, rep(FitColors$CompColor[1], NComp))
+                          Plot_Args$pch <<- c(Plot_Args$pch, rep(STypeIndx[grep(tclvalue(FCompSym), SType)], NComp))
+                          Plot_Args$cex <<- c(Plot_Args$cex, rep(tclvalue(FCompSySiz), NComp))
+                      }
                   }
                   if (tclvalue(FitONOFF)=="1") {
-                     Plot_Args$col <<- c(Plot_Args$col, tclvalue(FitCol))
+                     Plot_Args$col <<- c(Plot_Args$col, rep(FitColors$FitColor[1], NComp))
                      Plot_Args$pch <<- c(Plot_Args$pch, STypeIndx[grep(tclvalue(FitSym), SType)])
                      Plot_Args$cex <<- c(Plot_Args$cex, as.numeric(tclvalue(FitSymSiz)))
                   }
                   if (tclvalue(LegOnOff) == "1"){
-                      Plot_Args$auto.key <<-AutoKey_Args
-                      Plot_Args$par.settings$superpose.symbol$col <<- tclvalue(SpectCol)
+                      Plot_Args$auto.key <<- AutoKey_Args
+                      Plot_Args$par.settings$superpose.symbol$col <<- SpectCol
                       Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[grep(tclvalue(SpectSym),SType)]
                   }
                }
@@ -687,73 +788,42 @@ XPSCustomPlot <- function(){
                      Plot_Args$auto.key <<- FALSE
                }
                CtrlPlot()
-   }
+               if (tclvalue(FCLblOnOff) == 1) {
+                    TextPosition <- list(x=NULL, y=NULL)
+                    AnnotateText <- NULL
+                    TextColor <- NULL
+                    xx <- yy <- NULL
+                    TextColor <- FitColors$CompColor[1:NComp]
+                    if (XPSSettings$General[8] == "MonoChromeFC"){
+                        TextColor <- rep(FitColors$CompColor[1], NComp)
+                    }
+                    for(ii in 1:NComp){
+                        xx <- FName[[SpectIndx]]@Components[[ii]]@param[[1]][2] #mu position of fit component ii
+                        idx <- findXIndex(FName[[SpectIndx]]@RegionToFit$x, xx)
+                        yy <- FName[[SpectIndx]]@Components[[ii]]@ycoor[idx] #+   #h value of fit component[[ii]] +
+                        TextPosition$x <- c(TextPosition$x, xx)
+                        TextPosition$y <- c(TextPosition$y, yy)
+                        AnnotateText <- c(AnnotateText, paste("C#",ii, sep=""))
+                    }
+                    trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
+                    AnnotationData <- list(x0 = TextPosition$x,
+                                                y0 = TextPosition$y,
+                                                pos = 3,
+                                                adj = c(0.5, 0.5),
+                                                offset=2,
+                                                labels = AnnotateText,
+                                                cex = 1,
+                                                col = TextColor
+                                         )
 
-   ResetPlot <- function(){
-               tclvalue(REVAX) <- TRUE
-               tclvalue(NORM) <- FALSE
-               tclvalue(RngIdx) <- "Original XYrange"
-               tclvalue(BLineONOFF) <- FALSE
-               tclvalue(FCompONOFF) <- FALSE
-               tclvalue(FitONOFF) <- FALSE
-               tclvalue(FCLblOnOff) <- FALSE
-               tclvalue(LegOnOff) <- FALSE
-
-               NComp <<- length(FName[[SpectIndx]]@Components)
-               SampData <<- OrigData
-               NColS <<- ncol(SampData)
-               SetErrBars <<- NULL
-
-	              Plot_Args$x	<<- formula("y ~ x")
-               Plot_Args$data <<- SampData
-               Plot_Args$groups	<<- rep(1, length(SampData$x))
-               Xlim <<- sort(range(SampData$x))
-               Ylim <<- sort(range(SampData$y))
-               wdth <- Xlim[2]-Xlim[1]
-               Xlim[1] <<- Xlim[1]-wdth/15
-               Xlim[2] <<- Xlim[2]+wdth/15
-               wdth <- Ylim[2]-Ylim[1]
-               Ylim[1] <<- Ylim[1]-wdth/15
-               Ylim[2] <<- Ylim[2]+wdth/15
-               if (tclvalue(REVAX) == "1") {   #reverse scale if checkbox TRUE
-                   Xlim <<- sort(Xlim, decreasing=TRUE)
-                   Plot_Args$xlim <<- Xlim
+                    graph <<- graph + latticeExtra::layer(data = AnnotationData,
+                                                panel.text(x=x0, y=y0, pos=3, adj=adj,
+                                                labels=labels, cex=cex, col=col),
+                                                force=TRUE)
+                    trellis.unfocus()
+                    plot(graph)
                }
-               Plot_Args$ylim <<- Ylim
-               Plot_Args$type <<-"l"
-               Plot_Args$pch <<- 1
-               Plot_Args$cex <<- 1
-               Plot_Args$lty <<- "solid"
-               Plot_Args$lwd <<- 1
-               Plot_Args$type <<- "l"
-               Plot_Args$background <<- "transparent"
-               Plot_Args$col <<- "black"
-               Plot_Args$main <<- list(label <- SpectName,cex=1.4)
-               Plot_Args$xlab <<- list(label=FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
-               Plot_Args$ylab <<- list(label=FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
-               Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), relation="same",
-                                         x=list(log=FALSE), y=list(log=FALSE))
-               Plot_Args$xscale.components <<- xscale.components.subticks
-               Plot_Args$yscale.components <<- yscale.components.subticks
-               Plot_Args$las <<- 0
-               Plot_Args$auto.key <<- FALSE
-               Plot_Args$grid <<- FALSE
-
-               Xlabel <<- FName[[SpectIndx]]@units[1]
-               Ylabel <<- FName[[SpectIndx]]@units[2]
-               AutoKey_Args <<- list(space="top",
-                                    text=SpectName,
-                                    cex = 1,
-                                    type= "l",
-                                    lines=TRUE,
-                                    points=FALSE,
-                                    border=FALSE,
-                                    list(corner=NULL,x=NULL,y=NULL)
-                                   )
-               tclvalue(Tsize) <<- "1.4"      #Titile size
-               tclvalue(AxNumSize) <<- "1"     #axis label size
-               tclvalue(LbSize) <<- "1.2"       #axis scale size
-  }
+   }
 
   LoadCoreLine <- function(){
                SpName <- tclvalue(CL)
@@ -779,16 +849,16 @@ XPSCustomPlot <- function(){
    SpectName <- get("activeSpectName", envir=.GlobalEnv)
    if(is.na(activeSpectName) || is.null(activeSpectName) || length(activeSpectName)==0){
       activeSpectName <<- SpectList[1]
-      activeSpectIndx <<- 1
+      activeSpectIndx <<- SpectIndx <- 1
    }
    FNameList <- XPSFNameList()
    ErrData <- FALSE
-   NonNull <- which(!sapply(FName[[1]]@.Data, is.null))
-   if (length(NonNull) < 4){
+   NonNull <- which(!sapply(FName[[SpectIndx]]@.Data, is.null))
+   if (max(NonNull) < 4){
        OrigData <- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
                               y=FName[[SpectIndx]]@.Data[[2]])
    }
-   if (length(NonNull) == 4){
+   if (max(NonNull) == 4){
        OrigData <- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
                               y=FName[[SpectIndx]]@.Data[[2]],
                               err=FName[[SpectIndx]]@.Data[[4]])
@@ -806,25 +876,37 @@ XPSCustomPlot <- function(){
    SetErrBars <- NULL
    graph <- NULL
 
-   Colors <- c("black", "red3", "limegreen", "blue", "magenta", "orange", "cadetblue", "sienna",
-             "darkgrey", "forestgreen", "gold", "darkviolet", "greenyellow", "cyan", "lightcoral",
-             "turquoise", "deeppink3", "wheat", "thistle", "grey40")
-   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash",     #definisco 20 tipi divesi di line pattern
-            "twodash", "F8", "431313", "22848222", "12126262",
-            "12121262", "12626262", "52721272", "B454B222", "F313F313",
-            "71717313", "93213321", "66116611", "23111111", "222222A2" )
-   LineTypes <- c("Solid", "Dashed", "Dotted", "Dotdash", "Longdash",     #definisco 20 tipi divesi di line pattern
-            "Twodash", "F8", "431313", "22848222", "12126262",
-            "12121262", "12626262", "52721272", "B454B222", "F313F313",
-            "71717313", "93213321", "66116611", "23111111", "222222A2" )
-   SType <- c("VoidCircle", "VoidSquare", "VoidTriangleUp", "VoidTriangleDwn",  "Diamond",
-            "X", "Star", "CrossSquare", "CrossCircle", "CrossDiamond",
-            "SolidSquare", "SolidCircle", "SolidTriangleUp", "SolidTriangleDwn", "SolidDiamond",
-            "DavidStar", "SquareCross", "SquareTriang", "CircleCross", "Cross")
-   STypeIndx <- c(1,  0,  2,  6,  5,
-                4,  8,  7,  10, 9,
-                15, 16, 17, 25, 18,
-                11, 12, 14, 13, 3)
+   SpectCol <- "black"
+   CLcolor <- list()  #to store widget ID
+   FCcolor <- list()  #to store widget ID
+   FTcolor <- list()  #to store widget ID
+
+   XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+   Colors <- XPSSettings$Colors
+   LType <- XPSSettings$LType
+   SType <- XPSSettings$Symbols
+   STypeIndx <- XPSSettings$SymIndx
+   CLineColors <- XPSSettings$Colors
+   FitColors <- list(BaseColor=XPSSettings$BaseColor, CompColor=XPSSettings$ComponentsColor,
+                           FitColor=XPSSettings$FitColor)
+#------------
+#   Colors <- c("black", "red3", "limegreen", "blue", "magenta", "orange", "cadetblue", "sienna",
+#             "darkgrey", "forestgreen", "gold", "darkviolet", "greenyellow", "cyan", "lightcoral",
+#             "turquoise", "deeppink3", "wheat", "thistle", "grey40")
+#   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash",     #definisco 20 tipi divesi di line pattern
+#            "twodash", "F8", "431313", "22848222", "12126262",
+#            "12121262", "12626262", "52721272", "B454B222", "F313F313",
+#            "71717313", "93213321", "66116611", "23111111", "222222A2" )
+#   SType <- c("VoidCircle", "VoidSquare", "VoidTriangleUp", "VoidTriangleDwn",  "Diamond",
+#            "X", "Star", "CrossSquare", "CrossCircle", "CrossDiamond",
+#            "SolidSquare", "SolidCircle", "SolidTriangleUp", "SolidTriangleDwn", "SolidDiamond",
+#            "DavidStar", "SquareCross", "SquareTriang", "CircleCross", "Cross")
+#   STypeIndx <- c(1,  0,  2,  6,  5,
+#                4,  8,  7,  10, 9,
+#                15, 16, 17, 25, 18,
+#                11, 12, 14, 13, 3)
+#------------
+
    LWidth <- c(1,1.25,1.5,1.75,2,2.25,2.5,3, 3.5,4)
    SymSize <- c(0,0.2,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2)
    LCol <- "black"
@@ -839,8 +921,8 @@ XPSCustomPlot <- function(){
    Dist <- c(0.01,0.02,0.04,0.06,0.08,0.1,0.12,0.14,0.16,0.18,0.2)
 
    Plot_Args <- list(x=formula("y ~ x"), data=NULL, groups=NULL, layout=NULL,
-                     xlim=NULL,ylim=NULL,
-                     pch=1,cex=1,lty="solid",lwd=1,type="l",               #default settings for point and lines
+                     xlim=NULL, ylim=NULL,
+                     type="l", lty="solid", lwd=1, pch=1, cex=1,                #default settings for point and lines
                      background="transparent", col="black",
                      main=list(label=NULL,cex=1.4),
                      xlab=list(label=NULL, rot=0, cex=1.2),
@@ -850,7 +932,7 @@ XPSCustomPlot <- function(){
                      xscale.components = xscale.components.subticks,
                      yscale.components = yscale.components.subticks,
                      las = 0,
-                     par.settings = list(superpose.line=list(lty="solid", col=Colors)), #needed to set colors
+                     par.settings = list(superpose.line=list(lty="solid", col=CLineColors)), #needed to set colors
                      auto.key = FALSE,
                      grid = FALSE
                    )
@@ -1311,32 +1393,20 @@ XPSCustomPlot <- function(){
        T2GroupOptn <- ttkframe(T2group1, borderwidth=0, padding=c(0,0,0,0) )
        tkgrid(T2GroupOptn, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-       T2frame1 <- ttklabelframe(T2GroupOptn, text = "COLOR", borderwidth=3)
-       tkgrid(T2frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-       SpectCol <- tclVar("black")
-       T2obj1 <- ttkcombobox(T2frame1, width = 15, textvariable = SpectCol, values = Colors)
-       tkgrid(T2obj1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-       tkbind(T2obj1, "<<ComboboxSelected>>", function(){
-                            Plot_Args$col <<- tclvalue(SpectCol)
-                            SetXYplotData()
-                     })
 
        T2frame2 <- ttklabelframe(T2GroupOptn, text = "LINE TYPE", borderwidth=3)
-       tkgrid(T2frame2, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
-       SpectLty <- tclVar("Solid")
-       T2obj2 <- ttkcombobox(T2frame2, width = 15, textvariable = SpectLty, values = LineTypes)
+       tkgrid(T2frame2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       SpectLty <- tclVar(LType[1])
+       T2obj2 <- ttkcombobox(T2frame2, width = 15, textvariable = SpectLty, values = LType)
        tkgrid(T2obj2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T2obj2, "<<ComboboxSelected>>", function(){
-#                              Plot_Args$type <<- "l"
-#                              Plot_Args$lty <<- tclvalue(SpectLty)
-#                              Plot_Args$par.settings = list(superpose.line=list(col=Colors, lwd=1)) #needed to set legend colors
                               AutoKey_Args$lines <<- TRUE
                               AutoKey_Args$points <<- FALSE
                               if (tclvalue(LineOnOff) == "ON") SetXYplotData()
                      })
 
        T2frame3 <- ttklabelframe(T2GroupOptn, text = "LINE WIDTH", borderwidth=3)
-       tkgrid(T2frame3, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T2frame3, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
        SpectLwd <- tclVar("1")
        T2obj3 <- ttkcombobox(T2frame3, width = 15, textvariable = SpectLwd, values = LWidth)
        tkgrid(T2obj3, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1345,36 +1415,23 @@ XPSCustomPlot <- function(){
                               if (tclvalue(LineOnOff) == "ON") SetXYplotData()
                      })
 
-       T2frame4 <- ttklabelframe(T2GroupOptn, text = "SET LINES", borderwidth=3)
-       tkgrid(T2frame4, row = 2, column = 3, padx = 5, pady = 5, sticky="w")
-       LineOnOff <- tclVar("ON")
-       items <- c("ON", "OFF")
-       for(ii in 1:2){
-           T2obj4 <- ttkradiobutton(T2frame4, text=items[ii], variable=LineOnOff, value=items[ii],
-                              command=function(){
-                                  SetXYplotData()
-                              })
-           tkgrid(T2obj4, row = 1, column = ii, padx = 5, pady=5, sticky="w")
-       }
-
-
        T2frame5 <- ttklabelframe(T2GroupOptn, text = "SYMBOL", borderwidth=3)
-       tkgrid(T2frame5, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-       SpectSym <- tclVar("VoidCircle")
+       tkgrid(T2frame5, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+       SpectSym <- tclVar(SType[1])
        T2obj5 <- ttkcombobox(T2frame5, width = 15, textvariable = SpectSym, values = SType)
        tkgrid(T2obj5, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T2obj5, "<<ComboboxSelected>>", function(){
                               Plot_Args$type <<- "p"
                               idx <- grep(tclvalue(SpectSym), SType)
                               Plot_Args$pch <<- STypeIndx[idx]
-                              Plot_Args$par.settings = list(superpose.symbol=list(col=Colors))
+                              Plot_Args$par.settings = list(superpose.symbol=list(col=CLineColors))
                               AutoKey_Args$lines <<- FALSE
                               AutoKey_Args$points <<- TRUE
                               if (tclvalue(SymOnOff)=="ON") SetXYplotData()
                      })
 
        T2frame6 <- ttklabelframe(T2GroupOptn, text = "SYMSIZE", borderwidth=3)
-       tkgrid(T2frame6, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T2frame6, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
        SpectSymSiz <- tclVar("0.8")
        T2obj6 <- ttkcombobox(T2frame6, width = 15, textvariable = SpectSymSiz, values = SymSize)
        tkgrid(T2obj6, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1383,8 +1440,21 @@ XPSCustomPlot <- function(){
                               if (tclvalue(SymOnOff)=="ON") SetXYplotData()
                      })
 
+       T2frame4 <- ttklabelframe(T2GroupOptn, text = "SET LINES", borderwidth=3)
+       tkgrid(T2frame4, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
+       LineOnOff <- tclVar("ON")
+       items <- c("ON", "OFF")
+       for(ii in 1:2){
+           T2obj4 <- ttkradiobutton(T2frame4, text=items[ii], variable=LineOnOff, value=items[ii],
+                                  command=function(){
+                                  SetXYplotData()
+                              })
+           tkgrid(T2obj4, row = 1, column = ii, padx = 5, pady=5, sticky="w")
+       }
+
+
        T2frame7 <- ttklabelframe(T2GroupOptn, text = "SET SYMBOLS", borderwidth=3)
-       tkgrid(T2frame7, row = 3, column = 3, padx = 5, pady = 5, sticky="w")
+       tkgrid(T2frame7, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
        SymOnOff <- tclVar("OFF")
        items <- c("ON", "OFF")
        for(ii in 1:2){
@@ -1394,20 +1464,43 @@ XPSCustomPlot <- function(){
                               })
            tkgrid(T2obj7, row = 1, column = ii, padx = 5, pady=5, sticky="w")
        }
+       WW <- as.numeric(tkwinfo("reqwidth", T2GroupOptn))+20
+       
+       T2frame1 <- ttklabelframe(T2group1, text = "COLORS", borderwidth=3)
+       tkgrid(T2frame1, row = 1, column = 1, padx = c(WW,5), pady = 5, sticky="w")
+       for(ii in 1:2){
+           for(jj in 1:10){ #column1 colors 1 - 10, column2 11 - 20
+               kk <- jj+(ii-1)*10
+               CLcolor[[kk]] <- ttklabel(T2frame1, text=as.character(kk), width=6, font="Serif 8", background=CLineColors[kk])
+               tkgrid(CLcolor[[kk]], row = jj, column = ii, padx = c(5,0), pady = 1, sticky="w")
+               tkbind(CLcolor[[kk]], "<Double-1>", function( ){
+                             X <- as.numeric(tkwinfo("pointerx", CustomWindow))
+                             Y <- tkwinfo("pointery", CustomWindow)
+                             WW <- tkwinfo("containing", X, Y)
+                             BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+                             BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+                             colIdx <- grep(BKGcolor, CLineColors)
+                             BKGcolor <- as.character(tcl("tk_chooseColor", initialcolor="red"))
+                             CLineColors[colIdx] <<- BKGcolor
+                             SpectCol <<- BKGcolor
+                             tkconfigure(CLcolor[[colIdx]], background=SpectCol)
+                             SetXYplotData()
+                     })
+           }
+       }
 
        if (ErrData == TRUE){
            T2frame8 <- ttklabelframe(T2group1, text = "ERROR BARS", borderwidth=3)
-           tkgrid(T2frame8, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-           txt <- paste("Only generic X, Y data with Standard Errors loaded with XPSImport.asciiGUI()\n",
-                        "can be plotted using the error options", sep="")
+           tkgrid(T2frame8, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+           txt <- paste("Plot Y-Standard Errors loaded", sep="")
            tkgrid( ttklabel(T2frame8, text=txt), row = 1, column = 1, padx = 5, pady=5, sticky="w")
            T2ckboxGroup <- ttkframe(T2frame8, borderwidth=0, padding=c(0,0,0,0))
            tkgrid(T2ckboxGroup, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
            txt <- c("Upper Bar", "Lower Bar", "Upper End", "Lower End")
-           for(ii in 1:length(txt)) {
+           for(ii in 1:4) {
                ErrBar <- tkcheckbutton(T2ckboxGroup, text=txt[ii], variable=txt[ii], onvalue = ii, offvalue = 0,
                                    command=function(){
-                                   for(jj in length(txt):1){
+                                   for(jj in 4:1){
                                        SetErrBars[jj] <<- as.numeric(tclvalue(txt[jj]))
                                        if (SetErrBars[jj] == 0) { SetErrBars <<- SetErrBars[-jj] }
                                    }
@@ -1453,25 +1546,26 @@ XPSCustomPlot <- function(){
        tkgrid(BaseLineCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
        T3frame1 <- ttklabelframe(T3group1, text = "COLOR", borderwidth=3)
-       tkgrid(T3frame1, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
-       BLineCol <- tclVar("black")
-       T3obj1 <- ttkcombobox(T3frame1, width = 15, textvariable = BLineCol, values = Colors)
-       tkgrid(T3obj1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-       tkbind(T3obj1, "<<ComboboxSelected>>", function(){
-                               SetXYplotData()
+       tkgrid(T3frame1, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+       BLineCol <- ttklabel(T3frame1, text=as.character(1), width=15, font="Serif 8", background=FitColors$BaseColor[1])
+       tkgrid(BLineCol, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       tkbind(BLineCol, "<Double-1>", function( ){
+                           FitColors$BaseColor[1] <<- as.character(tcl("tk_chooseColor", initialcolor=FitColors$BaseColor[1]))
+                           tkconfigure(BLineCol, background=FitColors$BaseColor[1])
+                           SetXYplotData()
                      })
 
        T3frame2 <- ttklabelframe(T3group1, text = "LINE TYPE", borderwidth=3)
-       tkgrid(T3frame2, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-       BLineLty <- tclVar("Solid")
-       T3obj2 <- ttkcombobox(T3frame2, width = 15, textvariable = BLineLty, values = LineTypes)
+       tkgrid(T3frame2, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+       BLineLty <- tclVar(LType[1])
+       T3obj2 <- ttkcombobox(T3frame2, width = 15, textvariable = BLineLty, values = LType)
        tkgrid(T3obj2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T3obj2, "<<ComboboxSelected>>", function(){
                                Plot_Args$type <<- "l"
                                SetXYplotData() })
 
        T3frame3 <- ttklabelframe(T3group1, text = "LINE WIDTH", borderwidth=3)
-       tkgrid(T3frame3, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T3frame3, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
        BLineLwd <- tclVar("1")
        T3obj3 <- ttkcombobox(T3frame3, width = 15, textvariable = BLineLwd, values = LWidth)
        tkgrid(T3obj3, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1480,8 +1574,8 @@ XPSCustomPlot <- function(){
                      })
 
        T3frame4 <- ttklabelframe(T3group1, text = "SYMBOL", borderwidth=3)
-       tkgrid(T3frame4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-       BLineSym <- tclVar("VoidCircle")
+       tkgrid(T3frame4, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
+       BLineSym <- tclVar(SType[1])
        T3obj4 <- ttkcombobox(T3frame4, width = 15, textvariable = BLineSym, values = SType)
        tkgrid(T3obj4, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T3obj4, "<<ComboboxSelected>>", function(){
@@ -1490,7 +1584,7 @@ XPSCustomPlot <- function(){
                      })
 
        T3frame5 <- ttklabelframe(T3group1, text = "SYMSIZE", borderwidth=3)
-       tkgrid(T3frame5, row = 4, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T3frame5, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
        BLSymSiz <- tclVar("0.8")
        T3obj5 <- ttkcombobox(T3frame5, width = 15, textvariable = BLSymSiz, values = SymSize)
        tkgrid(T3obj5, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1504,7 +1598,10 @@ XPSCustomPlot <- function(){
        T4group1 <- ttkframe(NoteBk,  borderwidth=2, padding=c(5,5,5,5) )
        tkadd(NoteBk, T4group1, text="FIT COMPONENT OPTIONS")
 
-       T4CKframe <- ttklabelframe(T4group1, text = "Set Components", borderwidth=3)
+       T4GroupOptn <- ttkframe(T4group1, borderwidth=0, padding=c(0,0,0,0) )
+       tkgrid(T4GroupOptn, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+
+       T4CKframe <- ttklabelframe(T4GroupOptn, text = "Set Components", borderwidth=3)
        tkgrid(T4CKframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        FCompONOFF <- tclVar(FALSE)
        ComponentCK <- tkcheckbutton(T4CKframe, text="Components ON/OFF", variable=FCompONOFF, onvalue = 1, offvalue = 0,
@@ -1520,7 +1617,7 @@ XPSCustomPlot <- function(){
                      })
        tkgrid(ComponentCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-       T4Lblframe <- ttklabelframe(T4group1, text = "Component Labels", borderwidth=3)
+       T4Lblframe <- ttklabelframe(T4GroupOptn, text = "Component Labels", borderwidth=3)
        tkgrid(T4Lblframe, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
        FCLblOnOff <- tclVar(FALSE)
        LabelCK <- tkcheckbutton(T4Lblframe, text="Labels ON/OFF", variable=FCLblOnOff, onvalue = 1, offvalue = 0,
@@ -1532,26 +1629,17 @@ XPSCustomPlot <- function(){
                      })
        tkgrid(LabelCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-       T4frame1 <- ttklabelframe(T4group1, text = "COLOR", borderwidth=3)
-       tkgrid(T4frame1, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
-       FCompCol <- tclVar("black")
-       T4obj1 <- ttkcombobox(T4frame1, width = 15, textvariable = FCompCol, values = Colors)
-       tkgrid(T4obj1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-       tkbind(T4obj1, "<<ComboboxSelected>>", function(){
-                                  SetXYplotData()
-                     })
-
-       T4frame2 <- ttklabelframe(T4group1, text = "LINE TYPE", borderwidth=3)
+       T4frame2 <- ttklabelframe(T4GroupOptn, text = "LINE TYPE", borderwidth=3)
        tkgrid(T4frame2, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-       FCompLty <- tclVar("Solid")
-       T4obj2 <- ttkcombobox(T4frame2, width = 15, textvariable = FCompLty, values = LineTypes)
+       FCompLty <- tclVar(LType[1])
+       T4obj2 <- ttkcombobox(T4frame2, width = 15, textvariable = FCompLty, values = LType)
        tkgrid(T4obj2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T4obj2, "<<ComboboxSelected>>", function(){
                                   Plot_Args$type <<- "l"
                                   SetXYplotData()
                      })
 
-       T4frame3 <- ttklabelframe(T4group1, text = "LINE WIDTH", borderwidth=3)
+       T4frame3 <- ttklabelframe(T4GroupOptn, text = "LINE WIDTH", borderwidth=3)
        tkgrid(T4frame3, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
        FCompLw <- tclVar("1")
        T4obj3 <- ttkcombobox(T4frame3, width = 15, textvariable = FCompLw, values = LWidth)
@@ -1560,9 +1648,9 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
 
-       T4frame4 <- ttklabelframe(T4group1, text = "SYMBOL", borderwidth=3)
+       T4frame4 <- ttklabelframe(T4GroupOptn, text = "SYMBOL", borderwidth=3)
        tkgrid(T4frame4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-       FCompSym <- tclVar("VoidCircle")
+       FCompSym <- tclVar(SType[1])
        T4obj4 <- ttkcombobox(T4frame4, width = 15, textvariable = FCompSym, values = SType)
        tkgrid(T4obj4, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T4obj4, "<<ComboboxSelected>>", function(){
@@ -1570,7 +1658,7 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
 
-       T4frame5 <- ttklabelframe(T4group1, text = "SYMSIZE", borderwidth=3)
+       T4frame5 <- ttklabelframe(T4GroupOptn, text = "SYMSIZE", borderwidth=3)
        tkgrid(T4frame5, row = 4, column = 2, padx = 5, pady = 5, sticky="w")
        FCompSySiz <- tclVar("0.8")
        T4obj5 <- ttkcombobox(T4frame5, width = 15, textvariable = FCompSySiz, values = SymSize)
@@ -1579,6 +1667,43 @@ XPSCustomPlot <- function(){
 #                                  Plot_Args$type <<- as.numeric(tclvalue(FCompSySiz))
                                   SetXYplotData()
                      })
+
+       #FitComponent color
+       T4frame1 <- ttklabelframe(T4group1, text = "COLORS", borderwidth=3)
+       tkgrid(T4frame1, row = 1, column = 3, padx = 5, pady = 5, sticky="wn")
+       #If FitComp = Multicolor building the widget to change FitComp colors
+       FCompCol <- tclVar("black")
+       if (XPSSettings$General[8] == "PolyChromeFC"){
+           for(ii in 1:2){
+               for(jj in 1:10){
+                   kk <- jj+(ii-1)*10
+                   FCcolor[[kk]] <- ttklabel(T4frame1, text=as.character(kk), width=6, font="Serif 8", background=(FitColors$CompColor[kk]))
+                   tkgrid(FCcolor[[kk]], row = jj, column = ii, padx = 5, pady = 1, sticky="w")
+                   tkbind(FCcolor[[kk]], "<Double-1>", function( ){
+                              X <- as.numeric(tkwinfo("pointerx", CustomWindow))
+                              Y <- tkwinfo("pointery", CustomWindow)
+                              WW <- tkwinfo("containing", X, Y)
+                              BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+                              BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+                              colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
+                              BKGcolor <- as.character(tcl("tk_chooseColor", initialcolor="red"))
+                              FitColors$CompColor[colIdx] <<- BKGcolor
+                              tkconfigure(FCcolor[[colIdx]], background=BKGcolor)
+                              SetXYplotData()
+                     })
+               }
+           }
+       }
+       #If FitComp = Singlecolor building the widget to change the Baseline FitComp and Fit colors
+       if (XPSSettings$General[8] == "MonoChromeFC"){
+           FCcolor <- ttklabel(T4frame1, text=as.character(1), width=15, font="Serif 8", background=(FitColors$CompColor[1]))
+           tkgrid(FCcolor, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+           tkbind(FCcolor, "<Double-1>", function( ){
+                           FitColors$CompColor[1] <<- as.character(tcl("tk_chooseColor", initialcolor="red"))
+                           tkconfigure(FCcolor, background=FitColors$CompColor[1])
+                           SetXYplotData()
+                     })
+       }
 
 # --- Tab5: Fit Options ---
 
@@ -1602,25 +1727,27 @@ XPSCustomPlot <- function(){
        tkgrid(FitLineCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
        T5frame1 <- ttklabelframe(T5group1, text = "COLOR", borderwidth=3)
-       tkgrid(T5frame1, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
-       FitCol <- tclVar("black")
-       T5obj1 <- ttkcombobox(T5frame1, width = 15, textvariable = FitCol, values = Colors)
-       tkgrid(T5obj1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-       tkbind(T5obj1, "<<ComboboxSelected>>", function(){
-                                  SetXYplotData()
+       tkgrid(T5frame1, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+
+       FitCol <- ttklabel(T5frame1, text=as.character(1), width=15, font="Serif 8", background=FitColors$FitColor[1])
+       tkgrid(FitCol, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       tkbind(FitCol, "<Double-1>", function( ){
+                           FitColors$FitColor[1] <<- as.character(tcl("tk_chooseColor", initialcolor=FitColors$FitColor[1]))
+                           tkconfigure(FitCol, background=FitColors$FitColor[1])
+                           SetXYplotData()
                      })
 
        T5frame2 <- ttklabelframe(T5group1, text = "LINE TYPE", borderwidth=3)
-       tkgrid(T5frame2, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-       FitLty <- tclVar("Solid")
-       T5obj2 <- ttkcombobox(T5frame2, width = 15, textvariable = FitLty, values = LineTypes)
+       tkgrid(T5frame2, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+       FitLty <- tclVar(LType[1])
+       T5obj2 <- ttkcombobox(T5frame2, width = 15, textvariable = FitLty, values = LType)
        tkgrid(T5obj2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T5obj2, "<<ComboboxSelected>>", function(){
                                   SetXYplotData()
                      })
 
        T5frame3 <- ttklabelframe(T5group1, text = "LINE WIDTH", borderwidth=3)
-       tkgrid(T5frame3, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T5frame3, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
        FitLw <- tclVar("1")
        T5obj3 <- ttkcombobox(T5frame3, width = 15, textvariable = FitLw, values = LWidth)
        tkgrid(T5obj3, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1629,8 +1756,8 @@ XPSCustomPlot <- function(){
                      })
 
        T5frame4 <- ttklabelframe(T5group1, text = "SYMBOL", borderwidth=3)
-       tkgrid(T5frame4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-       FitSym <- tclVar("VoidCircle")
+       tkgrid(T5frame4, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
+       FitSym <- tclVar(SType[1])
        T5obj4 <- ttkcombobox(T5frame4, width = 15, textvariable = FitSym, values = SType)
        tkgrid(T5obj4, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        tkbind(T5obj4, "<<ComboboxSelected>>", function(){
@@ -1638,7 +1765,7 @@ XPSCustomPlot <- function(){
                      })
 
        T5frame5 <- ttklabelframe(T5group1, text = "SYMSIZE", borderwidth=3)
-       tkgrid(T5frame5, row = 4, column = 2, padx = 5, pady = 5, sticky="w")
+       tkgrid(T5frame5, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
        FitSymSiz <- tclVar("0.8")
        T5obj5 <- ttkcombobox(T5frame5, width = 15, textvariable = FitSymSiz, values = SymSize)
        tkgrid(T5obj5, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1660,11 +1787,11 @@ XPSCustomPlot <- function(){
                                   if (tclvalue(LegOnOff) == "1") {
 		           	                        Plot_Args$auto.key <<-AutoKey_Args
                                       if (tclvalue(LineOnOff) == "ON") {
-                                         Plot_Args$par.settings$superpose.line$col <<- tclvalue(SpectCol)
-                                         Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LineTypes)
+                                         Plot_Args$par.settings$superpose.line$col <<- SpectCol
+                                         Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LType)
                                       }
                                       if (tclvalue(SymOnOff) == "ON") {
-                                         Plot_Args$par.settings$superpose.symbol$col <<- tclvalue(SpectCol)
+                                         Plot_Args$par.settings$superpose.symbol$col <<- SpectCol
                                          Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[grep(tclvalue(SpectSym),SType)]
                                       }
                                   } else {
@@ -1735,7 +1862,7 @@ XPSCustomPlot <- function(){
        tkbind(LineWdhCK, "<<ComboboxSelected>>", function(){
                                   weight <- as.numeric(tclvalue(LegWeigth))
                                   if (tclvalue(LineOnOff) == "ON") {   #Selected Lines for plotting
-                                      Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LineTypes)
+                                      Plot_Args$par.settings$superpose.line$lty <<- grep(tclvalue(SpectLty), LType)
                                       Plot_Args$par.settings$superpose.line$lwd <<- weight
                                   } else {
                                       Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[grep(tclvalue(SpectSym), SType)]
@@ -1809,7 +1936,7 @@ XPSCustomPlot <- function(){
                                   if  (tclvalue(LegTcol)=="B/W"){
                                        Plot_Args$auto.key$col <<- "black"
                                   } else {
-                                       Plot_Args$auto.key$col <<- tclvalue(SpectCol)
+                                       Plot_Args$auto.key$col <<- SpectCol
                                   }
                                   CtrlPlot()
                      })
