@@ -1108,14 +1108,12 @@ setMethod("XPSpkgCtrl", signature(object = "XPSCoreLine"),
 #'   unprocessed CoreLine. For processed one it plots the RegionToFit defined by
 #'   the Boundaries extremes, the baseline, any FitComponent and Fit if they are present.
 #' @param x The \code{XPS} numeric matrix containing a XPS CoreLine to be plotted
-#' @param y Xdata, Ydata are contained in the XPSCoreLine object
 #' @seealso \code{\link{matplot}}, \code{\link{par}}
 #'
 setGeneric("plot", function(x="XPSCoreLine", y="missing") standardGeneric("plot")) #variables must be x, y, ... coherently with plot defined in R
 #' @title plot
 #' @description method to plot objects of class XPSCoreLine or XPSSample
 #' @param x The \code{XPS} numeric matrix containing a XPS CoreLine to be plotted
-#' @param y (not used) Xdata, Ydata are contained in the XPSCoreLine object
 #' @param type character "l", "p", "b" for line, points or both
 #' @param ltype character, "solid", "dashed"... pattern of the line 
 #' @param color character, "black", "red", "green"... color for the data to be plotted
@@ -1598,14 +1596,12 @@ setMethod("XPSpkgCtrl", signature(object = "XPSSample"),
 #' @title 'plot'
 #' @description function plot for objects of class 'XPSSample'
 #' @param x XPSSample
-#' @param y (not used) Xdata, Ydata are contained in the XPSSample object
 #' @param ...  further parameters to the plot function
 
 setGeneric("plot", function(x="XPSSample", y="missing") standardGeneric("plot"))  #variables must be x, y, ... coherently with plot defined in R
 #' @title 'plot'
 #' @description definition of method 'plot' for objects of class 'XPSSample'
 #' @param x XPSSample
-#' @param y (not used) Xdata, Ydata are contained in the XPSSample object
 #' @param ...  further parameters to the plot function
 #' @aliases missing
 #' @examples
@@ -1629,7 +1625,7 @@ setMethod("plot", signature(x="XPSSample", y="missing"),
 
       ###now prepare to plot a max number of 12 spectra
       rowXcol <- list(product= c(1, 2, 4, 6, 9, 12),
-                  nrow=c(1,1,2,2,3,3),
+                 nrow=c(1,1,2,2,3,3),
                  ncol=c(1,2,2,3,3,4))
       idx <- min(which (rowXcol$product >= min(length(x),12)))
       op <- par(mfrow=c(rowXcol$nrow[idx], rowXcol$ncol[idx]))   #set the plot with N panels orgaized in $nrow rows and $ncol columns

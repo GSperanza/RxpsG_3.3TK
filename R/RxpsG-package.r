@@ -5,9 +5,7 @@
 #' The spectra can be obtained from .pxt and .vms data format from different instruments.'
 #' More generally, any data that is recorded as a list of (x,y) is suitable.
 #'
-#' @import digest latticeExtra minpack.lm signal SparseM tcltk 
-#' @suggests rootSolve
-#'
+#' @import digest latticeExtra minpack.lm rootSolve signal SparseM tcltk 
 #'
 #' @importFrom graphics grconvertX grconvertY arrows axTicks axis box grid
 #' @importFrom graphics layout legend lines locator matlines matplot mtext par plot.new
@@ -38,14 +36,8 @@
 #'
 #' @docType package
 #' @name RxpsG   
-#' @parameter activeSpectIndx
-#' @parameter activeSpectName
-#' @parameter XPSSettings 
-#' @parameter Pkgs 
 NULL
 
-
-   
 
 
 

@@ -75,13 +75,13 @@ XPSAnalysis <- function() {
                     coords <<- unlist(pos)
                     SetCurPos2()  #selection of the zoom area
                 }
-                if (tabMain == 1 && SetZoom == FALSE && BType != "spline") {
+                if (tabMain == 1 && SetZoom == FALSE && BType != "Spline") {
                     coords <<- unlist(pos)
                     SetCurPos1()  #selection of the BaseLine Edges
                 }
-                if (tabMain == 1 && BType == "spline") {
+                if (tabMain == 1 && BType == "Spline") {
                     coords <<- unlist(pos)
-                    SetCurPos2()  #selection of the BaseLine
+                    SetCurPos2()  #plot spline points
                 }
                 if (tabMain == 2 ) {
                     coords <<- unlist(pos)
@@ -167,7 +167,7 @@ XPSAnalysis <- function() {
      xx <- coords[1]
      yy <- coords[2]
 
-     if (BType=="spline") {
+     if (BType=="Spline") {
          splinePoints$x <<- c(splinePoints$x, coords[1])
          splinePoints$y <<- c(splinePoints$y, coords[2])
          Marker$Points <<- splinePoints
@@ -331,7 +331,7 @@ XPSAnalysis <- function() {
          tkmessageBox(message="Select the Base-Line Please", title="WARNING", icon="warning")
          return() 
      }
-     if (BType == "spline" && is.null(splinePoints$x)) { return() }
+     if (BType == "Spline" && is.null(splinePoints$x)) { return() }
 
      Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])
      Object[[coreline]] <<- XPSbaseline(Object[[coreline]], BType, deg, Wgt, splinePoints )
@@ -341,6 +341,9 @@ XPSAnalysis <- function() {
   }
 
   Reset.Baseline <- function(h, ...) {
+     tkconfigure(T1Lab1, text="               ")
+     tkconfigure(T1Lab2, text="               ")
+     tkdestroy(BLBtn)
      if (coreline != 0) {   #coreline != "All spectra"
         if (FreezeLimits == FALSE) {  #ZOOM not activated
            if (Object[[coreline]]@Flags[1] == TRUE){  #Binding Energy scale
@@ -478,8 +481,8 @@ XPSAnalysis <- function() {
          tkmessageBox(message="Please select the BaseLine type!", title="WARNING", icon="warning")
          Ctrl <- -1
          return(Ctrl)
-     } else if (BType == "spline" && length(splinePoints)==0) { #splinePoints not defined skip XPSBaseline()
-         tkmessageBox(message="Please select the spline points with the RIGHT mouse button!", title="WARNING", icon="warning")
+     } else if (BType == "Spline" && length(splinePoints)==0) { #splinePoints not defined skip XPSBaseline()
+         tkmessageBox(message="Please select the spline points with the LEFT mouse button!", title="WARNING", icon="warning")
          splinePoints <<- list(x=NULL, y=NULL)
          Reset.Baseline()
      } else if (hasBoundaries(Object[[coreline]]) == FALSE) {
@@ -533,7 +536,13 @@ XPSAnalysis <- function() {
                                             GetCurPos(SingClick=FALSE)
                                             if (length(splinePoints$x) == 2) {
                                                 BType <<- "linear" #"linear" #plot Linear baseline until splinePoints are selected
-                                                splinePoints <<- point.coords
+                                                decr <- FALSE #Kinetic energy set
+                                                if (Object[[coreline]]@Flags[1] == TRUE) { decr <- TRUE }
+                                                idx <- order(splinePoints$x, decreasing=decr)
+                                                splinePoints$x <<- splinePoints$x[idx] #splinePoints$x in ascending order
+                                                splinePoints$y <<- splinePoints$y[idx] #following same order select the correspondent splinePoints$y
+                                                Object[[coreline]]@Boundaries$x <<- Xlimits <<- c(splinePoints$x[1],splinePoints$x[2]) #set the boundaries of the baseline
+                                                Object[[coreline]]@Boundaries$y <<- c(splinePoints$y[1],splinePoints$y[2])
                                             } else {
                                                 decr <- FALSE #Kinetic energy set
                                                 if (Object[[coreline]]@Flags[1] == TRUE) { decr <- TRUE }
@@ -779,7 +788,9 @@ XPSAnalysis <- function() {
   BaselineType <- NULL
   jj <- 1
   for(ii in 1:length(BaseLines1)){
-      BaselineType[ii] <- ttkradiobutton(T1Frame1, text=BaseLines1[ii], variable=BL, value=BaseLines1[ii], command=function(){ BLSelect() })
+      BaselineType[ii] <- ttkradiobutton(T1Frame1, text=BaseLines1[ii], variable=BL, value=BaseLines1[ii], 
+      command=function(){ 
+      BLSelect() })
       tkgrid(unlist(BaselineType[ii]), row=6, column=ii, padx=5, pady=3, sticky="w")
   }
   LL <- ii
@@ -1009,7 +1020,6 @@ XPSAnalysis <- function() {
      tkgrid( tkcheckbutton(T2Frame4, text=DispTxt[ii], variable=DT, onvalue = ii, offvalue = 0,
           command=function(){ updateOutput() }),
           row = 24, column = ii, padx=5, pady=5, sticky="w")
-#          tclvalue(DispTxt[ii]) <- FALSE # checkbuttons unset
   }
 
   #--- plot type : Residual or simple
@@ -1060,7 +1070,7 @@ XPSAnalysis <- function() {
                   assign("activeSpectName", coreline[2], envir = .GlobalEnv)
                   XPSSaveRetrieveBkp("save")
                   coreline <<- as.integer(coreline[1])
-                  replot()
+                  plot(Object[[activeSpectIndx]])
               })
   tkgrid(saveBtn, row = 28, column = 2, padx=5, pady=5, sticky="w")
 
@@ -1076,7 +1086,7 @@ XPSAnalysis <- function() {
                   XPSSaveRetrieveBkp("save")
                   tkdestroy(MainWindow)
                   coreline <<- as.integer(coreline[1])
-                  plot(Object)
+                  plot(Object[[activeSpectIndx]])
               })
   tkgrid(savexitBtn, row = 29, column = 1, padx=5, pady=5, sticky="w")
 
@@ -1084,7 +1094,6 @@ XPSAnalysis <- function() {
                   EXIT <<- TRUE
                   XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                   assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
-                  plot(Object[[activeSpectIndx]])   #plot selected XPSSample with all the corelines
                   XPSSaveRetrieveBkp("save")
                   tkdestroy(MainWindow)
                   plot(Object)
@@ -1111,9 +1120,7 @@ XPSAnalysis <- function() {
   tcl(nbComponents,"select", 0)  #Set NB page=1, Select works on base 0
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0
   tcl("update", "idletasks") #Complete the idle tasks
-#  tkwait.window(MainWindow)
-
-
+  tkwait.window(MainWindow)
 }
 
 

@@ -130,7 +130,8 @@ XPSPreferences <- function() {
    WSizeLabel <- ttklabel(frameDim, text=txt)
    tkgrid(WSizeLabel, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
    WS <- tclVar(WinSize)
-   WindowSize <- ttkscale(frameDim, from=3, to=15, value=as.numeric(WinSize), variable=WS, orient="horizontal", length=300)
+   WindowSize <- tkscale(frameDim, from=5, to=15, tickinterval=1, value=as.numeric(WinSize), 
+                         variable=WS, orient="horizontal", showvalue=FALSE, length=300)
    tkgrid(WindowSize, row = 2, column = 1, padx = 5, pady = 3, sticky="we")
    tkbind(WindowSize, "<ButtonRelease>", function(K){
                          WinSize <<- as.numeric(tclvalue(WS))
@@ -145,8 +146,8 @@ XPSPreferences <- function() {
    for(ii in 1:LL){
        SysRadio <- ttkradiobutton(frameDev, text=OSList[ii], variable=OS, value=OSList[ii],
                          command=function(){
-                         if (tclvalue(OS) == "Linux") {Gdev <- "X11(type='cairo', xpos=700, ypos=5, title=' ')"}
-                         if (tclvalue(OS) == "Windows") {Gdev <- "x11(xpos=700, ypos=5, title=' ')"} #top right position
+                         if (tclvalue(OS) == "Linux") {Gdev <- "X11(type='cairo', xpos=600, ypos=5, title=' ')"}
+                         if (tclvalue(OS) == "Windows") {Gdev <- "x11(xpos=600, ypos=5, title=' ')"} #top right position
                          if (tclvalue(OS) == "MacOS") {Gdev <- "quartz(title=' ')"} #quartz() doesn't allow to set the opening position
                     })
        tkgrid(SysRadio, row = ii, column = 1, padx = 5, pady = 2, sticky="w")

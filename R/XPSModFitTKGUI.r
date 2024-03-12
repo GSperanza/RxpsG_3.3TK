@@ -34,8 +34,8 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
            return()
        }
 
-       import::from(FME, modFit)
-       import::from(rootSolve,gradient)
+#       import::from(FME, modFit)
+#       import::from(rootSolve,gradient)
        assign("gradient", gradient, envir=.GlobalEnv)
 
 # ==============================================================
@@ -81,7 +81,7 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 #
 # ===========================================================
 
-   XPSmakeFit <- function(Object, method, ...) {
+   XPSmakeFit <- function(Object, method, modFit, ...) {
 #--- data to fit: curve - baseline
  	     datafit <- data.frame(x = Object@RegionToFit$x,
  				  y = Object@RegionToFit$y - Object@Baseline$y)
@@ -400,19 +400,19 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
    LvMarkBtn <- tkbutton(MFFframe5, text="Lev.Marq.", width=12, command=function(){
                    FitModel <- "Marq"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(LvMarkBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    NwtnBtn <- tkbutton(MFFframe5, text="Newton", width=12, command=function(){
                    FitModel <- "Newton"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(NwtnBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
    PortBtn <- tkbutton(MFFframe5, text="Port", width=12, command=function(){
                    FitModel <- "Port"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(PortBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 #---
@@ -421,25 +421,25 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
    NeldMBtn <- tkbutton(MFFframe6, text="Nelder-Mead", width=12, command=function(){
                    FitModel <- "Nelder-Mead"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(NeldMBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    CGBtn <- tkbutton(MFFframe6, text="Conj.Grad.", width=12, command=function(){
                    FitModel <- "CG"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(CGBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
    BFGSBtn <- tkbutton(MFFframe6, text="BFGS", width=12, command=function(){
                    FitModel <- "BFGS"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(BFGSBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 
    L_BFGSBtn <- tkbutton(MFFframe6, text="L-BFGS-B", width=12, command=function(){
                    FitModel <- "L-BFGS-B"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(L_BFGSBtn, row = 1, column = 4, padx = 5, pady = 5, sticky="w")
 #---
@@ -448,13 +448,13 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
    SannBtn <- tkbutton(MFFframe7, text="SANN", width=12, command=function(){
                    FitModel <- "SANN"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(SannBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    PseudoBtn <- tkbutton(MFFframe7, text="Pseudo", width=12, command=function(){
                    FitModel <- "Pseudo"
-                   FittedObject <<- XPSmakeFit(Object, FitModel,  ...)
+                   FittedObject <<- XPSmakeFit(Object, FitModel, modFit, ...)
               })
    tkgrid(PseudoBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 #---

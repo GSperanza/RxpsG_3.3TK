@@ -890,8 +890,8 @@ XPSConstraints <- function(){
 #                                              }
 #                                          }
 #-------------------------------------------------------------------------------------------------------------------------------
-                                           if (length(component1)==0 || length(component2)==0){
-                                               tkmessageBox(message="Error: Component to link or Reference Component not set!", title ="WRONG COMPONENT SELECTION", icon="error")
+                                           if (length(component1)==0 || component2 == "0"){
+                                               tkmessageBox(message="Error: Parameter-To-Link or Reference-Component not set!", title ="WRONG COMPONENT SELECTION", icon="error")
                                                return()
                                            }
                                            operation <<- "link"

@@ -309,9 +309,9 @@ XPSQuant <- function(){
       totLgth <- sum(lgth)+1
       cat("\n")
 
-
       QTabTxt <<- sprintf("%s %s \n", "   File Name: ", XPSSample@Filename)
-      TabTxt <<- c(TabTxt,txt,"\n")
+      TabTxt <<- c(TabTxt,"   File Name: ", XPSSample@Filename,"\n")
+
       txt <- "-"  #separator
       cell <- printCell("separator", "-","",totLgth,"left")     #call cellprint in modality SEPARATOR  alignment LEFT
       TabTxt <<- c(TabTxt, cell)
@@ -319,9 +319,13 @@ XPSQuant <- function(){
       QTabTxt <<- sprintf("%s \n", QTabTxt)
       TabTxt <<- c(TabTxt,"\n")
 
-      txt <- c("Components", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")
+      txt <- c("Comp.", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")
       cell <- printCell("tableRow", txt, CellB=" ", lgth, "center")
       QTabTxt <<- sprintf("%s %s \n", QTabTxt, cell)
+#      CBrd2 <<- data.frame(Comp="Comp.", Area="Area(cps)", FWHM="FWHM ", RSF="RSF", BE="BE", TOT="TOT(%)", stringsAsFactors=FALSE)
+      CBrd2 <<- data.frame(Comp=" ", Area=" ", FWHM=" ", RSF=" ", BE=" ", TOT=" ", stringsAsFactors=FALSE)
+      CBrd2 <<- rbind(CBrd2, c(" ", " ", " ", " ",  " ", " "))
+
       TabTxt <<- c(TabTxt,cell,"\n")
       cell <- printCell("separator", "-","",totLgth,"left")
       TabTxt <<- c(TabTxt, cell)
@@ -329,57 +333,62 @@ XPSQuant <- function(){
       QTabTxt <<- sprintf("%s \n", QTabTxt)
       TabTxt <<- c(TabTxt,"\n")
 
-  	   for(ii in 1:N_CL){
+  	   kk <- 2
+      for(ii in 1:N_CL){
           indx <- CoreLineIndx[ii]
           if (CLCK[[ii]] == "TRUE") {
               #PEAK data
-              Component <- names(CoreLineComp)[ii]
+              Comp <- names(CoreLineComp)[ii]
               Area <- sprintf("%1.2f", AreaCL[ii])  #round number to 2 decimals and trasform in string
-              RSF <- sprintf("%1.3f",XPSSample[[indx]]@RSF)
+              RSF <- sprintf("%1.3f", XPSSample[[indx]]@RSF)
               Mpos <- NULL
               Mpos <- findMaxPos(XPSSample[[indx]]@RegionToFit)    #Mpos[1]==position of spectrum max,    Mpos[2]==spectrum max value
-              BE <- sprintf("%1.3f",Mpos[1])
+              BE <- sprintf("%1.2f", Mpos[1])
               if (RSF=="0.000") { #RSF not defined (es. Auger, VB spectra...) : cannot make correction for RSF
                  Conc <- sprintf("%1.2f",0)
               } else {
                  Conc <- sprintf("%1.2f",100*NormAreaCL[ii]/AreaTot)
               }
- 		           txt <- c(Component, Area, " ", RSF, BE, Conc )   #total concentration relative to the coreline: FWHM e BE not print
+ 		           txt <- c(Comp, Area, " ", RSF, BE, Conc )   #total concentration relative to the coreline: FWHM e BE not print
+              CBrd2 <<- rbind(CBrd2, as.character(txt))
               cell <- printCell("tableRow", txt, CellB=" ", lgth, "center")
               QTabTxt <<- sprintf("%s %s \n", QTabTxt, cell)                  #this QTabTxt will appear in the Quant widget
               cell <- printCell("tableRow", txt, CellB="|", lgth, "center")
               TabTxt <<- c(TabTxt,cell,"\n")                    #this TabTxt will appear in the R consolle
+
               #FIT COMPONENT's data
               if (hasComponents(XPSSample[[indx]])) {
                  N_comp <- length(CoreLineComp[[ii]]) #number of fit components
                  for(jj in 1:N_comp){ #ii runs on the corelines, jj runs on the fit components
-                    comp <- CoreLineComp[[ii]][jj]
+                    Comp <- CoreLineComp[[ii]][jj]
                     Area <- sprintf("%1.2f",sumComp[ii,jj]) #area of component jj coreline ii
-                    FWHM <- sprintf("%1.2f",XPSSample[[indx]]@Components[[comp]]@param[3,1]) #FWHM component ii
-                    RSF <- sprintf("%1.3f",XPSSample[[indx]]@Components[[comp]]@rsf) #RSF component ii
-                    BE <- sprintf("%1.2f",XPSSample[[indx]]@Components[[comp]]@param[2,1]) #BE component ii
+                    FWHM <- sprintf("%1.2f",XPSSample[[indx]]@Components[[Comp]]@param[3,1]) #FWHM component ii
+                    RSF <- sprintf("%1.3f",XPSSample[[indx]]@Components[[Comp]]@rsf) #RSF component ii
+                    BE <- sprintf("%1.2f",XPSSample[[indx]]@Components[[Comp]]@param[2,1]) #BE component ii
                     if (RSF=="0.000") {
                        Conc <- sprintf("%1.2f",0)
                     } else {
                        Conc <- sprintf("%1.2f",100*AreaComp[ii,jj]/AreaTot)  #Concentration component ii
                     }
-     		             txt <- c(comp, Area, FWHM, RSF, BE, Conc) #make string to print
+     		             txt <- c(Comp, Area, FWHM, RSF, BE, Conc) #make string to print
+                    CBrd2 <<- rbind(CBrd2, as.character(txt))
                     cell <- printCell("tableRow", txt, CellB=" ", lgth, "center") #print string in modality TABLEROW
                     QTabTxt <<- sprintf("%s %s \n", QTabTxt, cell)
                     cell <- printCell("tableRow", txt, CellB="|", lgth, "center") #print string in modality TABLEROW
                     TabTxt <<- c(TabTxt,cell,"\n")
                  }
+                 CBrd2 <<- rbind(CBrd2, c(" ", " ", " ", " ",  " ", " "))
               }
               QTabTxt <<- sprintf("%s \n",QTabTxt)
               TabTxt <<- c(TabTxt,"\n")
-
           }
-       }
+      }
 
-       tcl(QTable, "delete", "0.0", "end") #clears the quant_window
-       tkinsert(QTable, "0.0", QTabTxt) #quantification report in QTable window
-#       tkconfigure(QTable, font=MyFont)
-       cat("\n", TabTxt)
+      tcl(QTable, "delete", "0.0", "end") #clears the quant_window
+      tkinsert(QTable, "0.0", QTabTxt) #quantification report in QTable window
+
+#      tkconfigure(QTable, font=MyFont)
+      cat("\n", TabTxt)
    }
 
    SetRSF <- function(ii){
@@ -577,7 +586,10 @@ XPSQuant <- function(){
       Qgroup[[ii]] <- ttkframe(QNB, borderwidth=0, padding=c(0,0,0,0) )
       tkadd(QNB, Qgroup[[ii]], text=" QUANTIFY ")
 
-      QuantBtn <- tkbutton(Qgroup[[ii]], text=" QUANTIFY ", command=function(){
+      QuantGroup <- ttkframe(Qgroup[[ii]], borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(QuantGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+
+      QuantBtn <- tkbutton(QuantGroup, text=" QUANTIFY ", command=function(){
                            SetRSF()
                            #extract indexes of CoreLines selected for quantification
                            CheckedCL <- names(CoreLineComp)
@@ -645,9 +657,37 @@ XPSQuant <- function(){
                            quant(CoreLineComp)
                  })
       tkgrid(QuantBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-      ww <- as.numeric(tkwinfo("reqwidth", QuantBtn))
+#      ww <- as.numeric(tkwinfo("reqwidth", QuantBtn)) + 15
+      
+      ClipBrdBtn <- tkbutton(QuantGroup, text=" COPY TO CLIPBOARD ", command=function(){
+                           CBrd1 <<- data.frame(A="File Name: ", B=XPSSample@Filename, stringsAsFactors=FALSE)
+                           CBrd1 <<- rbind(CBrd1, c(" ", " "))
+                           rownames(CBrd1) <<- NULL
+                           colnames(CBrd1) <<- NULL
+                           rownames(CBrd2) <<- NULL
+                           colnames(CBrd2) <<- c("Comp.", "Area(cps)", "FWHM", "RSF", "BE(eV)", "TOT.(%)")
+                           for(ii in 1:length(CBrd2)){
+                               NChr <- max(nchar(CBrd2[[ii]]))
+                               CBrd2[[ii]] <<- encodeString(CBrd2[[ii]], width=NChr, quote="", justify=c("right"))
+                               if (NChr < 6 || is.na(NChr)) { #NChr <- 5 }
+                                   CBrd2[[ii]] <- paste(CBrd2[[ii]],"", sep="\t")
+                               }
+                           }
 
-      WriteBtn <- tkbutton(Qgroup[[ii]], text=" WRITE TO FILE ", command=function(){
+                           ClipBoard <- file(description="clipboard")
+                           open(ClipBoard, "w")
+                           write.table(CBrd1, file=ClipBoard, append=TRUE, eol="\n", sep="\t", na="    ",
+                                       dec=".", quote=FALSE, row.names=FALSE, col.names=TRUE )
+                           write.table(CBrd2, file=ClipBoard, append=TRUE, eol="\n", sep="   ", na="    ",
+                                       dec=".", quote=FALSE, row.names=FALSE, col.names=TRUE )
+                           flush(ClipBoard)
+                           close(ClipBoard)
+                           cat("\n Table copied to clipboard")
+                 })
+      tkgrid(ClipBrdBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+#      ww <- ww + as.numeric(tkwinfo("reqwidth", ClipBrdBtn)) + 15
+
+      WriteBtn <- tkbutton(QuantGroup, text=" WRITE TO FILE ", command=function(){
                                           Filename <- unlist(strsplit(QTabTxt[2], ":"))[2]
                                           Filename <- unlist(strsplit(Filename, "\\."))[1]
                                           Filename <- paste(Filename, "txt", sep="")
@@ -665,7 +705,7 @@ XPSQuant <- function(){
                                           }
                                           close(OutFile)
                  })
-      tkgrid(WriteBtn, row = 1, column = 1, padx = ww+15, pady = 5, sticky="w")
+      tkgrid(WriteBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 
       MyFont <- paste(get("XPSSettings", envir=.GlobalEnv)[[1]][1],
                        get("XPSSettings", envir=.GlobalEnv)[[1]][3],
@@ -706,6 +746,8 @@ XPSQuant <- function(){
       CMPCK <<- list()
       SelCMP <<- list()
       QTable <<- list()
+      CBrd1 <<- NULL
+      CBrd2 <<- NULL
       RSFCK <<- list()
       RSF <<- list()
 
@@ -778,6 +820,8 @@ XPSQuant <- function(){
    CMPCK <- list()
    SelCMP <- list()
    QTable <- list()
+   CBrd1 <- NULL
+   CBrd2 <- NULL
 
    RSFCK <- list()
    RSF <- list()
@@ -875,6 +919,5 @@ XPSQuant <- function(){
 
    CoreLineComp <- setNames(CoreLineComp, CoreLineNames)   #the list contains the names of the coreline and the relative FitComponents
    OrigCoreLinComp <- CoreLineComp
-
-#   tkwait.window(Qwin)
+   tkwait.window(Qwin)
 }

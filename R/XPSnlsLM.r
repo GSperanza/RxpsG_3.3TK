@@ -273,7 +273,6 @@ XPSnlsLM <- function (formula, data = parent.frame(), start, jac = NULL,
     res <- .swts * res
     res
   }
-
   NLS <- nls.lm(par = start, fn = FCT, jac = jac, control = control, lower = lower, upper = upper, ...)
   ## previous versions before boundaries were included
   # NLS <- nls.lm(par = start, fn = FCT, jac = jac, control = control, ...)

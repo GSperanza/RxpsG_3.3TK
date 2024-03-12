@@ -39,11 +39,9 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                        }
                     })
 
-#=== SUGGESTED==================================================================
-#Now check installation of optional packages and import optional functions
 
-### Following imports are placed in the macros where call to external functions are used
-
+#====Now check installation of optional packages and import optional functions==
+# The following imports are placed in the macros where call to external functions are used
 if( is.na(match("baseline", Pkgs)) == FALSE ){  #check if the package 'baseline' is installed
 # baseline is not loaded in the NAMESPACE cannot use isNamespaceLoaded
 # cannot use import:: since it requires the library to be listed in the DESCRIPTION imports
@@ -63,9 +61,11 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
    dwt <- wavelets::dwt
    wt.filter <- wavelets::wt.filter
 }
-#===============================================================================
+
 
 #===== Default variable settings =====
+   activeFName <- activeSpectIndx <- activeSpectName <- XPSSettings <- Pkgs <- NULL
+
    FNameList <- ""
    XPSSample <- NULL
    SpectList <- NULL
@@ -116,7 +116,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
   menuBar <- tkmenu(MainWindow)
   tkconfigure(MainWindow, menu = menuBar)
 
-  FileMenu <- tkmenu(menuBar, tearoff=FALSE)
+  FileMenu <- tkmenu(menuBar)
   tkadd(menuBar, "cascade", label = "File", menu = FileMenu)
   if(Sys.info()[1] == "Linux"){
      tkconfigure(menuBar, foreground="blue")   #It works in Linux not in Windows
@@ -182,21 +182,18 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
   tkbind(XS_Tbl, "<Button-3>", function() {   #bind the table elements to the RIGHT mouse button PRESS
       posxy <- tclvalue(tkwinfo("pointerxy", MainWindow))  #read the cursor position
       posxy <- as.integer(unlist(strsplit(posxy, " ")))    #and transform to integer
-      activeFName <<- get_selected_treeview(XS_Tbl)
-      SpectList <- XPSSpectList(activeFName)    #regtrieve the list of CoreLines from the selected XPSSample
-      CLmenu <- tkmenu(XS_Tbl, tearoff=FALSE) #generates a menu container
-#      sapply(SpectList, function(x) tcl(CLmenu, "add", "cascade", label=x, command=function(){  #populate the menu container
-      sapply(SpectList, function(x) tkadd(CLmenu, "command", label=x, command=function(){  #populate the menu container
+      activeFName <<- get_selected_treeview(XS_Tbl)     
+      SpectList <- XPSSpectList(activeFName)    #retrieve the list of CoreLines from the selected XPSSample
+      CLmenu <- tkmenu(XS_Tbl, tearoff=FALSE) #generates a menu container         
+      sapply(SpectList, function(x) tcl(CLmenu, "add", "command", label=x, command=function(){  #populate the menu container  
                             CL <- unlist(strsplit(x, "\\."))
                             activeSpectIndx <<- as.integer(CL[1])
-                            activeSpectName <<- CL[2]
-                            XPSSample <- get(activeFName, envir=.GlobalEnv)
                             plot(XPSSample[[activeSpectIndx]])
                             assign("activeSpectName", activeSpectName, envir=.GlobalEnv)
                             assign("activeSpectIndx", activeSpectIndx, envir=.GlobalEnv)
                             XPSFitInfo()
                         }))
-#      tcl(CLmenu, "add", "cascade", label=SpectList)
+
       PopUpMenu <- tkpopup(CLmenu, posxy[1], posxy[2]) #link the container with a popupmenu
    })
 
@@ -752,9 +749,8 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
    XPSSettings$General[6] <- Gdev
    
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
+      tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
       XPSSetWD()
-      tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory",
-                   title="SET THE WORKING DIR!", parent=MainWindow, icon="error")
    } else {
       setwd(XPSSettings$General[7])
    }

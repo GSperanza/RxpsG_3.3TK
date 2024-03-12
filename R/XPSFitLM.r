@@ -142,7 +142,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
     NPrint <- 0
     if (verbose) {NPrint <- 1}
        fit <- NULL
-       cat("\n\n >>> Start Fitting")
+       cat("\n\n >>> Start Fitting \n")
        fit <- try(XPSnlsLM(     #modified nlsLM: same algorithm but avoids fit processing to block upon NON-convergence
                       formula = fmla,
                       data = datafit,
@@ -150,7 +150,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
                       upper = ubound,
                       lower = lbound,
                       algorithm = "LM", #Levenberg-Marquardt
-                      trace = FALSE, #prints residual sum of errors at each iteration
+                      trace = TRUE, #prints residual sum of errors at each iteration
                       control = nls.lm.control(ftol = 1e-10, factor = 0.1, maxiter = 500, nprint = NPrint),
                       ... ), silent=TRUE)
 

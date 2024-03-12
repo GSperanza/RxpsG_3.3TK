@@ -63,24 +63,17 @@ XPSSetGraphDev <- function() {
    tkgrid(WSvalue, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    WS <- tclVar(7)
-   WS_Slider <- ttkscale(frame0, from=3, to=15, variable=WS, orient="horizontal", length=280)
-   tkbind(WS_Slider, "<ButtonRelease>", function(b){
+   WS_Slider <- ttkscale(frame0, from=5, to=15, tickinterval=1, variable=WS,
+                         orient="horizontal", showvalue=FALSE, length=280)
+   tkbind(WS_Slider, "<ButtonRelease>", function(K){
                         WinSize <<- as.numeric(tclvalue(WS))
                         txt <- paste("Graphical Window size: ", WinSize, sep="")
                         tkconfigure(WSvalue, text=txt)
                         graphics.off() #switch off the graphic window
                         O_Sys <- tclvalue(OS)
-                        if (O_Sys == "") {
-                           tclvalue(WS) <- 7
-                           tkconfigure(WSvalue, text="Graphical Window size: 7")
-                           tkmessageBox(message="Select the Operating System Please!", title="WARNING", icon="warning")
-                           return()
-                        }
                         switch (O_Sys,
-                            "Linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )"
-                                         X11(type='cairo', xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )},
-                            "Windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )"
-                                                  x11(xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize ) },
+                            "Linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
+                            "Windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
                             "macOS" = {VerMajor <- as.numeric(version[6])
                                          VerMinor <- as.numeric(version[7])
                                          if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
@@ -91,7 +84,6 @@ XPSSetGraphDev <- function() {
                                          }
                                          tkmessageBox(message="Cannot set Graphic Window Dimensions for MacOS", title="WARNING", icon="warning")
                                          import::from(grDevices, quartz)
-                                         Gdev <- "quartz(title= ' ')"
                                          quartz(title= ' ')   #quartz() does allow setting the opening position
                                          return()
                                    })
