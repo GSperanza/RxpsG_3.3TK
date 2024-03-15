@@ -37,8 +37,8 @@ XPSSprucing <- function() {
                 } else {
                     Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
                     Xlim2 <- max(range(Object[[coreline]]@.Data[[1]]))
-                    Ylim1 <- 0.95*min(range(Object[[coreline]]@.Data[[2]]))
-                    Ylim2 <- 1.05*max(range(Object[[coreline]]@.Data[[2]]))
+                    Ylim1 <- min(range(Object[[coreline]]@.Data[[2]]))
+                    Ylim2 <- max(range(Object[[coreline]]@.Data[[2]]))
 
                     if (pos$x < Xlim1 ) {pos$x <- Xlim1}
                     if (pos$x > Xlim2 ) {pos$x <- Xlim2}

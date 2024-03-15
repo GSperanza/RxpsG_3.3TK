@@ -18,6 +18,7 @@
 
 
 XPSFilter <- function() {
+#   import::from(signal, filter, freqz, sgolay, hamming, fir1, filtfilt, butter)
 
    PlotData <- function() {
       XXX <- cbind(unlist(Object@.Data[1]))
@@ -104,6 +105,7 @@ XPSFilter <- function() {
          NN <- ceiling(NN/2)      #range to evaluate average at data edges
       }
       SaveAmpli <<- FALSE         #do not preserve ampliture range of original data
+#XX <-cbind(seq(1:LL))
       Data[1:(2*FiltLgth)] <- rep(Data[(2*FiltLgth)],2*FiltLgth)
       Data <- normalize(Data)
       Data <- Data*(max(Object@.Data[[2]]) - min(Object@.Data[[2]]))
@@ -115,6 +117,9 @@ XPSFilter <- function() {
             oldSS <- SS
             Data <- Data*AA+dAA
             SS <- sum(RawData-Data)^2/LL
+#matplot(x=XX, y=cbind(RawData, Data), type="l", lty=1, col=c("black", "red"))
+#cat("\n ==> SS = ", SS)
+#scan(n=1, quiet=TRUE)
             if (abs(SS-oldSS) < 10^-4) {
                 break
             }
@@ -285,6 +290,7 @@ XPSFilter <- function() {
          Filtered <<- normalize(Filtered)
 
          Filtered <<- Filtered-0.5*(mean(Filtered[1:5]) + mean(Filtered[(LL-5):LL])) #shift the Filtered edges at zero
+#         BackGnd <- BkgSubtraction(Object@.Data[[2]])
          BkgSubtraction(Object@.Data[[2]])
          SaveAmpli <<- TRUE
          normalize(Object@.Data[[2]]-BackGnd)
@@ -359,7 +365,7 @@ XPSFilter <- function() {
       RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #NPad Padding at edges
       LL_DF <- length(RawData)     #LL_DF is even
       ##Filtering
-      stopF <- 0.5* FiltLgth/15   #for rejection noise=1 the cutoff freq=0.5=Nyquist Freq., for rejection=15 cutoff freq=1/15*0.5 = 0.0333
+      stopF <- 0.5* (15-FiltLgth)/15   #for rejection noise=1 the cutoff freq=0.5=Nyquist Freq., for rejection=15 cutoff freq=1/15*0.5 = 0.0333
       dF <- 0.5/(LL_DF*0.5)               #FFT is composed by LL_DF/2 points; from 1+LL_DF/2 to LL_DF the FFT is specular to the first half
       freq <- seq(from=0, to=0.5, by=dF)  #frequency axis from 0 to 0.5 step dF same length of RawData
       idx <- length(which(freq <= stopF)) #idx is the array index corresponding to frequency <= stopF
@@ -383,6 +389,7 @@ XPSFilter <- function() {
 
    msSmoothMRA <- function(mra, dwt){
       FiltInfo <<- paste("Wavelets filter, N.wavelets: ", tclvalue(F5WavN), " Degree: ", tclvalue(F5Deg), sep="")
+#      import::from(wavelets, mra, dwt) #cannot use import::here because rootSolve not listed in DESCRIPTION
       RawData <<- NULL
       Filtered <<- NULL
       coeff <<- NULL
@@ -1103,16 +1110,18 @@ XPSFilter <- function() {
                         SpectIndx <- get("activeSpectIndx",.GlobalEnv)
                         Symbol <- get("activeSpectName",.GlobalEnv)
                         CLNames <- names(FName)
-                        LL <- length(FName) 
-                        chrPos <- FindPattern(CLNames[SpectIndx], "ST.") #Are we working on a Smoothing-Test core line?
-                        if (length(chrPos[2]) > 0) {                     #Smoothing-Test Coreline IS PRESENT
+                        LL <- length(FName)
+#                        chrPos <- regexpr("ST.", CLNames[SpectIndx])    #Are we working on a Smoothing-Test core line?
+                        chrPos <- FindPattern(CLNames[SpectIndx], "ST.")
+                        if (length(chrPos[2]) > 0) {                               #Smoothing-Test Coreline IS PRESENT
                            TestIdx <- SpectIndx
-                           Info <- FName[[TestIdx]]@Info                 #update filter information
+                           Info <- FName[[TestIdx]]@Info                #update filter information
                            LL <- length(Info)
                            Info[LL] <- paste("   ::: Smoothing Test: ", FiltInfo, sep="")
                            FName[[TestIdx]]@Info <<- Info
-                        } else {  
-                           chrPos <- FindPattern(CLNames, "ST.")         #Find the index if there is a "ST." identifying the Smoothing-Test coreline
+                        } else {
+#                           chrPos <- which(regexpr("ST.", CLNames) > 0)  #Find the index if there is a "ST." identifying the Smoothing-Test coreline
+                           chrPos <- FindPattern(CLNames, "ST.")
                            if (length(chrPos[2])==0) {                   #Smoothing-Test coreline is NOT present
                               TestIdx <- LL+1                            #Smoothing-Test coreline is added to FName as a new coreline
                               FName[[TestIdx]] <<- FName[[SpectIndx]]    #We are testing a filter on a coreline and save results in the Smoothing-Test coreline
@@ -1141,6 +1150,7 @@ XPSFilter <- function() {
                            FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                         }
                         assign(ActiveFName, FName,envir=.GlobalEnv)      #Save the modified XPSSample in the globalEnv
+#                        assign("activeSpectIndx", TestIdx, envir=.GlobalEnv)  #set the activeSpectIndx be the smoothed core line
                         RawData <<- NULL
                         Filtered <<- NULL
                         BackGnd <<- 0

@@ -7,7 +7,7 @@
 
 #' @title XPSResetAnalysis
 #' @description XPSResetAnalysis function resets the analysis performed
-#    on objects of class XPSCoreline
+#'    on objects of class XPSCoreline
 #'   Function to delete individual elements of a Coreline analysis:
 #'   resets only the Best Fit;
 #'   resets an single or all the Fitting Components;

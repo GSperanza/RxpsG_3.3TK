@@ -124,7 +124,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
 
 #--- link: index indicates the param to drop since linked
 	   index <- NULL
-    # drop the variable from fit paramter list
+           # drop the variable from fit paramter list
 	   for (number in seq_along(Object@Components)) {
 		     if (length(Object@Components[[number]]@link)) {
 	   	   		for (idx in seq_along(slot(Object@Components[[number]],"link"))) {
@@ -152,11 +152,9 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
                       algorithm = "LM", #Levenberg-Marquardt
                       trace = TRUE, #prints residual sum of errors at each iteration
                       control = nls.lm.control(ftol = 1e-10, factor = 0.1, maxiter = 500, nprint = NPrint),
-                      ... ), silent=TRUE)
+                      ... ), silent=FALSE)  #silent=FALSE => report error messages
 
-      # if no-error update parameters
-
-
+# if no-error update parameters
        if ( ! identical(class(fit), "try-error") )  {
 #	        if (show_summary) print(summary(fit)) # summary
 #--- fit coefficients
@@ -190,7 +188,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
                 index <- Object@Components[[idx]]@link[[ii]]$position
                 tmpfit[index] <- value
              }
-	         }
+	  }
 
 #--- update start values
           IndexNamesOftmpfit <- as.numeric(gsub("[^0-9]", "", names(tmpfit)))
@@ -206,6 +204,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
                                                     x=Object@RegionToFit$x,
                                                     y=Object@Baseline$y)
           }
+
 
 #--- update slot Fit
    	      Object@Fit$y <- fitted(fit)  #fitted(fit) computes the fitting function using the best fit parameters
