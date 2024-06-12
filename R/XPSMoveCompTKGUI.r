@@ -43,7 +43,7 @@ XPSMoveComp <- function(){
                     Xindx <- which(Object@RegionToFit[[1]] > xx-Estep/2 & Object@RegionToFit[[1]] < xx+Estep/2)
                     yy_BasLin <- yy-Object@Baseline$y[Xindx]  #spectral intensity at xx without Baseline
                     coords <<- c(xx, yy, yy_BasLin)
-                    LBmousedown()  #selection of the BaseLine Edges
+                    LBmousedown()
                 }
             }
        }
@@ -253,7 +253,7 @@ XPSMoveComp <- function(){
                    FitComp <<- ttkradiobutton(MCFrame3 , text=ComponentList[[(jj+NN)]], variable=FC,
                                 value=ComponentList[(jj+NN)], command=function(){
                                 FComp <<- tclvalue(FC)
-#                                cat("\n selected component:", FComp)
+                                cat("\n selected component:", FComp)
                                 FComp <<- as.numeric(unlist(strsplit(FComp, split="C")))   #index selected component
                                 FComp <<- FComp[2]
                                 xx <- Object@Components[[FComp]]@param[2,1] #component position mu
@@ -282,7 +282,7 @@ XPSMoveComp <- function(){
            }
            tclvalue(FC) <- FALSE
        }
-       if (LL == 1){    #gradio works with at least 2 items
+       if (length(ComponentList) == 1){    #gradio works with at least 2 items
            FC <<- tclVar(FALSE)
            FitComp <<- tkcheckbutton(MCFrame3 , text=ComponentList[[1]], variable=FC, onvalue = ComponentList[[1]],
                             offvalue = 0, command=function(){
@@ -294,7 +294,6 @@ XPSMoveComp <- function(){
                                 FComp <<- as.numeric(unlist(strsplit(FComp, split="C")))   #index selected compoent
                                 FComp <<- FComp[2]
                                 xx <- Object@Components[[FComp]]@param[2,1] #component position mu
-                                yy <- Object@Components[[FComp]]@param[1,1] #component height h
                                 Rng <- range(Object@RegionToFit[[1]])
                                 if (xx < Rng[1]) {xx <- Rng[1]}
                                 if (xx > Rng[2]) {xx <- Rng[2]}
@@ -303,7 +302,7 @@ XPSMoveComp <- function(){
                                 yy <- yy+Object@Baseline$y[Xindx]  #spectral intensity + Baseline at point xx
                                 coords[1] <<- xx
                                 coords[2] <<- yy
-                                refresh <<- TRUE    #cancel previous component markers
+                                refresh<<-TRUE    #cancel previous component markers
                                 replot()   #plot spectrum only
                                 refresh <<- FALSE #now plot spectrum + component marker
                                 replot()
@@ -312,7 +311,7 @@ XPSMoveComp <- function(){
                                 }
                                 GetCurPos(SingClick=FALSE)
                        })
-           tkgrid(FitComp, row = 5, column = 1, padx = 5, pady=5, sticky="w")
+           tkgrid(FitComp, row = 5, column = ii, padx = 5, pady=5, sticky="w")
        }
        txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
                     "\n=> Left click with the mouse to enter the cursor coordinates.",
@@ -328,6 +327,7 @@ XPSMoveComp <- function(){
 
   LoadCoreLine <- function(){
       XPSSample <<- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
+      Indx <<- activeSpectIndx
       Object <<- XPSSample[[Indx]]
       Xlimits <<- range(Object@RegionToFit$x)
       Ylimits <<- range(Object@RegionToFit$y)
@@ -335,8 +335,8 @@ XPSMoveComp <- function(){
       Object@Boundaries$y <<- Ylimits
       point.coords$x <<- Xlimits #set original X range
       point.coords$y <<- Ylimits #set original Y range
+
       ComponentList <<- names(slot(Object,"Components"))
-      plot(Object)
       if (length(ComponentList)==0) {
           tkmessageBox(message="ATTENTION NO FIT FOUND: change coreline please!" , title = "WARNING",  icon = "warning")
           return()
@@ -367,8 +367,8 @@ XPSMoveComp <- function(){
       CNames <- c("Start", "Min", "Max")
       fitParam <<- as.matrix(fitParam) #this is needed to construct correctly the data.frame
       fitParam <<- data.frame(fitParam, stringsAsFactors=FALSE) #in the dataframe add a column with variable names
-      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames,
-                               RowNames=ParNames, Width=15, Env=environment(), parent=NULL)
+      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames, 
+                               Width=15, Modify=TRUE, Env=environment(), parent=NULL)
 #--- Save changes ---
       Object@Components[[FComp]]@param <<- fitParam #save parameters in the slot of XPSSample
       XPSSample[[Indx]] <<- Object
@@ -399,10 +399,8 @@ XPSMoveComp <- function(){
   }
 
   reset.vars <- function(){
-     XPSSample <<- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
-     Indx <<- 1
+     Indx <<- 2
      assign("activeSpectIndx", 1, envir=.GlobalEnv)
-     if(activeSpectIndx > length(XPSSample)) { Indx <<- 1 }
      OldXPSSample <<- XPSSample
      Object <<- XPSSample[[Indx]]
      SpectName <<- NULL
@@ -413,7 +411,7 @@ XPSMoveComp <- function(){
      if (is.null(FitComp) == FALSE){
          tkdestroy(FitComp)
      }
-     UpdateCompMenu <<- TRUE     
+     UpdateCompMenu <<- TRUE
      coords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
      CompCoords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
 
@@ -422,7 +420,7 @@ XPSMoveComp <- function(){
      NoFit <<- FALSE
      ShowMsg <<- TRUE
      WinSize <<- as.numeric(XPSSettings$General[4])
-     hscale <<- hscale <- as.numeric(WinSize)
+     hscale <<- as.numeric(WinSize)
 
      if (length(ComponentList)==0) {
         tkmessageBox(message="ATTENTION NO FIT FOUND: change coreline please!" , title = "WARNING",  icon = "warning")
@@ -435,6 +433,11 @@ XPSMoveComp <- function(){
 
 
 # --- Variable definitions ---
+     activeFName <- get("activeFName", envir = .GlobalEnv)
+     if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+         tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+         return()
+     }
      XPSSample <- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
      if (exists("activeSpectIndx")){
         Indx <- activeSpectIndx
@@ -497,7 +500,7 @@ XPSMoveComp <- function(){
 
 #--- Widget ---
      MCWindow <- tktoplevel()
-     tkwm.title(MCWindow,"XPS MOVE FIT COMPONENT")
+     tkwm.title(MCWindow,"XPS ANALYSIS")
      tkwm.geometry(MCWindow, "+100+50")   #position respect topleft screen corner
      tkbind(MCWindow, "<Destroy>", function(){
                            EXIT <<- TRUE
@@ -516,16 +519,11 @@ XPSMoveComp <- function(){
      XPS.Sample <- ttkcombobox(MCFrame1, width = 15, textvariable = XS, values = FNameList)
      tkgrid(XPS.Sample, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
      tkbind(XPS.Sample, "<<ComboboxSelected>>", function(){
+                           activeFName <<- tclvalue(XS)
+                           assign("activeFName", activeFName, envir=.GlobalEnv)
+                           XPSSample <<- get(activeFName, envir=.GlobalEnv)
                            reset.vars()
-                           ActFName <- tclvalue(XS)
-                           assign("activeFName", ActFName, envir=.GlobalEnv)
-                           XPSSample <<- get(ActFName, envir=.GlobalEnv)
-                           Indx <<- activeSpectIndx
-                           if(activeSpectIndx > length(XPSSample)) { Indx <<- 1 }
-                           Object <<- XPSSample[[Indx]]
-                           SpectList <- XPSSpectList(activeFName)
                            tkconfigure(Core.Lines, values = SpectList)
-                           tclvalue(CL) <<- ""
                            refresh <<- FALSE #now plot also the component marker
                            Xlimits <<- range(Object@RegionToFit$x)
                            Ylimits <<- range(Object@RegionToFit$y)
@@ -738,7 +736,9 @@ XPSMoveComp <- function(){
      WidgetState(LMFitbutton, "normal")
      WidgetState(MFFitbutton, "normal")
      WidgetState(RSTbutton, "normal")
-#     tkevent.generate(MCWindow$widget, "<Expose>", when="now") #forces the MCWindow to be exposed
+     if (length(ComponentList) > 0) {
+         ComponentMenu()
+     }
 }
 
 

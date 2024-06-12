@@ -98,6 +98,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 #----- OverlayEngine FUNCTIONS -----
 
 #--- Define a NEW XPSSample containing all the spectra to be plotted with related fits (if present)
+    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
     if (length(SelectedNames$XPSSample) == 0) { return() } #no selected XPSSamples to plot
     overlayXPSSample <- new("XPSSample")
     LL<-length(SelectedNames$XPSSample)
@@ -157,6 +158,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     NXPSSamp <- idx-1
 
 # set Titles and axis labels
+    activeFName <- get("activeFName", envir=.GlobalEnv)       #load the active XPSSample
     FName <- get(activeFName, envir=.GlobalEnv)               #load the active XPSSample
     SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)     #load the active spectrum index
     SpectName <- get("activeSpectName", envir=.GlobalEnv)     #load the active spectrum name
@@ -192,7 +194,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 
 #--- Switch BE/KE scale
     if (PlotParameters$SwitchE) {
-       XEnergy<-get("XPSSettings", envir=.GlobalEnv)$General[5] #the fifth element of the first column of XPSSettings
+       XEnergy <- XPSSettings$General[5] #the fifth element of the first column of XPSSettings
        XEnergy<-as.numeric(XEnergy)
        Plot_Args$xlim<-XEnergy-Plot_Args$xlim  #Transform X BE limits in X KE limits
        for (idx in 1:XPSSampLen) {
@@ -221,16 +223,21 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     if (PlotParameters$Align) {
        LL<-length(Y)
        if ( all(sapply(Y, function(z) !is.na(charmatch("BASE", names(z))))) ) {
-			       minybase <- sapply(Y, function(z) min(z$BASE))
+			       minybkg <- sapply(Y, function(z) min(z$BASE))
 			       for (idx in 1:LL) {
-			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybase[idx])
+			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
 		       	}
        } else {
-          for (idx in 1:LL) {
-              Y[[idx]] <- lapply(Y[[idx]], function(z) {
-	                               return( rescale(z, newrange = c(0, diff(range(z))) ) )
-	                         })
-          }
+          minybkg <- sapply(Y, function(z){
+                           LL1 <- length(z$MAIN)
+                           while(LL1-K < 0){
+                                 K <- K/2
+                           }
+                           min(mean(z$MAIN[1:10]), mean(z$MAIN[(LL1-10):LL1]))
+                       })
+          for(idx in 1:LL) {
+			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
+		       	}
        }
     }
 
@@ -589,37 +596,30 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                graph <<- AcceptedGraph
                plot(graph)
                if (! is.null(TextPosition$x) && ! is.null(TextPosition$y)){
-                   AnnotationData <- list(x0 = TextPosition$x,
-                                                y0 = TextPosition$y,
-                                                labels = AnnotateText,
-                                                cex = TextSize,
-                                                col = TextColor,
-                                                adj = NA)
+                   graph <<- graph + layer(data=list(x0=TextPosition$x, y0=TextPosition$y, labels=AnnotateText,
+                                       cex=TextSize, col=TextColor),
+                                       panel.text(x0, y0, labels=labels, cex=cex, col=col)
+                                      )
 
-                   graph <<- graph + latticeExtra::layer(data = AnnotationData,
-                                                panel.text(x = x0, y = y0, pos=0,
-                                                labels = labels, cex=cex, col=col,
-                                                adj = c(-1, -1)), force=TRUE)
                }
-
                if (! is.null(ArrowPosition0$x) && ! is.null(ArrowPosition1$y)){
-                   AnnotationData <- list(x0 = ArrowPosition0$x,
-                                                y0 = ArrowPosition0$y,
-                                                x1 = ArrowPosition1$x,
-                                                y1 = ArrowPosition1$y,
-                                                col = TextColor)
-                   graph <<- graph + latticeExtra::layer(data = AnnotationData, panel.points(x = x0, y = y0, type="p", cex=1.1, pch=20, col=col))
-                   graph <<- graph + latticeExtra::layer(data = AnnotationData, panel.arrows(x0 = x0, y0 = y0,
-                                                   x1 = x1, y1 = y1, length = 0.07, col = col))
+                   graph <<- graph + layer(data = list(x0=ArrowPosition0$x, y0=ArrowPosition0$y,
+                                                  cex=1.1, pch=20, col=TextColor),
+                                                  panel.points(x0, y0, pch=20, cex=cex, col=col)
+                                          )
+                   graph <<- graph + layer(data = list(x0=ArrowPosition0$x, y0=ArrowPosition0$y,
+                                                  x1=ArrowPosition1$x, y1=ArrowPosition1$y,
+                                                  length = 0.07, col=TextColor),
+                                                  panel.arrows(x0, y0, x1, y1, length = length, col = col)
+                                          )
                    ArrowPosition0 <<- ArrowPosition1 <<- list(x=NULL, y=NULL)
                }
-
-               trellis.unfocus()
                plot(graph)
+               trellis.unfocus()
        }
 
        ConvertCoords <- function(pos){
-               X1 <- min(Xlim)  #Xlim, Ylim parameters passed to XPSLattAnnotate()
+               X1 <- min(Xlim)  
                if (PlotParameters$Reverse) {
                    X1 <- max(Xlim)   #Binding Energy Set
                }
@@ -693,6 +693,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
        TxtButt <- tkbutton(Anframe2, text=" TEXT POSITION ", command=function(){
                             if (is.null(AnnotateText)){
                                 tkmessageBox(message="Set Label Text Please", title="WARNING", icon="warning")
+                                return()
                             }
                             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
                             pos <- list(x=NULL, y=NULL)
@@ -710,10 +711,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             TextColor <<- tclvalue(TCOLOR)
                             if (is.na(TextColor)) {TextColor <<- "black"}
 
-                            tkdestroy(AnnotePosition)
                             txt <- paste("Text Position: X = ", round(TextPosition$x, 1), "  Y = ", round(TextPosition$y, 1), sep="")
-                            AnnotePosition <- ttklabel(Anframe2, text=txt)
-                            tkgrid(AnnotePosition, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+                            tkconfigure(AnnotePosition, text=txt)
                             WidgetState(Anframe1, "normal")
                             WidgetState(Anframe2, "normal")
                             WidgetState(Anframe3, "normal")
@@ -770,7 +769,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
                             pos <- grid.locator(unit = "points")
                             ArrowPosition0 <<- ConvertCoords(pos)
-                            panel.points(x = ArrowPosition0$x, y = ArrowPosition0$y, type="p", cex=1.1, pch=20, col=TextColor)
+                            panel.points(x = ArrowPosition0$x, y = ArrowPosition0$y, cex=1.1, pch=20, col=TextColor)
                             pos <- grid.locator(unit = "points") #first mark the arrow start point
                             ArrowPosition1 <<- ConvertCoords(pos)
                             WidgetState(Anframe1, "normal")

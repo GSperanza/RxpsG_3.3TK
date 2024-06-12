@@ -1,3 +1,22 @@
+#CoreLineCK[[ii]] == pagina del notebook
+#
+#CLboxBtn[[ii]] == ttkcheckbutton(CoreLines)
+#CL_var <- tclVar(1)  1=checked  0=unchecked
+#CLCK[[ii]]  == TRUE checked   FALSE unchecked
+#
+
+#ComponentCK[[ii]] <<- lapply(genera component chkBox) DA ELIMINARE
+
+#CMPboxBtn[[ii]] <<- ttkcheckbutton(CL_FitComp)
+#CMP_var <- tclVar(1) # 0 unchecked  1 checked
+#SelCMP[[ii]][jj] <<- list(CMP_var) #list() needed to correctly save CMP_var in SelCMP
+#   NON E' POSSIBILE AVERE DIRETTAMENTE SelCMP[[ii]][jj] <- tclVar(1)
+#CMPCK[[ii]] <<- valori componenti selezionate == "C1", "C3", "C4"...
+
+
+
+
+
 #Function to perform quantifications on XPS spectra
 #allowing selection of corelines and fit components
 #for the computation of the atomic concentrations.
@@ -25,8 +44,7 @@ XPSQuant <- function(){
    RetrivePE <- function(CL=NULL){  #Retrieve the PE value from the CL coreline information slot
       PEnergy <- NULL
       if(is.null(CL)){
-         LL <- length(XPSSample)
-         for(ii in 1:LL){
+         for(ii in 1:NCoreLines){
              info <- XPSSample[[ii]]@Info[1]   #retrieve info containing PE value
              xxx <- unlist(strsplit(info, "Pass energy"))[2]  #extract PE value
              PEnergy[ii] <- as.integer(gsub("\\D","", xxx)) # extract numeric characters from xxx = PE value
@@ -36,7 +54,7 @@ XPSQuant <- function(){
                 tkwm.geometry(PEwin, "+200+200")
                 PEgroup1 <- ttkframe(PEwin, borderwidth=0, padding=c(0,0,0,0) )
                 tkgrid(PEgroup1, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
-                txt <- paste("CoreLine ", XPSSample[[ii]]@Symbol, ": \nPass Energy unknown! Please provide the Pass Energy value", sep="")
+                txt <- paste("CoreLine N.",ii, " :", XPSSample[[ii]]@Symbol, ": \nPass Energy unknown! Please provide the Pass Energy value", sep="")
                 tkgrid( ttklabel(PEgroup1, text=txt, font="Serif 12"),
                         row = 1, column = 1, padx = 5, pady = 5, sticky="w")
                 CLPE1 <- tclVar("CoreLine Pass Energy ")  #sets the initial msg
@@ -75,18 +93,15 @@ XPSQuant <- function(){
       return(PEnergy)
    }
 
-   CorrectPE <- function(CheckedCL, CK.PassE, SurPE, CLinePE){
-      idx <- which(CK.PassE == SurPE)   #select all the corelines with PE==160. It is supposed that survey cannot be used for quantification. Only CL extracted from survey can be used
-      LL <- length(idx)
-      for (ii in 1:LL){
-          jj <- CheckedCL[idx[ii]]
-          info <- XPSSample[[jj]]@Info[1]   #retrieve info containing PE value
-          xxx <- strsplit(info, "Pass energy")  #extract PE value
-          PE <- strsplit(xxx[[1]][2], "Iris") #PE value
-          info <- paste(xxx[[1]][1],"Pass energy ", CLinePE, "   Iris", PE[[1]][2], sep="")
-          XPSSample[[jj]]@Info[1] <<- info
-          assign(activeFName, XPSSample, envir=.GlobalEnv)
-      }
+   CorrectPE <- function(CheckedCL, CK.PassE, idx, CLrefPE){
+   #after application of normalization to ReferenceCL intensity 
+   #set PE as the acquisition would be made at PE == PE_ReferenceCL
+       jj <- CheckedCL[idx]
+       info <- XPSSample[[jj]]@Info[1]   #retrieve info containing PE value
+       xxx <- strsplit(info, "Pass energy")  #extract PE value
+       PE <- strsplit(xxx[[1]][2], "Iris") #PE value
+       info <- paste(xxx[[1]][1],"Pass energy ", CLrefPE, "   Iris", PE[[1]][2], sep="")
+       XPSSample[[jj]]@Info[1] <<- info
    }
 
 
@@ -102,20 +117,36 @@ XPSQuant <- function(){
 # Different PE leads to markedly different signal intensities.
 # Let A1 = area of C1s at PE=160,  A2 = area of C1s at PE=20
 # It has discovered that a simple normalization for the PE: A1/160, A2/20   does not work
-# In htis function a high resolution-Coreline (lower PE) is compared with the same spectrum 
+# In this function a high resolution-Coreline (lower PE) is compared with the same spectrum
 # from the survey and a proportion coeff. is computed
 # This proportion coeff. is used to normalize Corelines acquired at different PE.
 
 #variables
+
+      GetArea <- function(Object, Idx){
+         BaseLine <- NULL
+         Idx <- sort(Idx, decreasing=FALSE)
+         idx1 <- Idx[1]
+         idx2 <- Idx[2]
+         DY <- (Object[[2]][idx2] - Object[[2]][idx1])/(idx2-idx1-1)   #energy step
+         for(ii in 1:(idx2-idx1+1)){
+             BaseLine[ii] <- Object[[2]][idx1]+(ii-1)*DY #this is the linear baseline
+         }
+         E_stp <- abs(Object[[1]][(idx1+1)]-Object[[1]][idx1])
+         Area <- sum(Object[[2]][idx1:idx2] - BaseLine)*E_stp    #Area of high resolution coreline
+         return(Area)
+      }
+
+#--- Variables
       PassCL <- NULL
       BaseLine <- NULL
       X <- list()
       Y <- list()
       Area1 <- Area2 <- Area3 <- NULL
-#------
 
-      CLinePE <- min(CK.PassE)
-      txt <- paste("Please Confirm if the Pass Energy of the High-Resolution Core Lines is ", as.character(CLinePE), sep="")
+#---
+      CLrefPE <- min(CK.PassE)
+      txt <- paste("Please Confirm if the Pass Energy of the High-Resolution Core Lines is ", as.character(CLrefPE), sep="")
       answ <- tkmessageBox(message=txt, type="yesno", title="CORE LINE PASS ENERGY", icon="info")
       if (tclvalue(answ) == "no"){
           CLwin <- tktoplevel()
@@ -137,70 +168,53 @@ XPSQuant <- function(){
                    tkconfigure(CL.PassE, foreground="black")
                })
           OKBtn <- tkbutton(CLgroup, text=" OK ", width=12,  command=function(){
-                   CLinePE <<- as.integer(tclvalue(CLPE2))
+                   CLrefPE <<- as.integer(tclvalue(CLPE2))
                    tkdestroy(CLwin)
                })
           tkgrid(OKBtn, row = 3, column = 1, padx=5, pady=5, sticky="w")
           tkwait.window(CLwin)
       }
-      
-      idx <- which(CK.PassE == CLinePE) #select all the corelines acquired at lower PE
-      CLidx <- CheckedCL[idx]  #CL.PE will contains CL indexes which could be in sparse order
+
+      idx <- which(CK.PassE == CLrefPE) #select all the corelines acquired at lower PE
+      CLidx <- CheckedCL[idx]  #CLidx will contains CL indexes which could be in sparse order
       LL <- length(CLidx)
       MaxI <- NULL
 
-#Now find the coreline with max intensity and compare this coreline
+#Now find the Reference coreline with max intensity and compare this coreline
 #with the same in the survey to compute the normalization factor
       for(ii in 1:LL){ #Among the selected corelines finds the one with max intensity
           MaxI[ii] <- max(XPSSample[[CLidx[ii]]]@.Data[[2]])  #find the coreline with max intensity
       }
-      idx <- which(MaxI == max(MaxI))  #index of the coreline with max intensity
-      idx <- CLidx[idx]   #index of the CL with max internsity and acquired with min PE
+      RefIdx <- which(MaxI == max(MaxI))  #index of the coreline with max intensity
+      RefIdx <- CLidx[RefIdx]   #index of the ReferenceCL with max internsity and acquired with min PE
 
-      if(XPSSample[[SurIdx]]@units[1] != XPSSample[[idx]]@units[1]){
-         tkmessageBox(message="WARNING: Wide Spectrum and Core-Lines energy scale units are different. Check please!", title="WARNING", icon="warning")
+      if(XPSSample[[SurIdx]]@units[1] != XPSSample[[RefIdx]]@units[1]){
+         tkmessageBox(message="WARNING: Wide Spectrum and Core-Lines energy scale are different. \nCannot compute the Normalization Factor!", title="WARNING", icon="warning")
          NormCoeff <<- -1
          return()
       }
-      CLName <- XPSSample[[idx]]@Symbol
-      X[[1]] <- unlist(XPSSample[[idx]]@RegionToFit$x) #resume the abscissa
-      Y[[1]] <- unlist(XPSSample[[idx]]@RegionToFit$y)
-      LL <- length(X[[1]])
-      DY <- (Y[[1]][LL] - Y[[1]][1])/(LL-1)   #energy step
-      for (ii in 1:LL){
-          BaseLine[ii] <- Y[[1]][1]+(ii-1)*DY #this is the linear baseline
-      }
-      Y[[1]] <- Y[[1]]-BaseLine
-      E_stp <- abs(X[[1]][2]-X[[1]][1])
-      Area1 <- sum(Y[[1]])*E_stp    #Area of high resolution coreline
-
-      Xlim <- range(X[[1]])  #X range of the selected CL
+      CLName <- XPSSample[[RefIdx]]@Symbol
+      idx1 <- 1
+      idx2 <- length(XPSSample[[RefIdx]]@RegionToFit$x)
+      Area1 <- GetArea(XPSSample[[RefIdx]]@RegionToFit, c(idx1, idx2))
+      #Now find the same Reference CL in survey and compute the Area2
+      Xlim <- range(XPSSample[[RefIdx]]@RegionToFit$x)  #X range of the selected CL
       Xlim <- sort(Xlim, decreasing=FALSE)
       Xlim[1] <- Xlim[1]-2   #extend the CL X-range for higher PE (maybe PE=160eV)
       Xlim[2] <- Xlim[2]+2   #extend the CL X-range for higher PE
-      if (XPSSample[[idx]]@Flags[1]==TRUE) {Xlim <- c(Xlim[2], Xlim[1])} #Binding energy scale
+      if (XPSSample[[RefIdx]]@Flags[1]==TRUE) {Xlim <- c(Xlim[2], Xlim[1])} #Binding energy scale
       idx1 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[1])
       idx2 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[2])
-      X[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[1]][idx1:idx2])  #X values of coreline extracted from survey
-      Y[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[2]][idx1:idx2])  #Y values of coreline extracted from survey
-      Ylim <- range(sapply(Y, sapply, range))
-      LL <- length(X[[2]])
-
-      BaseLine <- NULL
-      DY <- (Y[[2]][LL] - Y[[2]][1])/(LL-1)   #energy step
-      for (ii in 1:LL){
-          BaseLine[ii] <- Y[[2]][1]+(ii-1)*DY #this is the linear baseline
-      }
-
-      Y[[2]] <- Y[[2]]-BaseLine
-      E_stp <- abs(X[[2]][2]-X[[2]][1])
-      Area2 <- sum(Y[[2]])*E_stp              #Area of the coreline extracted from survey
-
+      Area2 <- GetArea(XPSSample[[SurIdx]]@.Data, c(idx1, idx2))
+      #Compute the NormCoeff to normalize areas of CL from the survey (High PE) to
+      #those acquired a\t high energy resolution (Low PE)
       NormCoeff <<- Area2/Area1
-      X[[3]] <- X[[2]]
-      Y[[3]] <- Y[[2]]/NormCoeff
-      Area3 <- sum(Y[[3]])*E_stp
+
+      XPSSample[[SurIdx]]@.Data[[2]] <<- XPSSample[[SurIdx]]@.Data[[2]]
+      E_stp <- abs(XPSSample[[SurIdx]]@.Data[[1]][2] - XPSSample[[SurIdx]]@.Data[[1]][1])
+      Area3 <- sum(XPSSample[[SurIdx]]@.Data[[2]][idx1:idx2])*E_stp
       cat("\n => Normalization coefficient: ", round(NormCoeff, 3))
+
 #----- Graphics
       if (XPSSample[[SurIdx]]@Flags[[1]]){        #Binding energy set
           Xlim <- sort(Xlim, decreasing=TRUE)
@@ -209,6 +223,15 @@ XPSQuant <- function(){
       }
       XLabel <- XPSSample[[SurIdx]]@units[1]
       YLabel <- XPSSample[[SurIdx]]@units[2]
+      X <- Y <- NULL
+      X[[1]] <- unlist(XPSSample[[RefIdx]]@RegionToFit$x) #resume the abscissa
+      Y[[1]] <- unlist(XPSSample[[RefIdx]]@RegionToFit$y)
+      X[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[1]][idx1:idx2])  #X values of coreline extracted from survey
+      Y[[2]] <- unlist(XPSSample[[SurIdx]]@.Data[[2]][idx1:idx2])  #Y values of coreline extracted from survey
+      X[[3]] <- X[[2]]
+      Y[[3]] <- Y[[2]]/NormCoeff
+      Ymax <- max(sapply(Y, function(x) max(x)))
+      Ylim <- c(0, Ymax)
       LL <- max(sapply(X, length))
       X <- sapply(X, function(x) {length(x)<-LL   #insert NAs if the length of X[] < LL
                                   return(x)})
@@ -216,32 +239,108 @@ XPSQuant <- function(){
                                   return(x)})
       X <- matrix(unname(unlist(X)), ncol=3)      #transform list in matrix
       Y <- matrix(unname(unlist(Y)), ncol=3)
+
       txt <- paste("Normalization coeff. computed on ", CLName, sep="")
-      matplot(x=X, y=Y, xlim=Xlim, type="l", lty=1, lwd=1, col=c("black","green","red"), main=txt, xlab=XLabel, ylab=YLabel)
+      matplot(x=X, y=Y, xlim=Xlim, ylim=Ylim, type="l", lty=1, lwd=1, col=c("black","green","red"), main=txt, xlab=XLabel, ylab=YLabel)
       txt <- c("High res. CL", "Extracted CL ", "Normalized CL")
-      legend(x=Xlim[1], y=Ylim[2]/1.2, legend=txt, text.col=c("black","green","red"))
+      legend(x=Xlim[1], y=Ylim[2], legend=txt, text.col=c("black","green","red"))
       txt <- paste(" Check the graph. The Integral Area of RED Normalized Spectrum \n must be EQUAL to the Integral Area of and BLACK Spectrum", sep="")
       answ <- tkmessageBox(message=txt, type="yesno", title="Compare HighRes and Normalized Spectra", icon="warning")
+
       if (tclvalue(answ) == "yes") {
+          #Now normalize areas of CL extracted from survey
           SurPE <- RetrivePE(XPSSample[[SurIdx]]) # Retrieve PE used for the survey
           idx <- which(CK.PassE == SurPE)
-          idx <- CheckedCL[idx] #retrieve the index of the selected corelines having PE=SurPE.
-           for(ii in idx){
-              XPSSample[[ii]]@.Data[[2]] <<- XPSSample[[ii]]@.Data[[2]]/NormCoeff
-              XPSSample[[ii]]@RegionToFit$y <<- XPSSample[[ii]]@RegionToFit$y/NormCoeff
-              XPSSample[[ii]]@Baseline$y <<- XPSSample[[ii]]@Baseline$y/NormCoeff
-              XPSSample[[ii]]@RegionToFit$NormCoeff <<- NormCoeff
-              if(hasComponents(XPSSample[[ii]]) == TRUE) {
-                 XPSSample[[ii]]@Components <<- sapply(XPSSample[[ii]]@Components, function(x) {
+          for(ii in idx){
+              jj <- CheckedCL[idx] #retrieve the index of the selected corelines having PE=SurPE.
+              XPSSample[[jj]]@.Data[[2]] <<- XPSSample[[jj]]@.Data[[2]]/NormCoeff
+              XPSSample[[jj]]@RegionToFit$y <<- XPSSample[[jj]]@RegionToFit$y/NormCoeff
+              XPSSample[[jj]]@Baseline$y <<- XPSSample[[jj]]@Baseline$y/NormCoeff
+              XPSSample[[jj]]@RegionToFit$NormCoeff <<- NormCoeff
+              if (hasComponents(XPSSample[[jj]]) == TRUE) {
+                  XPSSample[[jj]]@Components <<- sapply(XPSSample[[jj]]@Components, function(x) {
                                                               x@ycoor <- x@ycoor/NormCoeff
                                                               return(x) } )
-                 XPSSample[[ii]]@Fit$y <<- XPSSample[[ii]]@Fit$y/NormCoeff
+                  XPSSample[[jj]]@Fit$y <<- XPSSample[[jj]]@Fit$y/NormCoeff
+              }
+              CorrectPE(CheckedCL, CK.PassE, ii, CLrefPE)
+          }
+
+          #Now check if there are other CL acquired at a PE different form ReferenceCL
+          RefPE <- RetrivePE(XPSSample[[RefIdx]]) # Retrieve PE used for the survey
+          idx <- which(CK.PassE != SurPE & CK.PassE != RefPE) #CL acquired at a PE different from survey and ReferenceCl
+          for(ii in idx){
+              jj <- CheckedCL[ii]
+              if (names(CoreLineComp)[jj] != "Survey" && CLCK[[ii]] == TRUE) {
+                  txt <- paste("Found Spectrum: ", names(CoreLineComp)[idx], " Acquired at Pass Energy: ", CK.PassE[idx],
+                           "\nDo You Want to Include it in the Quantification?", sep="")
+                  answ <- tkmessageBox(message=txt, type="yesno", title = "WARNING", icon="warning")
+                  if(tclvalue(answ) == "yes"){
+                     #Compute the Area3 for the CL with PE != to survey or Reference_CL
+                     Xlim <- range(XPSSample[[jj]]@RegionToFit$x)  #X range of the selected CL
+                     Xlim <- sort(Xlim, decreasing=FALSE)
+                     Xlim[1] <- Xlim[1]-2   #extend the CL X-range for higher PE (maybe PE=160eV)
+                     Xlim[2] <- Xlim[2]+2   #extend the CL X-range for higher PE
+                     if (XPSSample[[jj]]@Flags[1]==TRUE) {Xlim <- c(Xlim[2], Xlim[1])} #Binding energy scale
+                     idx1 <- 1
+                     idx2 <- length(XPSSample[[jj]]@RegionToFit$x)
+                     Area3 <- GetArea(XPSSample[[jj]]@RegionToFit, c(idx1, idx2))
+
+                     #Now compute the equivalent Area2 of the same Spectrum in the survey
+                     idx1 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[1])
+                     idx2 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[2])
+                     Area2 <- GetArea(XPSSample[[SurIdx]]@.Data, c(idx1, idx2))
+
+                     NormCoeff_PE <- Area3/Area2 * NormCoeff
+                     #NormCoeff == Area2/Area1 : Observe that the Area2 is now computed for a different
+                     #spectral region with respect to that corresponding to ReferenceCL.
+                     #Then the two Area2 are different each other
+                     #In NormCoeff_PE multiplying for Area2/Area1 normalizes the spectral intensity to the Survey_PE
+                     #Then dividing for NormCoeff we normalize the intensity at Survey_PE to that acquired with Reference_CL
+
+#----- Graphics
+                     if (XPSSample[[jj]]@Flags[[1]]){        #Binding energy set
+                         Xlim <- sort(Xlim, decreasing=TRUE)
+                     } else {
+                         Xlim <- sort(Xlim, decreasing=FALSE)
+                     }
+                     XLabel <- XPSSample[[SurIdx]]@units[1]
+                     YLabel <- XPSSample[[SurIdx]]@units[2]
+                     X <- Y <- NULL
+                     X[[1]] <- unlist(XPSSample[[jj]]@RegionToFit$x) #resume the abscissa
+                     Y[[1]] <- unlist(XPSSample[[jj]]@RegionToFit$y)
+                     X[[2]] <- X[[1]]
+                     Y[[2]] <- Y[[1]]/NormCoeff
+                     Ymax <- max(sapply(Y, function(x) max(x)))
+                     Ylim <- c(0, Ymax)
+                     X <- matrix(unname(unlist(X)), ncol=2)      #transform list in matrix
+                     Y <- matrix(unname(unlist(Y)), ncol=2)
+                     CLName <- XPSSample[[jj]]@Symbol
+                     txt <- paste("Normalization coeff. computed on ", CLName, sep="")
+                     matplot(x=X, y=Y, xlim=Xlim, ylim=Ylim, type="l", lty=1, lwd=1, col=c("black","red"), main=txt, xlab=XLabel, ylab=YLabel)
+                     txt <- c("Original CL", "Normalized CL")
+                     legend(x=Xlim[1], y=Ylim[2], legend=txt, text.col=c("black","red"))
+                     txt <- paste(" Check the graph. The Integral Area of RED Normalized Spectrum \n must be EQUAL to the Integral Area of and BLACK Spectrum", sep="")
+                     tkmessageBox(message=txt, title="Normalized Spectrum", icon="warning")
+                     #Now make the normalization
+                     XPSSample[[jj]]@.Data[[2]] <<- XPSSample[[jj]]@.Data[[2]]/NormCoeff_PE
+                     XPSSample[[jj]]@RegionToFit$y <<- XPSSample[[jj]]@RegionToFit$y/NormCoeff_PE
+                     XPSSample[[jj]]@Baseline$y <<- XPSSample[[jj]]@Baseline$y/NormCoeff_PE
+                     XPSSample[[jj]]@RegionToFit$NormCoeff <<- NormCoeff_PE
+                     if (hasComponents(XPSSample[[jj]]) == TRUE) {
+                         XPSSample[[jj]]@Components <<- sapply(XPSSample[[jj]]@Components, function(x) {
+                                                               x@ycoor <- x@ycoor/NormCoeff_PE
+                                                               return(x)
+                                                           })
+                         XPSSample[[jj]]@Fit$y <<- XPSSample[[jj]]@Fit$y/NormCoeff_PE
+                     }
+                     CorrectPE(CheckedCL, CK.PassE, ii, CLrefPE)
+                  }
               }
           }
-          CorrectPE(CheckedCL, CK.PassE, SurPE, CLinePE)
       }
       return()
-}
+   }
 
 
 #XPScalc() function cannot be applied since here you can select fit components and their RSF
@@ -386,8 +485,6 @@ XPSQuant <- function(){
 
       tcl(QTable, "delete", "0.0", "end") #clears the quant_window
       tkinsert(QTable, "0.0", QTabTxt) #quantification report in QTable window
-
-#      tkconfigure(QTable, font=MyFont)
       cat("\n", TabTxt)
    }
 
@@ -416,64 +513,51 @@ XPSQuant <- function(){
        }
    }
 
-   ResetComp <- function(ii){
-       indx <- CoreLineIndx[ii]
-       if (CLCK[[ii]] == FALSE) {   #if the coreline is not selected the fit component are disabled
-          if (hasComponents(XPSSample[[indx]])) {     #Does the coreline possess fitting components?
-              sapply(SelCMP[[ii]], function(x) tclvalue(x) <- FALSE) #deselects all fit components
-              CLCK[[ii]] <<- FALSE
-              CMPCK[[ii]] <<- ""    #All fitcomp of coreline ii are unchecked
-          }
-       }
-       if (CLCK[[ii]] == TRUE) {    #if the coreline is selected all the fitting components are selected
-
-          if (hasComponents(XPSSample[[indx]])) {
-              sapply(SelCMP[[ii]], function(x) tclvalue(x) <- TRUE) #deselects all fit components
-              CLCK[[ii]] <<- TRUE
-              CMPCK[[ii]] <<- CoreLineComp[[ii]]  #All fitcomp of coreline ii are checked
-          }
-       }
-
-   }
+#   ResetComp <- function(ii){
+#       indx <- CoreLineIndx[ii]
+#       if (CLCK[[ii]] == FALSE) {   #if the coreline is not selected the fit component are disabled
+#          if (hasComponents(XPSSample[[indx]])) {     #Does the coreline possess fitting components?
+#              sapply(SelCMP[[ii]], function(x) tclvalue(x) <- FALSE) #deselects all fit components
+#              CLCK[[ii]] <<- FALSE
+#              CMPCK[[ii]] <<- ""    #All fitcomp of coreline ii are unchecked
+#          }
+#       }
+#       if (CLCK[[ii]] == TRUE) {    #if the coreline is selected all the fitting components are selected
+#
+#          if (hasComponents(XPSSample[[indx]])) {
+#              sapply(SelCMP[[ii]], function(x) tclvalue(x) <- TRUE) #deselects all fit components
+#              CLCK[[ii]] <<- TRUE
+#              CMPCK[[ii]] <<- CoreLineComp[[ii]]  #All fitcomp of coreline ii are checked
+#          }
+#       }
+#   }
 
    CKHandlers <- function(){
+cat("\n ==> NcoreLines",NCoreLines)
          for(ii in 1:NCoreLines){
-#----HANDLER on Widget-CoreLineCK to call ResetComp()
-            if (CLCK[[ii]] != CLChecked[ii] && length(CLChecked[ii]) > 0) {
-               CLChecked[ii] <<- CLCK[[ii]]
-               ResetComp(ii)     #set/reset fit components
-            }
 #----HANDLER on Widget-ComponentCK
-            NComp <- length(CoreLineComp[[ii]])
-            tmp1 <- CMPCK[[ii]]
-            tmp2 <- unlist(CoreLineComp[[ii]])
-            if(CLCK[[ii]] == FALSE && is.null(tmp2) == TRUE) {  #Coreline has only baseline is un-selected
-               tmp1 <- ""
-               tmp2 <- ""
-            } else if(length(tmp1) == 0 && length(tmp2) > 0) {  #Coreline with fit is un-selected
-               CLChecked[ii] <<- FALSE
-               sapply(CLChecked[[ii]], function(x) tclvalue(x) <- FALSE) #uncheck CL checkbox
-               tmp1 <- ""
-               CMPCK[[ii]] <- ""
-               sapply(SelCMP[[ii]], function(x) tclvalue(x) <- FALSE) #deselects all fit components
-            } else {
-               sapply(CLChecked[[ii]], function(x) tclvalue(x) <- TRUE) #CL checkbox marked
-               CLChecked[ii] <<- TRUE  #set CL checkbox marked
+            indx <- CoreLineIndx[ii]
+            NComp <- length(XPSSample[[indx]]@Components)
+            if(CLCK[[ii]] == FALSE && NComp==0) {  #Coreline with baseline only, is un-selected
+#               CoreLineComp[[ii]] <<- sapply(CoreLineComp[[ii]], function(x) x <- "")
+               CoreLineComp[[ii]] <<- NULL
+            } else if(CLCK[[ii]] == FALSE && NComp > 0) {  #Coreline with fit is un-selected
+               CoreLineComp[[ii]] <<- sapply(CoreLineComp[[ii]], function(x) x <- "")   #deselect all fit components
+               CMPCK[[ii]] <<- sapply(CMPCK[[ii]], function(x) x <- "")   #deselect all fit components
+               sapply(SelCMP[[ii]], function(x) tclvalue(x) <- FALSE)   #deselect all fit components
+            } else if(CLCK[[ii]] == TRUE && sum(nchar(CoreLineComp[[ii]])) == 0) {  #Coreline with fit is reselected, all components deselected
+               CMPCK[[ii]] <<- "" # reselect al components previously all deselected
+               CoreLineComp[[ii]] <<- CMPCK[[ii]]
+               sapply(SelCMP[[ii]], function(x) tclvalue(x) <- TRUE)   #deselect all fit components
+            } else if(length(CMPCK[[ii]]) != length(CoreLineComp[[ii]])) {  #Coreline fit components are un-selected
+               CoreLineComp[[ii]] <<- "" #reset CoreLineComp[[ii]]
+               CoreLineComp[[ii]] <<- sapply(CMPCK[[ii]], function(x) CoreLineComp[[ii]] <<- x) #uncheck CL checkbox => all fit_comp unselected
             }
-            if(is.null(tmp2) == TRUE) {
-               tmp2 <- ""
+            if(is.null(CoreLineComp[[ii]]) == TRUE) {
+               CoreLineComp[[ii]] <<- ""
             }  # the correspondent coreline does NOT possess fitting components but only the BaseLine
-            if (all(tmp1 == tmp2) == FALSE) {    #if the two vector contain different elements
-#               CoreLineComp[[ii]] <<- tmp1 #modify component [ii] of the list following the checkbox component selections
-#               if (nchar(tmp1) == 0) {
-#                  names(CoreLineComp[[ii]]) <<- ""
-#                  CLChecked[ii] <<- ""
-#               }
-#               if (nchar(tmp1) > 0) {
-#                  CoreLineComp <<- setNames(CoreLineComp, CoreLineNames)
-#               }
-            }
          }
+cat("\n ")
    }
 
 
@@ -511,19 +595,20 @@ XPSQuant <- function(){
 
               SelCMP[[ii]] <<- list() #SelCMP[[ii]]is a list containing the pointers to fit_comp checkbox ON/OFF values for each coreline ii
               CMPCK[[ii]] <<- CoreLineComp[[ii]]  #initialize CMPCK setting all fitcomponents checked
-              ComponentCK[[ii]] <<- lapply(seq_along(CoreLineComp[[ii]]), function(jj) {  #CoreLine[[ii]] contains just an element but Lapply creates the correct pointer
+              lapply(seq_along(CoreLineComp[[ii]]), function(jj) {  #CoreLine[[ii]] contains just an element but Lapply creates the correct pointer
                                          txt <- unlist(CoreLineComp[[ii]][jj])
                                          CMP_var <- tclVar(1) # 0 unchecked  1 checked
                                          SelCMP[[ii]][jj] <<- list(CMP_var) #list() needed to correctly save CMP_var in SelCMP
                                          CMPboxBtn[[ii]] <<- ttkcheckbutton(CMPframe[[ii]], text=as.character(txt), variable=CMP_var,
                                                command=function(){
                                                   ii <- as.integer(tcl(QNB, "index", "current"))+1 #ii+1= index of active notebook page starting from 0
+                                                  indx <- CoreLineIndx[ii]
                                                   CMPCK[[ii]] <<- sapply(SelCMP[[ii]], function(x) tclvalue(x))
                                                   for(ll in length(CMPCK[[ii]]):1){
                                                       if(CMPCK[[ii]][ll] == "0"){
                                                          CMPCK[[ii]] <<- CMPCK[[ii]][-ll] #remove unchecked fit component
                                                       } else {
-                                                         CMPCK[[ii]][ll] <<- CoreLineComp[[ii]][ll] #set checked fit components
+                                                         CMPCK[[ii]][ll] <<- names(XPSSample[[indx]]@Components)[ll] #set checked fit components
                                                       }
                                                   }
                                                   CKHandlers()
@@ -533,7 +618,6 @@ XPSQuant <- function(){
           }
           RSFframe[[ii]] <- ttklabelframe(Qgroup[[ii]], text=" RSF ", borderwidth=2)
           tkgrid(RSFframe[[ii]], row = 1, column = 3, padx=5, pady=5, sticky="w")
-
           RelSensFactCK[[ii]] <<- list()
           RSFCK[[ii]] <<- list()
           RSF[[ii]] <<- list()
@@ -589,7 +673,7 @@ XPSQuant <- function(){
       QuantGroup <- ttkframe(Qgroup[[ii]], borderwidth=0, padding=c(0,0,0,0) )
       tkgrid(QuantGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-      QuantBtn <- tkbutton(QuantGroup, text=" QUANTIFY ", command=function(){
+      QuantBtn <- tkbutton( QuantGroup, text=" QUANTIFY ", command=function(){
                            SetRSF()
                            #extract indexes of CoreLines selected for quantification
                            CheckedCL <- names(CoreLineComp)
@@ -599,28 +683,29 @@ XPSQuant <- function(){
                                                   return(x)
                                                })
                            CheckedCL <- as.integer(CheckedCL[1,])
+
                            #Control on the Pass Energies
                            CK.PassE <- PassE[CheckedCL] #extracts PE valued corresponding to the elements selected for quantification
                            idx <- unname(which(CK.PassE != CK.PassE[1])) #are the selected elements acquired at different PE?
                            is.NC <- TRUE #logic, TRUE if NormCoeff is already computed
                            idx <- CheckedCL[idx]  #now idx correctly indicates the corelines
                            for(ii in idx){
-                               if(length(XPSSample[[ii]]@RegionToFit) < 3){
-                               is.NC <- FALSE}    #NormCoeff not saved in ...RegionToFit@NormCoeff
+                               if (length(XPSSample[[jj]]@RegionToFit) < 3){  #NormCoeff not saved in ...RegionToFit@NormCoeff
+                                   is.NC <- FALSE
+                               }
                            }
                            if (length(idx) > 0 && is.NC == FALSE) {  #selected elements are acquired at different PE and NormCoeff not computed
-                               answ <- tkmessageBox(message=" Found spectra acquired at different Pass Energies. \n Do you want to quantify spectra EXTRACTED FROM SURVEY ?",
+                               answ <- tkmessageBox(message=" Found Spectra Acquired at Different Pass Energies. \n Do You Want Proceed with Quantification?",
                                                     type="yesno", title="NORMALIZATION COEFFICIENT", icon="warning")
                                if (tclvalue(answ) == "yes"){
                                #Control how many Survey spectra in XPSSample
-                                   SurIdx <<- grep("Survey", SpectList) #indexes of the names components == "Survey"
+                                   SurIdx <- grep("Survey", SpectList) #indexes of the names components == "Survey"
                                    if (length(SurIdx) == 0) {
-                                       SurIdx <<- grep("survey", SpectList)
+                                       SurIdx <- grep("survey", SpectList)
                                    }
                                    N_Survey <- length(SurIdx)
-
                                    if (N_Survey > 1) {
-                                       txt <- paste(" Found ", N_Survey, " in the XPSSample ", activeFName, ": \n select the Survey used to extract the Core Lines", sep="")
+                                       txt <- paste(" Found ", N_Survey, " in the XPSSample ", activeFName, ": \n select the Reference Survey", sep="")
                                        tkmessageBox(message=txt, title="SELECT SURVEY", icon="warning")
                                        CLwin <- tktoplevel()
                                        tkwm.title(CLwin,"SELECT SURVEY")
@@ -638,12 +723,17 @@ XPSQuant <- function(){
                                        }
                                        exitBtn <- tkbutton(CLgroup, text="  OK  ", width=15, command=function(){
                                                      SelectedSur <- tclvalue(SS)
-                                                     SurIdx <<- grep(SelectedSur, CL_Names)
+                                                     SurIdx <- grep(SelectedSur, CL_Names)
                                                      tkdestroy(CLwin)
                                            })
                                        tkgrid(exitBtn, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
                                        tkwait.window(CLwin)
                                    }
+                                   if (N_Survey == 0) {
+                                       txt <-"Survey Spectrum Lacking! Cannot Proceed Computing the Normalization Coefficient"
+                                       tkmessageBox(message=txt, title="SURVEY LACKING", icon="error")
+                                       return()
+                                   }                                   
                                    cat("\n => Compute the normalization coefficient")
                                    CalcNormCoeff(CheckedCL, CK.PassE, SurIdx)
                                    if (NormCoeff == -1){  #Found wide spectrum and corelines acquired using different energy units.
@@ -655,7 +745,7 @@ XPSQuant <- function(){
                                 }
                            }
                            quant(CoreLineComp)
-                 })
+                 })      
       tkgrid(QuantBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 #      ww <- as.numeric(tkwinfo("reqwidth", QuantBtn)) + 15
       
@@ -670,7 +760,7 @@ XPSQuant <- function(){
                                NChr <- max(nchar(CBrd2[[ii]]))
                                CBrd2[[ii]] <<- encodeString(CBrd2[[ii]], width=NChr, quote="", justify=c("right"))
                                if (NChr < 6 || is.na(NChr)) { #NChr <- 5 }
-                                   CBrd2[[ii]] <- paste(CBrd2[[ii]],"", sep="\t")
+                                   CBrd2[[ii]] <<- paste(CBrd2[[ii]],"", sep="\t")
                                }
                            }
 
@@ -685,7 +775,6 @@ XPSQuant <- function(){
                            cat("\n Table copied to clipboard")
                  })
       tkgrid(ClipBrdBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
-#      ww <- ww + as.numeric(tkwinfo("reqwidth", ClipBrdBtn)) + 15
 
       WriteBtn <- tkbutton(QuantGroup, text=" WRITE TO FILE ", command=function(){
                                           Filename <- unlist(strsplit(QTabTxt[2], ":"))[2]
@@ -725,8 +814,10 @@ XPSQuant <- function(){
       XPSSampleList <<- XPSFNameList()                     #list of all XPSSamples
       XPSSampleIdx <<- grep(activeFName,XPSSampleList)
       SpectList <<- XPSSpectList(activeFName)          #list of all CoreLines of the active XPSSample
-      PassE <<- RetrivePE() # Retrieve list of CoreLine Pass Energies
       NormCoeff <<- 1
+      NCoreLines <<- length(SpectList)
+      PassE <<- RetrivePE() # Retrieve list of CoreLine Pass Energies
+      names(PassE) <<- SpectList
 
       CoreLineNames <<- ""
       CoreLineIndx <<- NULL
@@ -734,12 +825,8 @@ XPSQuant <- function(){
       NComp <<- NULL
       CoreLineComp <<- list()
       OrigCoreLinComp <<- list()
-      CLChecked <<- NULL
-      CompChecked <<- NULL
 
-      SurIdx <<- NULL
-      CoreLineCK <<- list()     #define lists for the Gwidget pointers
-      ComponentCK <<- list()
+      CoreLineCK <<- list()     #define lists for the widget pointers
       RelSensFactCK <<- list()
       CLCK <<- list()
       SelCL <<- list()
@@ -759,16 +846,12 @@ XPSQuant <- function(){
       CLboxBtn <<- list()
       CMPboxBtn <<- list()
 
-      NCoreLines <<- length(SpectList)
       NmaxFitComp <<- 0
       QTabTxt <<- ""    #text containing Quantification results for the Qtable gtext()
       TabTxt <<- ""     #text containing Quantification results for the RStudio consolle
-
-      RegionToFit <- 0
       jj <- 1
       for(ii in 1:NCoreLines){
          if (length(XPSSample[[ii]]@RegionToFit) > 0){ #a Baseline is defined
-            RegionToFit <- 1
             CoreLineNames[jj] <<- SpectList[ii]  #Save the coreline name where a baseline is defined
             CoreLineIndx[jj] <<- ii              #vector containing indexes of the corelines where a baseline is defined
             jj <- jj+1
@@ -776,17 +859,17 @@ XPSQuant <- function(){
             if (NFC > NmaxFitComp) {NmaxFitComp <<- NFC}
          }
       }
-      if (RegionToFit == 0){
+      if (length(CoreLineIndx) == 0){
          tkmessageBox(message="WARNING: NO FIT REGIONS DEFINED ON THIS XPS SAMPLE", title = "WARNING", icon = "warning")
          return()
       }
       NCoreLines <<- length(CoreLineIndx) #now only the corelines with baseline are considered for the quantification
-      CLChecked <<- rep(TRUE,NCoreLines)
    }
 
 
 #---- variables ----
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -796,11 +879,11 @@ XPSQuant <- function(){
    XPSSampleList <- XPSFNameList()                     #list of all XPSSamples
    XPSSampleIdx <- grep(activeFName,XPSSampleList)
    SpectList <- XPSSpectList(activeFName)              #list of all the corelines of the active XPSSample
-   PassE <- RetrivePE()                                # Retrieve list of CoreLine Pass Energies
-   names(PassE) <- SpectList
    NormCoeff <- 1
    NCoreLines <- length(SpectList)
    MaxNComp <- max(sapply(XPSSample, function(x) length(x@Components)))
+   PassE <- RetrivePE()                                # Retrieve list of CoreLine Pass Energies
+   names(PassE) <- SpectList
 
    CoreLineNames <- ""
    CoreLineIndx <- NULL
@@ -808,12 +891,8 @@ XPSQuant <- function(){
    NComp <- NULL
    CoreLineComp <- list()
    OrigCoreLinComp <- list()
-   CLChecked <- NULL
-   CompChecked <- NULL
 
-   SurIdx <- NULL
    CoreLineCK <- list()     #define lists for the Gwidget pointers
-   ComponentCK <- list()
    RelSensFactCK <- list()
    CLCK <- list()
    SelCL <- list()
@@ -838,11 +917,9 @@ XPSQuant <- function(){
    QTabTxt <- ""    #text containing Quantification results for the Qtable gtext()
    TabTxt <- ""     #text containing Quantification results for the RStudio consolle
 
-   RegionToFit <- 0
    jj <- 1
-   for(ii in 1:NCoreLines){ #Baseline MUST be defined for the quantufucation
+   for(ii in 1:NCoreLines){ #Baseline MUST be defined for the quantification
       if (length(XPSSample[[ii]]@RegionToFit) > 0){ #a baseline is defined
-         RegionToFit <- 1
          CoreLineNames[jj] <- SpectList[ii]  #Save the coreline name where a baseline is defined
          CoreLineIndx[jj] <- ii              #vector containing indexes of the corelines where a baseline is defined
          jj <- jj+1
@@ -850,13 +927,11 @@ XPSQuant <- function(){
          if (NFC > NmaxFitComp) {NmaxFitComp <- NFC}
       }
    }
-   if (RegionToFit == 0){
-      tkmessageBox(message="WARNING: NO Fit, NO BaseLine found in this XPS Sample", title = "WARNING", icon = "warning")
+   if (length(CoreLineIndx) == 0){
+      tkmessageBox(message="WARNING: NO Core.Line BaseLine found in this XPS Sample", title = "WARNING", icon = "warning")
       return()
    }
    NCoreLines <- length(CoreLineIndx) #now only the corelines with baseline are considered for the quantification
-   CLChecked <- rep(TRUE,NCoreLines)
-
 
 
 #===== GUI =====
@@ -875,6 +950,7 @@ XPSQuant <- function(){
    SelXPSData <- ttkcombobox(Qgrp0, width = 15, textvariable = XS, values = XPSSampleList)
    tkbind(SelXPSData, "<<ComboboxSelected>>", function(){
                              activeFName <<- tclvalue(XS)
+                             assign("activeFName", activeFName, envir=.GlobalEnv)
                              assign("activeSpectIndx", 1, envir=.GlobalEnv)
                              assign("activeSpectName", SpectList[1], envir=.GlobalEnv)
                              tkdestroy(QNB)
@@ -904,10 +980,12 @@ XPSQuant <- function(){
    tkgrid(QSave, row = 1, column = 4, padx = 5, pady = 5, sticky="w")
 
    QSaveExit <- tkbutton(Qgrp0, text=" SAVE & EXIT ", width=12, command=function(){
-                             SetRSF()
-                             assign(activeFName, XPSSample, .GlobalEnv)  #save the fit parameters in the activeSample
                              tkdestroy(Qwin)
+                             SetRSF()
+                             assign("activeFName", activeFName, envir=.GlobalEnv)
+                             assign(activeFName, XPSSample, .GlobalEnv)  #save the fit parameters in the activeSample
                              XPSSaveRetrieveBkp("save")
+                             UpdateXS_Tbl()
                  })
    tkgrid(QSaveExit, row = 1, column = 5, padx = 5, pady = 5, sticky="w")
 
@@ -919,5 +997,6 @@ XPSQuant <- function(){
 
    CoreLineComp <- setNames(CoreLineComp, CoreLineNames)   #the list contains the names of the coreline and the relative FitComponents
    OrigCoreLinComp <- CoreLineComp
-   tkwait.window(Qwin)
+
+#   tkwait.window(Qwin)
 }

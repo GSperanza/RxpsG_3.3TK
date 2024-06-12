@@ -124,7 +124,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
 
 #--- link: index indicates the param to drop since linked
 	   index <- NULL
-           # drop the variable from fit paramter list
+    # drop the variable from fit paramter list
 	   for (number in seq_along(Object@Components)) {
 		     if (length(Object@Components[[number]]@link)) {
 	   	   		for (idx in seq_along(slot(Object@Components[[number]],"link"))) {
@@ -150,7 +150,7 @@ XPSFitLM <- function(Object, plt=TRUE, verbose=TRUE, ...) {
                       upper = ubound,
                       lower = lbound,
                       algorithm = "LM", #Levenberg-Marquardt
-                      trace = TRUE, #prints residual sum of errors at each iteration
+                      trace = verbose, #prints residual sum of errors at each iteration
                       control = nls.lm.control(ftol = 1e-10, factor = 0.1, maxiter = 500, nprint = NPrint),
                       ... ), silent=FALSE)  #silent=FALSE => report error messages
 

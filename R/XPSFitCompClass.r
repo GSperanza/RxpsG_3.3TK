@@ -15,6 +15,7 @@
 #' @slot rsf the RSF associated to the fit component (the same as that of the Core-Line)
 #' @slot ycoor the y values of the best fit
 #' @slot link the list containing the series of links associated to this fit component
+#' @rdname XPSFitClassesMethods
 #' @examples
 #' \dontrun{
 #'  showClass("fitComponents")
@@ -53,6 +54,7 @@ setClass("fitComponents",
 #' @param variable character as "mu", "sigma"... indicates the parameter to set
 #' @param value numeric the value to set
 #' @return 'setParam' returns the object withthe parameter set
+#' @rdname XPSFitClassesMethods
 setGeneric("setParam", function(object, parameter=NULL, variable=NULL, value= NULL) standardGeneric("setParam"))
 
 #' @title setParam
@@ -63,6 +65,7 @@ setGeneric("setParam", function(object, parameter=NULL, variable=NULL, value= NU
 #' @param variable character as "mu", "sigma"... indicates the parameter to set  
 #' @param value numeric the value to set
 #' @return 'setParam' returns the object withthe parameter set
+#' @rdname XPSFitClassesMethods
 #' @examples
 #' \dontrun{
 #'  setParam(test[["C1s"]]@Component[[2]], parameter="start", variable="mu", value="285")
@@ -108,6 +111,7 @@ setMethod("setParam", "fitComponents", function(object, parameter=NULL, variable
 #' @param parameter character is one of the "start", "max" or "min" parameter to be set
 #' @param variable character as "mu", "sigma"... indicates the parameter to set
 #' @return 'getParam' returns the value of the requested parameter
+#' @rdname XPSFitClassesMethods
 setGeneric("getParam", function(object, parameter=NULL, variable=NULL) standardGeneric("getParam"))
 
 #' @title getParam
@@ -117,6 +121,7 @@ setGeneric("getParam", function(object, parameter=NULL, variable=NULL) standardG
 #' @param parameter character is one of the "start", "max" or "min" parameter to be set
 #' @param variable character as "mu", "sigma"... indicates the parameter to set
 #' @return 'getParam' returns the value of the requested parameter
+#' @rdname XPSFitClassesMethods
 #' @examples
 #' \dontrun{
 #'   getParam(test[["C1s"]]@Component[[2]], parameter="start", variable="mu")
@@ -156,6 +161,7 @@ setMethod("getParam", "fitComponents", function(object, parameter=NULL, variable
 #' @param y numeric vector of the type CL@Baseline$y where
 #'   CL is of class 'XPSCoreLine'
 #' @return 'Ycomponent' returns Baseline subtracted vales of the fit component
+#' @rdname XPSFitClassesMethods
 setGeneric("Ycomponent", function(object, x, y)   standardGeneric("Ycomponent"))
 
 #' @title Ycomponent
@@ -168,6 +174,7 @@ setGeneric("Ycomponent", function(object, x, y)   standardGeneric("Ycomponent"))
 #' @param y numeric vector of the type CL@Baseline$y where
 #'   CL is of class 'XPSCoreLine'
 #' @return 'Ycomponent' returns Baseline subtracted vales of the fit component
+#' @rdname XPSFitClassesMethods
 #' @examples
 #' \dontrun{
 #'   Ycomponent(test[["C1s"]]@Component[[2]],test[["C1s"]]@RegionToFit$x, test[["C1s"]]@Baseline$y)
@@ -202,7 +209,7 @@ Initialize = new("fitComponents",
     description = "Symmetric Function(h, mu, sigma)",
     label = "",
     param = data.frame(
-        row.names = c("h", "mu", "sigma"),     # min and max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "sigma"),     # min and max values are set in XPSAddFitComponent()
         start = c(NA, NA, NA),
         min = c(NA, NA, NA),
         max = c(NA, NA, NA) ),
@@ -313,7 +320,7 @@ AsymmGauss = new("fitComponents",
     description = "Simple Asymmetric Gaussian shape",
     label = "AsymmGauss",
     param = data.frame(
-        row.names = c("h", "mu", "sigma", "asym"),           #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "sigma", "asym"),           #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 1, 0.3),
         min = c(0, 0, 0.05, 0.01),
         max = c(Inf, Inf, 10, 1) 	),
@@ -328,7 +335,7 @@ AsymmLorentz = new("fitComponents",
     description = "Simple Asymmetric Lorentz shape",
     label = "AsymmLorentz",
     param = data.frame(
-        row.names = c("h", "mu", "sigma", "asym"),           #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "sigma", "asym"),           #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 0.7, 0.3),
         min = c(0, 0, 0.1, 0.01),
         max = c(Inf, Inf, 10, 1) 	),
@@ -343,7 +350,7 @@ AsymmVoigt = new("fitComponents",
     description = "Asymmetric Voigt shape",
     label = "AsymmVoigt",
     param = data.frame(
-        row.names = c("h", "mu", "sigma", "lg", "asym"),     #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "sigma", "lg", "asym"),     #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 0.4, 0.1, 0.1),
         min = c(0, 0, 0.1, 0.01, 0.01),
         max = c(Inf, Inf, 10, 1, 1) ),
@@ -473,7 +480,7 @@ Linear = new("fitComponents",
     description = "Linear Fit",
     label = "Linear",
     param = data.frame(
-        row.names = c("m", "c", "mu"),          #min e max values are set in XPSaddFitComponent()
+        row.names = c("m", "c", "mu"),          #min e max values are set in XPSAddFitComponent()
         start = c(NA, 0, NA),
         min = c(-Inf, -Inf, NA),
         max = c(Inf, Inf, NA) ),
@@ -487,7 +494,7 @@ ExpDecay = new("fitComponents",
     description = "Exponential Decay",
     label = "ExpDecay",
     param = data.frame(
-        row.names = c("h", "mu", "k", "c"),     #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "k", "c"),     #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 1, 0),
         min = c(0, 0, 0, 0),
         max = c(Inf, Inf, 5, Inf) ),
@@ -501,7 +508,7 @@ PowerDecay = new("fitComponents",
     description = "Power Law Decay",
     label = "PowerDecay",
     param = data.frame(
-        row.names = c("h", "mu", "pow", "c"),   #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "pow", "c"),   #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 2, 0),
         min = c(0, 0, 0.1, 0),
         max = c(Inf, Inf, 5, Inf) ),
@@ -515,7 +522,7 @@ Sigmoid = new("fitComponents",
     description = "Sigmoid function",
     label = "Sigmoid",
     param = data.frame(
-        row.names = c("h", "mu", "k", "c"),     #min e max values are set in XPSaddFitComponent()
+        row.names = c("h", "mu", "k", "c"),     #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 1, 0),
         min = c(0, 0, 0, 0),
         max = c(Inf, Inf, 5, Inf) ),
@@ -602,7 +609,7 @@ FitProfile = new("fitComponents",
     description = "Depth Profile",
     label = "DepthP.",
     param = data.frame(
-        row.names = c("R.I", "d", "La", "Lb"),     #min e max values are set in XPSaddFitComponent()
+        row.names = c("R.I", "d", "La", "Lb"),     #min e max values are set in XPSAddFitComponent()
         start = c(NA, 10, NA, NA),
         min = c(NA, 0, NA, NA),
         max = c(NA, 50, NA, NA) ),

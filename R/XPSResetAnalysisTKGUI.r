@@ -23,16 +23,16 @@
 
 XPSResetAnalysis <- function(){
 
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
    FNameList <- XPSFNameList()
-   ActiveFName <- get("activeFName", envir=.GlobalEnv)  #load the XPSSample
    FName <- get(activeFName, envir=.GlobalEnv)
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)
    ActiveSpectName <- get("activeSpectName", envir=.GlobalEnv)
-   SpectList <- XPSSpectList(ActiveFName)
+   SpectList <- XPSSpectList(activeFName)
    SpectList <- c(SpectList, "All")
    NComp <- length(FName[[SpectIndx]]@Components)
    FitComp <- ""

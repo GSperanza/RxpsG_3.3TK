@@ -21,7 +21,7 @@ XPSProcessCoreLine <- function(){
 
    CtrlRepCL <- function(destIndx, SpectName, DestSpectList){    #CTRL for repeated CL: search for core-lines with same name
       winCL <- tktoplevel()
-      tkwm.title(winCL,"XPS ANALYSIS")
+      tkwm.title(winCL,"CORE.LINE SELECTION")
       tkwm.geometry(winCL, "+200+200")   #position respect topleft screen corner
       groupCL <- ttkframe(winCL, borderwidth=0, padding=c(0,0,0,0) )
       tkgrid(groupCL, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
@@ -37,19 +37,19 @@ XPSProcessCoreLine <- function(){
       items <- DestSpectList[destIndx]
       LL <- length(DestSpectList[destIndx])
       for(ii in 1:LL){
-          Radio <- ttkradiobutton(groupCL, text=items[ii], variable=selectCL, value=items[ii],
+          CLRadio <- ttkradiobutton(groupCL, text=items[ii], variable=selectCL, value=items[ii],
                                 command=function(){
                                       CoreLine <- tclvalue(selectCL)
                                       CoreLine <- unlist(strsplit(CoreLine, "\\."))   #drop "NUMBER." at beginning of coreLine name
                                       RepCLidx <<- as.numeric(CoreLine[1])
                                 })
-          tkgrid(Radio, row = 3, column = ii, padx = 5, pady = 5, sticky="w")
+          tkgrid(CLRadio, row = 3, column = ii, padx = 5, pady = 5, sticky="w")
       }
 
-      exitBtn <- tkbutton(groupCL, text="  OK  ", width = 15, command=function(){
+      OKBtn <- tkbutton(groupCL, text="  OK  ", width = 15, command=function(){
                                 tkdestroy(winCL)
                  })
-      tkgrid(exitBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
+      tkgrid(OKBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
       tkwait.window(winCL) #winCL modal mode
    }
 
@@ -141,8 +141,6 @@ XPSProcessCoreLine <- function(){
         return(DestFile[[destIndx]])
    }
 
-
-
 #---
 
    SaveSpectrum <- function(){
@@ -156,6 +154,7 @@ XPSProcessCoreLine <- function(){
       WidgetState(SaveBtn, "disabled")
       WidgetState(SaveNewSpect, "disabled")
       WidgetState(SaveExitBtn, "disabled")
+      UpdateXS_Tbl()
    }
 
    SaveNewSpectrum <- function(){
@@ -400,7 +399,7 @@ XPSProcessCoreLine <- function(){
                                       plot(DestFName[[destIndx]])
                                       activeSpectIndx <<- destIndx
                                       activeSpectName <<- SpectName
-                                      msg <- paste(" Fit data added to ", SpectName, "PLASE SAVE DATA!", sep="")
+                                      msg <- paste(" Fit data added to ", SpectName, " PLASE SAVE DATA!", sep="")
                                       cat("\n ==> ", msg)
                                   }
                                   WidgetState(SaveBtn, "normal")  #Enable SaveSpectrum
@@ -596,7 +595,7 @@ XPSProcessCoreLine <- function(){
                                   DestFName@names <<- c(CoreLineList,SpectName)
                                   activeSpectIndx <<- destIndx
                                   activeSpectName <<- SpectName
-                                  msg <- paste(" Coreline: ",  SpectName, "added to XPS Sample", DestFName@Filename, ". PLEASE SAVE DATA!", sep="")
+                                  msg <- paste(" Coreline: ",  SpectName, " added to XPS Sample", DestFName@Filename, ". PLEASE SAVE DATA!", sep="")
                                   cat("\n ==> ", msg)
                                   plot(DestFName)
                                   WidgetState(SaveBtn, "normal")  #Enable SaveSpectrum\
@@ -1328,7 +1327,6 @@ XPSProcessCoreLine <- function(){
                                XPSSaveRetrieveBkp("save")
                      })
       tkgrid(ExitBtn, row = 1, column = 4, padx = 5, pady = 3, sticky="w")
-      WidgetState(ExitBtn, "disabled")
 
 }
 

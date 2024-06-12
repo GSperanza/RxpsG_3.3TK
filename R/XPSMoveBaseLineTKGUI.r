@@ -17,6 +17,7 @@ XPSMoveBaseLine <- function(){
    ReDraw <- function(){
 #--- Here the coreline and Baseline+Fit has to be displayed separately
        SampData <- as.matrix(XPSSample[[indx]]@.Data) #create spectrum data matrix for plot
+       ## SampData is not of Class XPSSample nor XPSCoreLine: generic plot is used
        plot(x=SampData[[1]], y=SampData[[2]], xlim=Xrange1, ylim=Yrange1, type="l", lty="solid", lwd=1, col="black")
        SampData <- setAsMatrix(XPSSample[[indx]], "matrix") #create Baseline+Fit data matrix for plot
        NC <- ncol(SampData)
@@ -82,8 +83,8 @@ XPSMoveBaseLine <- function(){
 
 
 #--- Variables ---
-
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }

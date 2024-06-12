@@ -2,19 +2,20 @@
 ## Fit functions
 ## =======================================================================
 
-#' @title XPSfitAlgorithms
-#' @description XPSfitAlgorithms groups all the definitions of the fit functions,
+#' @title XPSFitAlgorithms
+#' @description XPSFitAlgorithms groups all the definitions of the fit functions,
 #'   the definition of fit parameters, and the initialization of the parameter
 #'   slots of objects of class 'XPSCoreLine'.
-#'@return Returns the selected fit algorithm.
-#'@examples
-#'\dontrun{
-#'	XPSfitAlgorithms()
-#'}
-#'@export
+#' @return Returns the selected fit algorithm.
+#' @rdname XPSFitFunctions
+#' @examples
+#'  \dontrun{
+#'  XPSFitAlgorithms()
+#' }
+#' @export
 #'
 
-XPSfitAlgorithms <- function() {
+XPSFitAlgorithms <- function() {
      bho <- sapply(fitAlgorithms, function(x) {
   	       cat(sprintf("%15s  %-30s\n", slot(x,"funcName"), slot(x,"description") ))
   	  })
@@ -35,6 +36,7 @@ XPSfitAlgorithms <- function() {
 #' @param h function amplitude
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
+#' @rdname XPSFitFunctions
 #' @export
 
   Initialize <- function(x, h, mu, sigma) {
@@ -48,6 +50,7 @@ XPSfitAlgorithms <- function() {
 #' @description Generic is a function to initialize the new Fit Component Slots
 #' @param x numeric vector
 #' @returns a series of NA of length = length(x)
+#' @rdname XPSFitFunctions
 #' @export
 
 Generic <- function(x) { 
@@ -61,6 +64,7 @@ Generic <- function(x) {
 #' @param h function amplitude
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
+#' @rdname XPSFitFunctions
 #' @export
 
 Gauss <- function(x, h, mu, sigma) { 
@@ -74,6 +78,7 @@ Gauss <- function(x, h, mu, sigma) {
 #' @param h function amplitude
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
+#' @rdname XPSFitFunctions
 #' @export
 
 Lorentz <- function(x, h, mu, sigma) { 
@@ -93,6 +98,7 @@ Lorentz <- function(x, h, mu, sigma) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param lg mix Gauss-Lorentz obtained via FFT convolution
+#' @rdname XPSFitFunctions
 #' @export
 
 Voigt <- function(x, h, mu, sigma, lg) {
@@ -132,6 +138,7 @@ Voigt <- function(x, h, mu, sigma, lg) {
 #' @param h function amplitude
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
+#' @rdname XPSFitFunctions
 #' @export
 
 Sech2 <- function(x, h, mu, sigma) { 
@@ -149,6 +156,7 @@ Sech2 <- function(x, h, mu, sigma) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param lg mix Gauss-Lorentz
+#' @rdname XPSFitFunctions
 #' @export
 
 GaussLorentzProd <- function(x, h, mu, sigma, lg) {
@@ -166,6 +174,7 @@ GaussLorentzProd <- function(x, h, mu, sigma, lg) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param lg mix Gauss-Lorentz
+#' @rdname XPSFitFunctions
 #' @export
 
 GaussLorentzSum <- function(x, h, mu, sigma, lg) {
@@ -190,6 +199,7 @@ GaussLorentzSum <- function(x, h, mu, sigma, lg) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 AsymmGauss <- function(x, h, mu, sigma, asym) {
@@ -213,6 +223,7 @@ AsymmGauss <- function(x, h, mu, sigma, asym) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 AsymmLorentz <- function(x, h, mu, sigma, asym) {
@@ -237,6 +248,7 @@ AsymmLorentz <- function(x, h, mu, sigma, asym) {
 #' @param sigma function full width at half maximum
 #' @param lg mix Gauss-Lorentz
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 AsymmVoigt <- function(x, h, mu, sigma, lg, asym) {
@@ -269,6 +281,7 @@ AsymmVoigt <- function(x, h, mu, sigma, lg, asym) {
 #' @param sigma function full width at half maximum
 #' @param lg mix Gauss-Lorentz
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 AsymmGaussLorentz <- function(x, h, mu, sigma, lg, asym) {
@@ -295,6 +308,7 @@ AsymmGaussLorentz <- function(x, h, mu, sigma, lg, asym) {
 #' @param lg mix Gauss-Lorentz
 #' @param asym function asymmetry value
 #' @param gv mix Gauss-Voigt
+#' @rdname XPSFitFunctions
 #' @export
 
 AsymmGaussVoigt <- function(x, h, mu, sigma, lg, asym, gv) {
@@ -311,15 +325,16 @@ AsymmGaussVoigt <- function(x, h, mu, sigma, lg, asym, gv) {
 
 ## =======================================================================
 ## Asym Gaussian Lorentz cross product from UNIFIT Publication
-#'@title AsymmGaussLorentzProd function
-#'@description Asym Gaussian Lorentz cross product from UNIFIT Publication
-#'@param x numeric vector
-#'@param h function amplitude
-#'@param mu position of function center
-#'@param sigma function full width at half maximum
-#'@param asym function asymmetry value
-#'@param lg mix Gauss-Lorentz
-#'@export
+#' @title AsymmGaussLorentzProd function
+#' @description Asym Gaussian Lorentz cross product from UNIFIT Publication
+#' @param x numeric vector
+#' @param h function amplitude
+#' @param mu position of function center
+#' @param sigma function full width at half maximum
+#' @param asym function asymmetry value
+#' @param lg mix Gauss-Lorentz
+#' @rdname XPSFitFunctions
+#' @export
 
 AsymmGaussLorentzProd <- function(x, h, mu, sigma, asym, lg) {
 
@@ -338,6 +353,7 @@ AsymmGaussLorentzProd <- function(x, h, mu, sigma, asym, lg) {
 #' @param mu position of function center
 #' @param sigmaDS function full width at half maximum
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 DoniachSunjic <- function(x, h, mu, sigmaDS, asym) {
@@ -364,6 +380,7 @@ DoniachSunjic <- function(x, h, mu, sigmaDS, asym) {
 #' @param sigmaDS function full width at half maximum
 #' @param asym function asymmetry value
 #' @param tail amplitude of the spectral tail on the low BE (high KE) side
+#' @rdname XPSFitFunctions
 #' @export
 
 DoniachSunjicTail <- function(x, h, mu, sigmaDS, asym, tail) {
@@ -396,6 +413,7 @@ DoniachSunjicTail <- function(x, h, mu, sigmaDS, asym, tail) {
 #' @param sigmaDS function full width at half maximum
 #' @param sigmaG full width at half maximum of superimpossed Gaussian broadening
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 DoniachSunjicGauss <- function(x, h, mu, sigmaDS, sigmaG, asym) {
@@ -438,6 +456,7 @@ DoniachSunjicGauss <- function(x, h, mu, sigmaDS, sigmaG, asym) {
 #' @param sigmaG full width at half maximum of superimpossed Gaussian broadening
 #' @param asym function asymmetry value
 #' @param tail amplitude of the spectral tail on the low BE (high KE) side
+#' @rdname XPSFitFunctions
 #' @export
 
 DoniachSunjicGaussTail <- function(x, h, mu, sigmaDS, sigmaG, asym, tail) {
@@ -488,6 +507,7 @@ DoniachSunjicGaussTail <- function(x, h, mu, sigmaDS, sigmaG, asym, tail) {
 #' @param mu position of function center
 #' @param sigma function full width at half maximum
 #' @param asym function asymmetry value
+#' @rdname XPSFitFunctions
 #' @export
 
 SimplifiedDoniachSunjic <- function(x, h, mu, sigma, asym) {
@@ -501,6 +521,7 @@ SimplifiedDoniachSunjic <- function(x, h, mu, sigma, asym) {
 #' @param m slope
 #' @param c constant value
 #' @param mu function position
+#' @rdname XPSFitFunctions
 #' @export
 
 Linear <- function(x, m, c, mu) {
@@ -521,6 +542,7 @@ Linear <- function(x, m, c, mu) {
 #' @param mu position of function center
 #' @param k decay constant
 #' @param c constant value
+#' @rdname XPSFitFunctions
 #' @export
 
 ExpDecay <- function(x, h, mu, k, c) {
@@ -536,6 +558,7 @@ ExpDecay <- function(x, h, mu, k, c) {
 #' @param mu position of function center
 #' @param pow value of the power exponent
 #' @param c constant value
+#' @rdname XPSFitFunctions
 #' @export
 
 PowerDecay <- function(x, h, mu, pow, c) {
@@ -551,6 +574,7 @@ PowerDecay <- function(x, h, mu, pow, c) {
 #' @param mu position of function center
 #' @param k sigmoid decay rate
 #' @param c constant value
+#' @rdname XPSFitFunctions
 #' @export
 
 Sigmoid <- function(x, h, mu, k, c) {
@@ -567,6 +591,7 @@ Sigmoid <- function(x, h, mu, k, c) {
 #' @param pow sigmoid decay rate
 #' @param A Sigmoid upper limit
 #' @param B Sigmoid lower limit
+#' @rdname XPSFitFunctions
 #' @export
 
 HillSigmoid <- function(x, h, mu, pow, A, B) { #decreases with incresing x values
@@ -586,7 +611,7 @@ HillSigmoid <- function(x, h, mu, pow, A, B) { #decreases with incresing x value
 #' @param h function amplitude
 #' @param mu position of function center
 #' @param k Fermi Distribution decay rate
-#'
+#' @rdname XPSFitFunctions
 
 
 VBFermi <- function(x, h, mu, k) {
@@ -602,7 +627,7 @@ VBFermi <- function(x, h, mu, k) {
 #' @description VBtop function to store VBtop position in a CoreLine@Components slot
 #' @param x numeric vector
 #' @param mu position of function center
-#'
+#' @rdname XPSFitFunctions
 
 
 VBtop <- function(x, mu) {
@@ -616,8 +641,7 @@ VBtop <- function(x, mu) {
 #' @description Derivative function to store Derivate position in a CoreLine@Components slot
 #' @param x numeric vector
 #' @param mu position of function center
-#' @export
-#'
+#' @rdname XPSFitFunctions
 
 Derivative <- function(x, mu) {
 

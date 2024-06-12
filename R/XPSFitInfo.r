@@ -152,18 +152,17 @@ XPSFitInfo <- function(){
 
 
 #----- variabili -----
-
    FName <- NULL
-   ActiveFName <- ""
-   FName <- get(activeFName, envir = .GlobalEnv)   #carico l'XPSSample dataFrame attivo
-   ActiveFName <- get("activeFName", envir = .GlobalEnv)  #carico il nome XPSSample (stringa)
-   Indx <- get("activeSpectIndx", envir = .GlobalEnv)  #carico il nome XPSSample (stringa)
-   activeSpectName <- get("activeSpectName", envir = .GlobalEnv)  #carico il nome XPSSample (stringa)
-   if (length(FName[[Indx]]@RegionToFit) == 0){  #no information se il Baseline non presente
-      message <- paste("No Baseline/Fit found for", ActiveFName, sep=" ")
-      return()
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
    }
-   message <- paste(activeSpectName, "Coreline Fit Info: ", sep=" ")
-   cat("\n", message)
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   Indx <- get("activeSpectIndx", envir = .GlobalEnv)
+   activeSpectName <- get("activeSpectName", envir = .GlobalEnv)
+   FName <- get(activeFName, envir = .GlobalEnv)
+   txt <- paste(activeSpectName, "Coreline Fit Info: ", sep=" ")
+   cat("\n", txt)
    info(FName[[Indx]])
 }

@@ -1,14 +1,15 @@
-#XPSImport.Ascii GUI to make reading/loading ascii file easy
+#XPSImport.Ascii GUI to make reading/loading ascii file
 
 #' @title XPSImport.Ascii function
 #' @description Function allowing import of textual (ascii) file data
 #'   Options are available to account for header and data separator
 #'   Options are also provided to store data in an object of class 'XPSSample'
-#' @return XPSImport.Ascii returns and object of class 'XPSSample' with
-#'   data loaded into a XPSCoreLine slot
+#'   XPSImport.Ascii saves the imported data in the .GlobalEnv
 #' @examples
 #' \dontrun{
 #'  XPSImport.Ascii()
+#'  activeFName <- get("activeFName", envir=.GlobalEnv)
+#'  XPSSample <- get(activeFName, envir=.GlobalEnv)
 #' }
 #' @export
 #'
@@ -134,7 +135,6 @@ XPSImport.Ascii <- function() {
                     Flags = c(as.logical(as.numeric(tclvalue(RevYN))), TRUE, FALSE, FALSE),
                     Symbol= tclvalue(CLNm)
                    )
-                                                                XColRead
               CLnames <- names(XPSSample)
               XPSSample[[LL]] <<- NewCL
               names(XPSSample) <<- c(CLnames, as.character(tclvalue(CLNm)))
@@ -182,10 +182,13 @@ XPSImport.Ascii <- function() {
 
 
 #--- Variables ---
-
        FNameIN <- NULL
        FName <- NULL
-       XPSSample <- NULL
+       XPSSample <- new("XPSSample",
+                         Project = " ",
+                         Comments = " ",
+                         User=Sys.getenv('USER'),
+                         Filename="" )
        activeFName <- NULL
        WW <- NULL
        HH <- NULL
@@ -210,16 +213,26 @@ XPSImport.Ascii <- function() {
 
 #--- Select File ---
        LoadButt <- tkbutton(LeftGroup, text="Open Data File", width=20, command=function(){
-                           Filters <- matrix(c("txt Files", ".txt", "Ascii Files", ".asc", "Prn Files", ".prn"), ncol=2, nrow=2, byrow=TRUE)
+                           XPSSamplesList <- XPSFNameList(warn=FALSE)
+                           idx <- grep(XPSSample@Filename, XPSSamplesList)
+                           if (length(idx) == 0 && length(XPSSample) > 0) {
+                               txt <- paste("Import Data in the Previous XPSSample ==> YES\n",
+                                            "Save Previous Data ==> NO", collapse="")
+                               answ <- tkmessageBox(message=txt, type="yesno", title="WARNING", icon="warning")
+                               if (tclvalue(answ) == "no"){
+                                   assign(activeFName, XPSSample, envir=.GlobalEnv) #save previous XPSSample
+                                   XPSSample <<- new("XPSSample",
+                                                      Project = " ",
+                                                      Comments = " ",
+                                                      User=Sys.getenv('USER'),
+                                                      Filename="" )
+                               }
+                           }
+                           Filters <- matrix(c("txt Files", ".txt", "Ascii Files", ".asc", "Data Files", ".dat", "Prn Files", ".prn"), ncol=2, nrow=2, byrow=TRUE)
                            FNameIN <<- tk_choose.files(default = "", caption = "Select files",
                                                        multi = FALSE, filters = Filters)
                            activeFName <<- basename(FNameIN)
                            pathFile <- dirname(FNameIN)
-                           XPSSample <<- new("XPSSample",
-                                             Project = " ",
-                                             Comments = " ",
-                                             User=Sys.getenv('USER'),
-                                             Filename=activeFName )
                            setwd(pathFile)
                            #Read Ascii file and show in InputData Window
                            tkinsert(Raw_Input, "0.0", paste(readLines(FNameIN), collapse="\n")) #write report in ShowParam Win
@@ -516,11 +529,13 @@ XPSImport.Ascii <- function() {
                              Saveframe <- ttklabelframe(SaveGroup, text = "Select Destination", borderwidth=2)
                              tkgrid(Saveframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-                             Items <- as.list(XPSSamples=XPSSamplesList)
+                             Items <- list(x=XPSSamplesList)
                              SaveTbl <- XPSTable(parent=Saveframe, items=Items, NRows=7, ColNames="XPSSamples", Width=100)
-                             addscrollbar(Saveframe, SaveTbl, type="y", Row=1, Col=1)
-                             tkbind(SaveTbl, "<Double-1>", function() {  #bind the table elements to the LEFT mouse but doubleClick
-                                         activeFName <<- tclvalue(tcl(SaveTbl, "selection" ))  # Get the selected items
+                             addScrollbars(Saveframe, SaveTbl, type="y", Row=1, Col=1)
+                             tkbind(SaveTbl, "<<TreeviewSelect>>", function() {  #bind the table elements to the LEFT mouse but doubleClick
+                                         idx <- tclvalue(tcl(SaveTbl, "selection" ))  # Get the selected items
+                                         idx <- as.numeric(gsub("\\D", "", idx))
+                                         activeFName <<- Items[[1]][idx]
                                    })
 
                              SaveBtn <- tkbutton(SaveGroup, text="SELECT", width=16, command=function(){
@@ -549,8 +564,7 @@ XPSImport.Ascii <- function() {
                      })
        tkgrid(AddXS_btn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
-       SaveExit_btn <- tkbutton(BtnFrame, text="SAVE and EXIT", width=14, command=function(){
-                         tkdestroy(ImportWin)
+       SaveExit_btn <- tkbutton(BtnFrame, text="SAVE", width=14, command=function(){
                          LL <- length(XPSSample)
                          assign(activeFName, XPSSample, envir=.GlobalEnv)  #save XPSSample in GlobalEnv
                          assign("activeFName", activeFName, envir=.GlobalEnv)  #Set the activeSpectName to the last name of imported data
@@ -563,8 +577,8 @@ XPSImport.Ascii <- function() {
 
        Exit_btn <- tkbutton(BtnFrame, text="EXIT", width=10, command=function(){
                          tkdestroy(ImportWin)
-                         XPSSample <<- NULL
                          XPSSaveRetrieveBkp("save")
+print(str(XPSSample))
                          return(XPSSample)
                      })
        tkgrid(Exit_btn, row = 1, column = 4, padx = 5, pady = 5, sticky="w")

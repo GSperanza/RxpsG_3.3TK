@@ -105,6 +105,11 @@ XPSInterpDecim <- function() {
 
 
 #--- Variables
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
    XPSSample <- NULL
    Indx <- NULL
    SelectedFName <- NULL

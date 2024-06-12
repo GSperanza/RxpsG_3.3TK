@@ -130,13 +130,33 @@ XPSPreferences <- function() {
    WSizeLabel <- ttklabel(frameDim, text=txt)
    tkgrid(WSizeLabel, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
    WS <- tclVar(WinSize)
-   WindowSize <- tkscale(frameDim, from=5, to=15, tickinterval=1, value=as.numeric(WinSize), 
-                         variable=WS, orient="horizontal", showvalue=FALSE, length=300)
+
+   WindowSize <- tkscale(frameDim, from=5, to=15, tickinterval=1, variable=WS,
+                         orient="horizontal", showvalue=FALSE, length=300)
    tkgrid(WindowSize, row = 2, column = 1, padx = 5, pady = 3, sticky="we")
    tkbind(WindowSize, "<ButtonRelease>", function(K){
                          WinSize <<- as.numeric(tclvalue(WS))
                          tkconfigure(WSizeLabel, text=paste("Graphical Window size: ", WinSize, sep=""))
-                         WinSize <<- dev.size()*WinSize   #rescale the graphic window
+                         graphics.off()
+                         O_Sys <- unname(tolower(Sys.info()["sysname"]))
+                         O_Sys <- tolower(O_Sys)
+                         switch (O_Sys,
+                                "linux" =   {
+                                            X11(type='cairo', width=WinSize, height=WinSize,
+                                                xpos=700, ypos=20, title= ' ')
+                                            XPSSettings$General[4] <<- WinSize
+                                            },
+                                "windows" = {
+                                            x11(width=WinSize, height=WinSize,
+                                                xpos=700, ypos=20, title= ' ')
+                                            XPSSettings$General[4] <<- WinSize
+                                            },
+                                "macos"  =  {
+                                            tkmessageBox(message="Cannot set Quartz Window Dimensions", type="WARNING", icon="warning")
+                                            WinSize <<- dev.size()
+                                            }
+                                      )
+
                     })
 
    frameDev <- ttklabelframe(group1, text = "SELECT THE OPERATING SYSTEM FOR GRAPHICS", borderwidth=2)
@@ -390,8 +410,8 @@ XPSPreferences <- function() {
    group5 <- ttklabelframe(frameColLinSym, text="LineTypes & Symbols", borderwidth=2)
    tkgrid(group5, row = 2, column = 2, padx = 0, pady = 0, sticky="w")
    DFrameTable(Data="GStyleParam", Title=" LINETYPE & SYMBOLS", # <<- needed to save modified GStyleParam
-                               ColNames=c("LineType", "Symbols"),
-                               RowNames="", Width=15, Env=environment(),
+                               ColNames=c("LineType", "Symbols"), RowNames="",
+                               Width=15, Modify=TRUE, Env=environment(),
                                parent=group5, Row=1, Column=1)
 
 

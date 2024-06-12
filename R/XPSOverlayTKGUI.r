@@ -4,7 +4,7 @@
 #' @description function to superpose plots of CoreLine spectra
 #'   Provides a userfriendly interface to select XPS-Corelines to overlay
 #'   and a selection of plotting options for a personalized data representation
-#'   This function is based on the (/code{Lattice}) package.
+#'   This function is based on the (\code{Lattice}) package.
 #' @examples
 #' \dontrun{
 #' 	XPSOverlay()
@@ -38,7 +38,8 @@ XPSOverlay <- function(){
                RowNames <- c(paste("Xmin (min=", axMin, "): ", sep=""),
                              paste("Xmax (max=", axMax, "): ", sep=""),
                              "N. ticks")
-               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, Width=15, Env=environment())
+               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, 
+                                      Width=15, Modify=TRUE, Env=environment())
                axParam <- as.numeric(unlist(axParam[[1]]))
                axMin <- axParam[1]     #X or Y scale min value
                axMax <- axParam[2]     #X or Y scale max value
@@ -169,17 +170,20 @@ XPSOverlay <- function(){
              if (SelectedNames$CoreLines[LL] == "-----") {
                  SelectedNames$CoreLines <<- SelectedNames$CoreLines[-LL] #Remove the last Coreline from the list of selected Corelines
              }
-             updateTable(NameTable, items=SelectedNames)   #update the table of the selected FNAmes
+             if (length(SelectedNames$XPSSample)==0 && length(SelectedNames$CoreLines)==0){
+                 clear_treeview(NameTable)
+             } else {
+                 updateTable(NameTable, items=SelectedNames)   #update the table of the selected FNAmes
+             }
              NCoreLines <<- 0
              NamesList <<- SelectedNames  #restore names prior the last selection
              SaveSelection <<- TRUE  #previous selection saved: TRUE to avoid error messages
              ClearWidget(T1frameCoreLines) # when selection complete delete checkboxes
-         } else if (SaveSelection == FALSE){
+         } else if (SaveSelection == FALSE && tclvalue(CL1)=="0"){  #XPSSample changed without selection of a CoreLine
              FNameList <- tclvalue(XS1)
              LL <- length(FNameList)
              FNameList <- FNameList[-LL]
-             tclvalue(XS1) <- FNameList
-             tkmessageBox(message="Please Save Selection" , title = "WARNING: SELECTION NOT SAVED",  icon = "error")
+             tkmessageBox(message="Select a Core.Line Please" , title = "WARNING: CORE.LINE NOT SELECTED",  icon = "error")
          } else {
              SaveSelection <<- FALSE #previous selection saved control enabled
              FName <- tclvalue(XS1)
@@ -217,6 +221,9 @@ XPSOverlay <- function(){
                                   }
                                   NamesList <<- SelectedNames   #a temporary variable used to allow changes in the checkbox
                                   SpectList <- tclvalue(CL1)
+                                  if (SpectList == "0"){ 
+                                      SpectList <- NULL
+                                  }
                                   LL <- length(SpectList)
                                   LLL <- length(NamesList$CoreLines)
                                   if (LL == 0) SpectList <- "-----"  #all the checkboxes are unselected (nocoreline selected)
@@ -372,9 +379,9 @@ XPSOverlay <- function(){
 
 
 #----- Variables -----
-
-   if (is.na(activeFName)){
-       tkmessageBox(message="No data present: please load an XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
    FName <- get(activeFName, envir=.GlobalEnv)   #load the active FName
@@ -1290,7 +1297,7 @@ XPSOverlay <- function(){
                    })
 
      #If FitComp = Multicolor building the widget to change FitComp colors
-     if (XPSSettings$General[8] == "PolyChromeFC"){
+     if (XPSSettings$General[8] == "FC.PolyChrome"){
          for(ii in 1:20){
              FCcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=FitColors$CompColor[ii])
              tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
@@ -1310,7 +1317,7 @@ XPSOverlay <- function(){
          }
      }
      #If FitComp = Singlecolor building the widget to change the Baseline FitComp and Fit colors
-     if (XPSSettings$General[8] == "MonoChromeFC"){
+     if (XPSSettings$General[8] == "FC.MonoChrome"){
           FCcolor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$CompColor[1])
           tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
           tkbind(FCcolor, "<Double-1>", function( ){
@@ -1321,7 +1328,6 @@ XPSOverlay <- function(){
                            CtrlPlot()
                        })
      }
-
      #Fit Color
      FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
      tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
@@ -1337,7 +1343,7 @@ XPSOverlay <- function(){
      tkgrid(T3F_BW_Col, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      BWCOL <- tclVar("RainBow")
-     T3_BW_Col <- ttkcombobox(T3F_BW_Col, width = 15, textvariable = BWCOL, values = c("MonoChrome", "ReinBow"))
+     T3_BW_Col <- ttkcombobox(T3F_BW_Col, width = 15, textvariable = BWCOL, values = c("MonoChrome", "RainBow"))
      tkbind(T3_BW_Col, "<<ComboboxSelected>>", function(){
                            if(tclvalue(BWCOL) == "MonoChrome") {
                               #now generate MonoChrome palette
@@ -1864,7 +1870,8 @@ XPSOverlay <- function(){
                            Title <- "CHANGE PANEL TITLE"
                            ColNames <- "Titles"
                            RowNames <- ""
-                           Plot_Args$PanelTitles <- DFrameTable("PTitles", Title, ColNames="", RowNames="", Width=15, Env=environment())
+                           Plot_Args$PanelTitles <- DFrameTable("PTitles", Title, ColNames="", RowNames="", 
+                                                                 Width=15, Modify=TRUE, Env=environment())
                            CtrlPlot()
                     })
      tkgrid(T4_PanelTitles, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -2112,7 +2119,7 @@ XPSOverlay <- function(){
                                      Plot_Args$par.settings$superpose.line$lty <<- "solid"
                                      Plot_Args$scales$relation <<- "free"
                                   }
- 		           	                if (tclvalue(BWCOL) == "RainBow") {                    #COLOR plot
+ 		           	                   if (tclvalue(BWCOL) == "RainBow") {                    #COLOR plot
                                      Plot_Args$par.settings$superpose.line$col <<- Colors
                                      Plot_Args$par.settings$superpose.line$lty <<- Plot_Args$lty
                                   }
@@ -2137,7 +2144,7 @@ XPSOverlay <- function(){
                     })
      tkgrid(T5_legendCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-     T5F_LegFNameCK <- ttklabelframe(T5group1, text="Enable Legend ON/OFF", borderwidth=2, padding=c(5,5,5,5))
+     T5F_LegFNameCK <- ttklabelframe(T5group1, text="Complete Legend", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T5F_LegFNameCK, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
      LEGNAMECK <- tclVar(FALSE)
      T5_LegFNameCK <- tkcheckbutton(T5F_LegFNameCK, text="Add XPSSamp Name", variable=LEGNAMECK, onvalue = 1, offvalue = 0,
@@ -2146,6 +2153,7 @@ XPSOverlay <- function(){
                                tkmessageBox(message="Please enable LEGENDS", icon="warning")
                                tclvalue(LEGNAMECK) <- "0"
                            } else {
+                              Legends <- NULL
                               if (tclvalue(LEGNAMECK) == "1") {
                                   Legends <- SelectedNames$CoreLines
                                   for (ii in seq_along(SelectedNames$XPSSample)){
@@ -2320,20 +2328,13 @@ XPSOverlay <- function(){
                            }
                            Legends <- DFrameTable(Legends, Title=Title,
                                                             ColNames=ColNames, RowNames=RowNames,
-                                                            Width=15, Env=environment())
+                                                            Width=15, Modify=TRUE, Env=environment())
                            Plot_Args$auto.key$text <<- unname(unlist(Legends))
                            CtrlPlot()
                     })
      tkgrid(T5_ChngLegBtn, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
 
      T5_AnnotateBtn <- tkbutton(T5group1, text=" Annotate ", width=20, command=function(){
-#                           xx <- Plot_Args$xlim   #in the case of zoom Xlim, Ylim are not null
-#                           yy <- Plot_Args$ylim
-#                           if (is.null(xx)){    #no zoom is present
-#                               xx <- Xlim  #get the X range from OverlayEngine
-#                               yy <- Ylim  #get the Y range from OverlayEngine
-#                           }
-#                           XPSLattAnnotate(xx, yy)
                            PlotParameters$Annotate <<- TRUE
                            CtrlPlot()
                            PlotParameters$Annotate <<- FALSE

@@ -18,7 +18,6 @@
 
 
 XPSFilter <- function() {
-#   import::from(signal, filter, freqz, sgolay, hamming, fir1, filtfilt, butter)
 
    PlotData <- function() {
       XXX <- cbind(unlist(Object@.Data[1]))
@@ -277,7 +276,7 @@ XPSFilter <- function() {
          Filtered <<- Filtered[(2*FiltLgth+1+P) : (LL+2*FiltLgth+P)]
       } else if (FilterType=="MovingAverage") {
 #--- Moving average filter
-         coeff <<- rep(1/(2*FiltLgth+1),(2*FiltLgth+1))  #1/FiltLgth because of the average
+#         coeff <<- rep(1/(2*FiltLgth+1),(2*FiltLgth+1))  #1/FiltLgth because of the average
          RawData <<- c(rep(RawData[1],FiltLgth), RawData, rep(RawData[LL],FiltLgth)) #FiltLgth Padding at edges
          for(ii in 1:LL){
              Filtered[ii] <<- mean(RawData[ii:(ii+2*FiltLgth)]) #Forward filtering
@@ -387,9 +386,10 @@ XPSFilter <- function() {
       return()
    }
 
-   msSmoothMRA <- function(mra, dwt){
+   msSmoothMRA <- function(){
       FiltInfo <<- paste("Wavelets filter, N.wavelets: ", tclvalue(F5WavN), " Degree: ", tclvalue(F5Deg), sep="")
-#      import::from(wavelets, mra, dwt) #cannot use import::here because rootSolve not listed in DESCRIPTION
+      mra <- get("mra", envir=.GlobalEnv)
+      mra <- get("dwt", envir=.GlobalEnv)      
       RawData <<- NULL
       Filtered <<- NULL
       coeff <<- NULL
@@ -541,17 +541,17 @@ XPSFilter <- function() {
 
 #----- Variabiles -----
    plot.new()
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
-   ActiveFName <- get("activeFName", envir=.GlobalEnv)  #cload the XPSSample name (string)
-   FName <- get(ActiveFName, envir=.GlobalEnv)   #load the active XPSSample (data)
+   FName <- get(activeFName, envir=.GlobalEnv)   #load the active XPSSample (data)
    FNameList <- XPSFNameList()                   #list of all XPSSamples loaded in .GlobalEnv
-   FNameIdx <- grep(ActiveFName,FNameList)
+   FNameIdx <- grep(activeFName,FNameList)
    SpectIndx <- NULL
    Object <- NULL
-   SpectList <- XPSSpectList(ActiveFName)
+   SpectList <- XPSSpectList(activeFName)
 
    RawData <- NULL
    Filtered <- NULL
@@ -589,9 +589,9 @@ XPSFilter <- function() {
    F1XpsSpect <- ttkcombobox(F1frame1, width = 20, textvariable = XS, values = FNameList)
    tkgrid(F1XpsSpect, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
    tkbind(F1XpsSpect, "<<ComboboxSelected>>", function(){
-                        ActiveFName <<- tclvalue(XS)
-                        FName <<- get(ActiveFName,envir=.GlobalEnv)  #carico in SampID il relativo XPSSAmple
-                        SpectList <<- XPSSpectList(ActiveFName)
+                        activeFName <<- tclvalue(XS)
+                        FName <<- get(activeFName,envir=.GlobalEnv)  #carico in SampID il relativo XPSSAmple
+                        SpectList <<- XPSSpectList(activeFName)
                         SpectIndx <<- 1
                         tkconfigure(F1CoreLine, values=SpectList)
                         plot(FName)
@@ -858,7 +858,7 @@ XPSFilter <- function() {
                             tkmessageBox(message=txt, title="WARNING", icon="error")
                             return()
                         }
-                        msSmoothMRA(mra, dwt)
+                        msSmoothMRA()
                         WidgetState(F5Response, "normal")
                         WidgetState(F5ResetBtn, "normal")
                         WidgetState(SaveNewButt, "normal")
@@ -1067,7 +1067,7 @@ XPSFilter <- function() {
                            idx2 <- which(FName[[SpectIndx]]@.Data[[1]] == rng[2])
                            FName[[SpectIndx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                         }
-                        assign(ActiveFName, FName,envir=.GlobalEnv)   #save XPSSample with additional smoothed coreline
+                        assign(activeFName, FName,envir=.GlobalEnv)   #save XPSSample with additional smoothed coreline
 #                        assign("activeSpectIndx", (NCL+1), envir=.GlobalEnv)      #set the activeSpectIndx be the smoothed core line
                         RawData <<- NULL
                         Filtered <<- NULL
@@ -1099,7 +1099,7 @@ XPSFilter <- function() {
                         }
                         Info[nI] <- paste("   ::: Smoothing: ", FiltInfo, sep="")  #Add or Change filter information
                         FName[[SpectIndx]]@Info <<- Info
-                        assign(ActiveFName, FName,envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato
+                        assign(activeFName, FName,envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato
                         Object <<- FName[[SpectIndx]]       #update Object used for filtering
                         plot(FName)
                         XPSSaveRetrieveBkp("save")
@@ -1149,7 +1149,7 @@ XPSFilter <- function() {
                            idx2 <- which(FName[[TestIdx]]@.Data[[1]] == rng[2])
                            FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                         }
-                        assign(ActiveFName, FName,envir=.GlobalEnv)      #Save the modified XPSSample in the globalEnv
+                        assign(activeFName, FName,envir=.GlobalEnv)      #Save the modified XPSSample in the globalEnv
 #                        assign("activeSpectIndx", TestIdx, envir=.GlobalEnv)  #set the activeSpectIndx be the smoothed core line
                         RawData <<- NULL
                         Filtered <<- NULL
