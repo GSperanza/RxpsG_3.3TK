@@ -126,7 +126,8 @@ FindNearest <- function(){
    LocPos <- list()
    Corners <- list(x=NULL, y=NULL)
    ZOOM <- FALSE
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -135,6 +136,10 @@ FindNearest <- function(){
    SpectList <- XPSSpectList(activeFName)
    SpectIndx <- get("activeSpectIndx",envir=.GlobalEnv)
    activeSpectName <- get("activeSpectName",envir=.GlobalEnv)
+   if (SpectIndx > length(FName)) { 
+       SpectIndx <- 1 
+       activeSpectName <- names(FName)[1]
+   }
    XYrange <- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
    if (FName[[SpectIndx]]@Flags[1]) {   #reverse if BE scale
       XYrange$x <- rev(XYrange$x)
@@ -207,7 +212,7 @@ FindNearest <- function(){
                  })
    tkgrid(ZMareaBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   ZMresetBtn <- tkbutton(ZMframe1, text=" Set the Zoom Area ", width=22, command=function(){
+   ZMresetBtn <- tkbutton(ZMframe1, text=" Reset Plot ", width=22, command=function(){
                      XYrange <<- ResetXYrange
                      ReDraw()
                  })

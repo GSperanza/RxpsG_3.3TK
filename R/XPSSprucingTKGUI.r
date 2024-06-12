@@ -161,7 +161,8 @@ XPSSprucing <- function() {
 
 
 #====== VARIABLES DEFINITION=======
-  if (exists("activeFName") == FALSE){
+  activeFName <- get("activeFName", envir = .GlobalEnv)
+  if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
       return()
   }

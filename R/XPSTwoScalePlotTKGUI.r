@@ -67,8 +67,6 @@ XPSTwoScalePlot <- function(){
             Plot_Args$lty <<- tclvalue(LT2)
             idx <- which(SType == tclvalue(SYT2))
             Plot_Args$pch <<- STypeIndx[idx]
-print(STypeIndx[idx])
-
             Plot_Args$data <<- df2
 
             par(new=T) #superpose new plot
@@ -170,7 +168,8 @@ print(STypeIndx[idx])
 
 #----- Variabili -----
    plot.new()                               #reset graphic window
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }

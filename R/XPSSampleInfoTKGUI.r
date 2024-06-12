@@ -52,7 +52,14 @@ XPSSampleInfo <- function() {
          CLtxt <<- paste(CLtxt, collapse="") #merge the possible CLtxt components in just one string.
       }
 
+
+
 #--- Variable definition ---
+      activeFName <- get("activeFName", envir = .GlobalEnv)
+      if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+          tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+          return()
+      }
       FName <- get(activeFName, envir=.GlobalEnv)
       FNameList <- XPSFNameList() #list of XPSSamples
       CLineList <- XPSSpectList(activeFName)
@@ -64,11 +71,11 @@ XPSSampleInfo <- function() {
       ColNames <- c("Parameters", "INFO")
       newData <- list()
       XSgroup  <- list()
+
       CLtxt <- ""
       CLBtns <- list()
       GetInfo(idx=1)
       children <- list()
-      
 
 #--- GUI ---
       InfoWindow <- tktoplevel()
@@ -89,7 +96,7 @@ XPSSampleInfo <- function() {
                     clear_widget(XSgroup)
                     #generate a new DFrameTable with updated info
                     DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 50),
-                                Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
+                                 Modify=TRUE, Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
                     Data <- get("Data", envir=environment())
 
                     clear_widget(CLFrame)
@@ -126,7 +133,7 @@ XPSSampleInfo <- function() {
       XSgroup <- ttkframe(XSFrame, borderwidth=0, padding=c(0,0,0,0) )  #Needed to contain the DFrameTable
       tkgrid(XSgroup, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
       Data <- DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 50),
-                  Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
+                   Modify=TRUE, Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
 
       CLFrame <- ttklabelframe(InfoGroup, text = " Core line Selection ", borderwidth=2)
       tkgrid(CLFrame, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
@@ -134,9 +141,9 @@ XPSSampleInfo <- function() {
       if (LL > 1){      #gradio works with at least 2 items
           CL <- tclVar()
           for(ii in 1:LL){
-              CLBtns <- ttkradiobutton(CLFrame, text=CLineList[ii], variable=CL, value=CLineList[ii],
+              CLBtns <- ttkradiobutton(CLFrame, text=CLineList[ii], variable=CL, value=ii,
                            command=function(){
-                              idx <<- grep(tclvalue(CL), CLineList)
+                              idx <<- as.integer(tclvalue(CL)) #exact match between selectedCL and CL-list
                               GetInfo(idx=idx)
                               tcl(CLinfo, "delete", "0.0", "end") #clears the quant_window
                               tkinsert(CLinfo, "0.0", CLtxt) #Insert Core line info
@@ -182,9 +189,11 @@ XPSSampleInfo <- function() {
                       FName@Comments <<- unlist(newData[[2]][3])
                       FName@User <<- unlist(newData[[2]][4])
                       FName@names <<- unlist(strsplit(unlist(newData[[2]][5]), " "))  #to correctly save the CoreLine Names
+                      assign("activeFName", activeFName, envir=.GlobalEnv)
                       assign(activeFName, FName, envir=.GlobalEnv)
                       tkdestroy(InfoWindow)
                       XPSSaveRetrieveBkp("save")
+                      UpdateXS_Tbl()
              })
       tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
       

@@ -18,6 +18,7 @@ XPSSaveData <- function() {
      ChDir <- function(){
           PathName <<- tk_choose.dir( default=getwd() )
           tkconfigure(DestFolder, text=PathName)
+          setwd(PathName)
      }
 
      CutPathName <- function(PathName){
@@ -35,7 +36,6 @@ XPSSaveData <- function() {
           FName <- get(activeFName, envir=.GlobalEnv)
           saveFName <<- unlist(strsplit(saveFName, "\\."))
           saveFName <<- paste(saveFName[1],".RData", sep="")  #Define the Filename to be used to save the XPSSample
-
           if (PathName != getwd()){  #original folder different from the current wirking directory
              txt= paste("Warning: current and original directories are different. Do you want to save data in folder: \n", PathName, sep="")
              answ <- tkmessageBox(message=txt, type="yesno", title="SET DESTINATION FOLDER", icon="warning")
@@ -43,11 +43,16 @@ XPSSaveData <- function() {
                 ChDir()
              }
           }
+          removeFName <- unlist(strsplit(activeFName, "\\."))   #in activeFName are initially .vms or .pxt or OldScienta fileNames
+          if (removeFName[2] != "RData" || saveFName != activeFName){ #activeFName contains the original XPSSample Name
+             remove(list=activeFName,pos=1,envir=.GlobalEnv)  #Now remove xxx.vms, xxx.pxt or the xxx.RData if a new name is given
+          }
 
           FName@Filename <- saveFName #save the new FileName in the relative XPSSample slot
           PathFileName <- paste(PathName, "/",saveFName, sep="")
           FName@Sample <- PathFileName
-          assign(activeFName, saveFName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
+
+          assign("activeFName", saveFName, envir=.GlobalEnv)  #change the activeFName in the .GlobalEnv
           assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
           RVersion <- as.integer(tclvalue(FMT)) #by default no indication of the R Version is saved
           if (RVersion == 1) {
@@ -58,11 +63,6 @@ XPSSaveData <- function() {
               RVersion <- 2  # code for R version <= 2
           }
           save(list=saveFName, file=PathFileName, version=RVersion, compress=TRUE)
-          removeFName <- unlist(strsplit(activeFName, "\\."))   #in activeFName are initially .vms or .pxt or OldScienta fileNames
-          if (removeFName[2] != "RData" || saveFName != activeFName){ #activeFName contains the original XPSSample Name
-             remove(list=activeFName,pos=1,envir=.GlobalEnv)  #Now remove xxx.vms, xxx.pxt or the xxx.RData if a new name is given
-          }
-          assign("activeFName", saveFName, envir=.GlobalEnv)  #change the activeFName in the .GlobalEnv
           ShortPathName <- CutPathName(PathFileName)
           txt <- paste("\n Analyzed Data saved in: ", ShortPathName, sep="")
           cat("\n", txt)
@@ -156,19 +156,20 @@ XPSSaveData <- function() {
             return()
          }
          saveFName <<- ""
+         FilePath <- ""
          PathName <<- getwd()
          saveFName <<- get("activeFName", envir=.GlobalEnv)
          saveFName <<- unlist(strsplit(saveFName, "\\."))     #not known if extension will be present
          saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
          FNameList <<- XPSFNameList()
          SpectIdx <<- grep(activeFName, FNameList)
-         PathName <<- getwd()
      }
 
 
 
 #----- Variables -----
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -208,21 +209,32 @@ XPSSaveData <- function() {
    tkbind(XPSSample, "<<ComboboxSelected>>", function(){
                       ResetVars()
                       tkconfigure(DestFolder, text=PathName)
-                      saveFName <<- tclvalue(XS)
-                      assign("activeFName", saveFName, envir=.GlobalEnv)   #change the activeFName in the .GlobalEnv
-                      saveFName <<- unlist(strsplit(saveFName, "\\."))      #not known if extension will be present
+                      activeFName <<- tclvalue(XS)
+                      saveFName <<- activeFName
+                      FName <- get(activeFName, envir=.GlobalEnv)
+                      assign("activeFName", activeFName, envir=.GlobalEnv)   #change the activeFName in the .GlobalEnv
+                      saveFName <<- unlist(strsplit(saveFName, "\\."))     #not known if extension will be present
                       saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
                       tclvalue(DFN) <<- saveFName
-                      FName <- get(activeFName, envir=.GlobalEnv)
                       FilePath <<- FName@Sample
                       if (FilePath == ""){
                           FilePath <<- getwd()
                       } else {
                           NC <- nchar(FilePath)
-                          if (substr(FilePath, NC, NC) == "/") { PathName <<- substr(FilePath, 1, NC-1) } #FilePath == Z:/X/LAVORI/R/Analysis/IPZS/
-                          if (substr(FilePath, NC, NC) != "/") {
-                              if (grep(saveFName, FilePath) > 0) FilePath <- dirname(FilePath)
-                              PathName <<- FilePath } #FilePath == Z:/X/LAVORI/R/Analysis/IPZS
+                          if (substr(FilePath, NC, NC) == "/") { #FilePath == Z:/X/LAVORI/R/Analysis/IPZS/
+                              FilePath <- substr(FilePath,1,NC-1)#FilePath == Z:/X/LAVORI/R/Analysis/IPZS
+                              PathName <<- FilePath
+                          }
+                          if (substr(FilePath, NC, NC) != "/") { #FilePath == Z:/X/LAVORI/R/Analysis/IPZS/Test1.vms
+                              if (length(grep(saveFName, FilePath)) > 0){ # Test1.RData in FilePath == Z:/X/LAVORI/R/Analysis/IPZS/Test1.RData
+                                  FilePath <- dirname(FilePath)
+                                  PathName <<- FilePath   #FilePath == Z:/X/LAVORI/R/Analysis/IPZS
+                              }
+                              if (length(grep(tclvalue(XS), FilePath)) > 0){# Test1.vms in FilePath == Z:/X/LAVORI/R/Analysis/IPZS/Test1.vms
+                                  FilePath <- dirname(FilePath)
+                                  PathName <<- FilePath   #FilePath == Z:/X/LAVORI/R/Analysis/IPZS
+                              }
+                          }
                       }
                       if (PathName != "" && PathName != FilePath){
                           txt= paste("Warning: current and original directories are different. Do you want to save data in folder: \n", PathName, sep="")
@@ -294,6 +306,7 @@ XPSSaveData <- function() {
 
    exitBtn <- tkbutton(SaveGroup, text="  EXIT  ", width=30, command=function(){
                           tkdestroy(SaveWindow)
+                          return()
                       })
    tkgrid(exitBtn, row = 6, column = 1, padx = 29, pady = c(5,10), sticky="w")
 

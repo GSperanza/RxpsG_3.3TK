@@ -33,7 +33,7 @@ ReadElmtList<-function(SpectrumType){
 peakDetection <- function(object, snmin , Ewin) {
  	 #- find peaks: DO NOT use baseline(object, method = "peakDetection")
  	 #- because it does not return the peaks index
- 	 import::from(baseline, baseline.peakDetection)
+         baseline.peakDetection <- get("baseline.peakDetection", envir=.GlobalEnv)
  	 peaks <- baseline.peakDetection(matrix(data=object[[2]], nrow=1),
                         snminimum = snmin,
                         left.right = Ewin,

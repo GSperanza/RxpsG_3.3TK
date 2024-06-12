@@ -286,6 +286,7 @@ XPSTable <- function(parent, items, NRows=0, ColNames, Width) {
 #' @param ColNames the names of the DFrameTable columns
 #' @param RowNames the names of the DFrameTable rownames
 #' @param Width the width of the DFrameTable columns
+#' @param Modify logical TRUE (default) to modify the selected item FALSE to simply return it
 #' @param Env the environment containing the object of class data.frame to print
 #' @param parent the ID of the parent container
 #' @param Row the row where to place the DFrameTable using tkgrid()
@@ -301,7 +302,7 @@ XPSTable <- function(parent, items, NRows=0, ColNames, Width) {
 #   Env must be specified to assign() and return(Data).
 
 
-DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Env, 
+DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=TRUE, Env,
                         parent=NULL, Row=NULL, Column=NULL, Border=c(10,10,10,10)){
 
   EditItem <- function(Idx, width){  #Idx == index of the selected TableList column
@@ -357,8 +358,8 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Env,
    ListBox <- list()  #set a list() to save tklistbox IDs
    CLidx <- 0
    DFrameWin <- list()
-   ListBox <- list()
    VarName <- NULL
+   SelectedItem <- NULL
 
    if (is.null(parent)) {
        DFrameWin <- tktoplevel()
@@ -466,7 +467,14 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Env,
                       break
                   }
               }
-              EditItem(ii, Width[ii])
+              if (Modify == TRUE ){
+                  EditItem(ii, Width[ii])
+              } else {
+                  ItemIdx <- tclvalue(tcl(ListBox[[ii]], "curselection"))
+#                  SelectedItem <- tclvalue(tcl(ListBox[[ii]], "get", ItemIdx))
+                  ItemIdx <- as.numeric(ItemIdx)+1  #+1 because items in listbox start from row=0
+                  SelectedItem <<- Data[[ii]][ItemIdx]
+              }
        })
    }
 
@@ -497,13 +505,22 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Env,
 #For this we place return(Data) here!
        return(Data)
    } else {
-       SetBtn <- tkbutton(DFFrame, text=" SET CHANGES ", command=function(){
+       if (Modify == TRUE){
+           SetBtn <- tkbutton(DFFrame, text=" SET CHANGES ", command=function(){
                             remove("DFWinExists", envir=.GlobalEnv)
                             XPSSaveRetrieveBkp("save")
                             assign(VarName, Data, envir=Env) #modified data has to be assigned using the original name
                             return(Data)
                           })
-       tkgrid(SetBtn, row = 2, column = 1, padx = 0, pady = 5, sticky="w")
+           tkgrid(SetBtn, row = 2, column = 1, padx = 0, pady = 5, sticky="w")
+       } else {
+           SetBtn <- tkbutton(DFFrame, text=" SELECT THE RSF ", command=function(){
+                            remove("DFWinExists", envir=.GlobalEnv)
+                            assign(VarName, SelectedItem, envir=Env) #modified data has to be assigned using the original name
+                            return(Data)
+                          })
+           tkgrid(SetBtn, row = 2, column = 1, padx = 0, pady = 5, sticky="w")
+       }
    }
 }
 

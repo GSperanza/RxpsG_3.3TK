@@ -68,7 +68,7 @@ XPSVBTop <- function() {
      tab2 <- as.numeric(tclvalue(tcl(nbVBfit, "index", "current")))+1 #retrieve nbVBfit page index
 #--- define point.coords
      if (is.null(point.coords$x) && VBlimOK == FALSE) {
-        if (hasBoundaries == FALSE) {
+        if (hasBoundaries(Object[[coreline]]) == FALSE) {
            Object[[coreline]]@Boundaries$x <- range(Object[[coreline]]@.Data[[1]])
            Object[[coreline]]@Boundaries$y <- range(Object[[coreline]]@.Data[[2]])
         }
@@ -446,8 +446,8 @@ XPSVBTop <- function() {
                           FitParam <<- data.frame(cbind(FitParam), stringsAsFactors=FALSE)  #add varnames in the first column of the paramMatrix and make resave data in a Dataframe to enable editing
                           newFitParam <<- FitParam
                           ClearWidget(GDFGroup)
-                          FitParam <<- DFrameTable(Data="FitParam", Title="Fit Comp. Parameters", ColNames=c("Start", "min", "max"),
-                                                   RowNames=VarNames, Width=10, Env=environment(), parent=GDFGroup, Row=1, Column=1, Border=c(10, 10, 10, 10))
+                          FitParam <<- DFrameTable(Data="FitParam", Title="Fit Comp. Parameters", ColNames=c("Start", "min", "max"), RowNames=VarNames,
+                                                   Width=10, Modify=TRUE, Env=environment(), parent=GDFGroup, Row=1, Column=1, Border=c(10, 10, 10, 10))
                     })
 
      GDFGroup <- ttkframe(FitCompframe, borderwidth=0, padding=c(0,0,0,0) )
@@ -620,7 +620,8 @@ XPSVBTop <- function() {
          ## Control on the extension of the VB above the Fermi
 
 #             VBtresh <- VBintg/5   #define a treshold for VBtop estimation
-             VBtresh <- (max(Object[[coreline]]@Fit$y)-min(Object[[coreline]]@Fit$y))/10
+             LL <- length(Object[[coreline]]@Baseline$x)
+             VBtresh <- (max(Object[[coreline]]@Fit$y)-min(Object[[coreline]]@Fit$y))/30 #*LL/VBintg
              LL <- length(Object[[coreline]]@Fit$y)
              for(idxTop in LL:1){ #scan the VBfit to find where the spectrum crosses the threshold
                 if (Object[[coreline]]@Fit$y[idxTop] >= VBtresh) break
@@ -718,9 +719,10 @@ XPSVBTop <- function() {
   }
 
 #-----VARIABLES---
-  if (is.na(activeFName)){
-       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
-       return()
+  activeFName <- get("activeFName", envir = .GlobalEnv)
+  if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+      tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+      return()
   }
 
   Object <- get(activeFName,envir=.GlobalEnv)  #this is the XPS Sample
@@ -750,7 +752,6 @@ XPSVBTop <- function() {
   SymSiz <- 1.8
 
   WinSize <- as.numeric(XPSSettings$General[4])
-
 
 #----- Widget -----
   VBwindow <- tktoplevel()
@@ -1134,9 +1135,14 @@ XPSVBTop <- function() {
                       LL <- length(Object)
                       Object[[LL+1]] <<- Object[[coreline]]
                       Object@names[LL+1] <<- "VBt"
+                      assign("activeFName", Object_name, envir = .GlobalEnv)
                       assign(Object_name, Object, envir = .GlobalEnv)
                       assign("activeSpectIndx", (LL+1), envir = .GlobalEnv)
                       assign("activeSpectName", "VBt", envir = .GlobalEnv)
+                      idx <- which(XPSFNameList() == activeFName)      #index of the XPSSample_Name in tle FNameList
+                      idx <- paste("I00", idx, sep="")                 #build index compatible with the TCL
+                      XS_Tbl <- get("XS_Tbl", envir=.GlobalEnv)        #get the ttktreview ID
+                      tcl(XS_Tbl, "selection", "set", idx)             #set the actual XPSSample as selected in the MAIN-GUI
                       replot()
                       XPSSaveRetrieveBkp("save")
          })
@@ -1152,12 +1158,14 @@ XPSVBTop <- function() {
                       LL <- length(Object)
                       Object[[LL+1]] <<- Object[[coreline]]
                       Object@names[LL+1] <<- "VBt"
+                      assign("activeFName", Object_name, envir = .GlobalEnv)
                       assign(Object_name, Object, envir = .GlobalEnv)
                       assign("activeSpectIndx", (LL+1), envir = .GlobalEnv)
                       assign("activeSpectName", "VBt", envir = .GlobalEnv)
                       tkdestroy(VBwindow)
                       plot(Object)
                       XPSSaveRetrieveBkp("save")
+                      UpdateXS_Tbl()
          })
   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="we")
 

@@ -14,8 +14,12 @@
 XPSSetCoreLine <- function() {
 
 #carico la lista dei file ID e loro FileNames
-   ActiveFName<-get("activeFName", envir=.GlobalEnv)
-   SpectList<-XPSSpectList(ActiveFName)
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
+   SpectList<-XPSSpectList(activeFName)
 
 
 #--- CL SELECTION for Constraints - NOT USED ---

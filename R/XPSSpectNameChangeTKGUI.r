@@ -31,8 +31,9 @@ XPSSpectNameChange <- function(){
    }
 
 #--- Global variables definition ---
-   if (is.na(activeFName)){
-       tkmessageBox(message="No data present: please load and XPS Sample", title="WARNING", icon="warning")
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
    FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
@@ -66,8 +67,8 @@ XPSSpectNameChange <- function(){
                         plot(FName)
                         LL <- length(FName)
                         clear_widget(LabFrame2)
-                        SpectList <<- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names",
-                                               RowNames="", Width=15, Env=environment(), parent=LabFrame2,
+                        SpectList <<- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
+                                               Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,
                                                Row=1, Column=1, Border=c(10, 10, 10, 10))
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
@@ -86,8 +87,8 @@ XPSSpectNameChange <- function(){
    LabFrame2 <- ttklabelframe(LabGroup, text = " Change Spectrum Names ", borderwidth=2)
    tkgrid(LabFrame2, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
 
-   SpectList <- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names",
-                         RowNames="", Width=15, Env=environment(), parent=LabFrame2,
+   SpectList <- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
+                         Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,
                          Row=1, Column=1, Border=c(10, 10, 10, 10))
 
    LabFrame3 <- ttklabelframe(LabGroup, text = " Set the New XPS-Sample Name ", borderwidth=2)
@@ -102,11 +103,11 @@ XPSSpectNameChange <- function(){
    tkbind(XSName, "<Key-Return>", function(K){
                         tkconfigure(XSName, foreground="black")
                         XPSSampName <<- tclvalue(XSNM)
-                        if (length(strsplit(XPSSampName, "\\.")[[1]]) < 2) {
-                           answ <- tkmessageBox(message=".RData extension is lacking. Add extension?", title="WARNING", type="yesno",  icon=c("warning"))
-                            if (answ == "yes"){
+                        if (length(strsplit(XPSSampName, "\\.")) < 2) {
+                            answ <- tkmessageBox(message="Extension is lacking. Add .RData extension?", title="WARNING", type="yesno",  icon=c("warning"))
+                            if (tclvalue(answ) == "yes"){
                                 XPSSampName <<- paste(XPSSampName, ".RData", sep="")
-                                tkconfigure(XSName, text=XPSSampName)
+                                tclvalue(XSNM) <- XPSSampName
                             } else {
                                 tkmessageBox(message="Please check your XPS-Sample name. \n Nothing was changed.", title="WARNING", icon="warning")
                                 return()

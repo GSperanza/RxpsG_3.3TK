@@ -42,6 +42,7 @@ XPSSetGraphDev <- function() {
 #--- variables
    OSList <- c("Windows", "macOS", "Linux")
    FormatList <- c("jpeg", "png", "bmp", "tiff", "eps", "pdf")
+   quartz <- NULL
    pathName <- getwd()
    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    WinSize <- as.numeric(XPSSettings$General[4])

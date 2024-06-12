@@ -32,6 +32,12 @@ reset.boundaries <- function(h, ...) {
                    title = "ERROR", icon="error")
        return()
    }
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
+  
    Object <- get(activeFName, envir = .GlobalEnv)
    CurrentCoreLine <- activeSpectIndx
    nameCtrl <- Object[[CurrentCoreLine]]@Symbol

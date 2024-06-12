@@ -86,11 +86,11 @@ XPSSplit <- function() {
     CL <- NULL
    
     CLidx <- NULL
-    if (exists("activeFName") == FALSE){
+    activeFName <- get("activeFName", envir = .GlobalEnv)
+    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
         tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
         return()
     }
-
     FName <- get(activeFName, envir=.GlobalEnv)   #load the active XPSSample in memory
     activeFName <- get("activeFName", envir=.GlobalEnv)  #carico il nome XPSSample (stringa)
     FNameList <- XPSFNameList()     #list of all loaded XPSSamples in .GlobalEnv

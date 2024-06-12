@@ -15,7 +15,7 @@
 
 
 XPSSpectList <- function(SelectedFName, noIdx=FALSE) {
-     if (is.na(SelectedFName)){
+     if (length(SelectedFName)==0 || is.na(SelectedFName) || is.null(SelectedFName)){
         tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
         return()
      }
