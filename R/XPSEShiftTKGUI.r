@@ -111,7 +111,8 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
 }
 
 #--- Variables ---
-   if (is.na(activeFName)){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -314,7 +315,6 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     tkgrid(tkbutton(Frame6, text="        SAVE        ", command=function(){
     	                   assign(activeFName, FName, envir=.GlobalEnv)
     	                   XPSSaveRetrieveBkp("save")
-    	                   plot(FName)
           }),row = 9, column = 2, padx=8, pady=5, sticky="w")
 
 

@@ -153,7 +153,7 @@ XPSExtract <- function() {
          Object@Symbol <- " "
          replot()
 
-         txt <- paste("Elem.Name \U21B2", sep="")  #/U000D = carriage return symbol (ENTER)
+         txt <- paste("Elem.Name ", sep="")  #\U21B2 = carriage return symbol (ENTER)
          ELMNT <- tclVar(txt)  #sets the initial msg
          EnterElmnt <- ttkentry(ElementFrame, textvariable=ELMNT, width=12, foreground="grey")
          tkgrid(EnterElmnt, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -172,10 +172,13 @@ XPSExtract <- function() {
                              if (tclvalue(yesno) =="No"){
                                  return()
                              }
+                         } else {
+                             Element <<- IniElement(Element)
                          }
                      })
 
-         txt <- paste("Orbital \U21B2", sep="")  #/U000D = carriage return symbol (ENTER)
+
+         txt <- paste("Orbital ", sep="")  #\U21B2 = carriage return symbol (ENTER)
          ORB <- tclVar(txt)  #sets the initial msg
          EnterOrb <- ttkentry(ElementFrame, textvariable=ORB, width=12, foreground="grey")
          tkgrid(EnterOrb, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
@@ -196,16 +199,62 @@ XPSExtract <- function() {
                                  return()
                              }
                          }
+#Example: Au  Element$Orbital is:
+#    Element Orbital  BE     KE RSF_K RSF_S
+#57       Au   5p3/2  57 1429.6    NA  0.00
+#79       Au   5p1/2  74 1412.6    NA  0.00
+#90       Au   4f7/2  84 1402.6 6.250  9.58
+#96       Au   4f5/2  87 1399.6    NA  7.54
+#124      Au      5s 110 1376.6 0.000  0.00
+#298      Au   4d5/2 335 1151.6 4.841  0.00
+#310      Au   4d3/2 353 1133.6 0.000  0.00
+#412      Au   4p3/2 546  940.6 3.166  2.14
+#443      Au   4p1/2 643  843.6 0.000  0.00
+#475      Au      4s 759  727.6 0.409  1.92
+                         if (Object@Flags[3] == FALSE) {   #eliminate rows corresponding to
+                             idx <- which(is.na(Element$RSF_K))# NAs present in RSF_K column
+                             Element <- Element[-idx, ]
+                             Object@RSF <<- Element$RSF_K
+                         } else {
+                             idx <- which(is.na(Element$RSF_S))#  NAs present in RSF_S column
+                             Element <- Element[-idx, ]
+                             Object@RSF <<- Element$RSF_S
+                         }
+                         #now identify rows corresponding to the selected orbital
+                         idx <- grep(Orbital, Element$Orbital) #for Orbital="4f" idx == c(3, 4) corresponding to "4f7/2", 4f5/2"
+                         if (length(idx) > 1){
+                             JJ <- sapply(strsplit(Element$Orbital, Orbital), function(x) x[2])  #extract "7/2", "5/2" strings
+                             JJ <- na.omit(JJ)  #omits NA from JJ
+                             JJ <- as.numeric(substr(JJ, start=1, stop=1)) #extract '7' and '5' which now can be converted in numbers
+                             ii <- which(JJ == max(JJ))
+                             idx <- idx[ii]  #select the index corresponding to the max LS value "7/2"
+                             if (Object@Flags[3] == FALSE) {
+                                 Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
+                             } else {
+                                 Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                             }
+                         } else {  #orbital is like 1s, 2p, 3d... LS not indicated
+#    Element Orbital  BE     KE RSF_K RSF_S
+#333       N      1s 397 1089.6 0.477   1.8
+#just one element identified by idx
+                             if (Object@Flags[3] == FALSE) {
+                                 Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
+                             } else {
+                                 Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                             }
+                         }
                      })
 
-         OKBtn <- tkbutton(ElementFrame, text="  OK  ", width=10, command=function(){
+         GETBtn <- tkbutton(ElementFrame, text=" GET SPECTRUM ", width=13, command=function(){
                          if (length(Element) == 0) {
                              tkmessageBox(message="Enter the CoreLine Name Please", title="ERROR", icon ="error")
                              return()
                          }
+                         Element <<- tclvalue(ELMNT)
+                         Orbital <<- tclvalue(ORB)
                          tkdestroy(EnterElmnt)
                          tkdestroy(EnterOrb)
-                         tkdestroy(OKBtn)
+                         tkdestroy(GETBtn)
                          if (length(Orbital) == 0) { Orbital <<- "" }
                          Symbol <- paste(Element, Orbital, sep="") #biold the exact CoreLine name
                          newcoreline <- Object   #creates a new coreline
@@ -225,9 +274,11 @@ XPSExtract <- function() {
                          newcoreline@Boundaries$x <- c(tmp[idx1], tmp[idx2])
                          tmp <- unlist(Object@.Data[2])  #extract correspondent Y values for the selected region
                          newcoreline@.Data[[2]] <- tmp[idx1:idx2]    #save the Y values in the new coreline
-                         newcoreline@Boundaries$y <- range(tmp)
-                         tmp <- unlist(Object@.Data[3])  #extract correspondent transmission Factor values for the selected region
-                         newcoreline@.Data[[3]] <- tmp[idx1:idx2]    #save the transmission Factor values in the new coreline
+                         newcoreline@Boundaries$y <- range(tmp[idx1:idx2])
+                         if (length(Object@.Data[3]) > 0){
+                             tmp <- unlist(Object@.Data[3])  #extract correspondent transmission Factor values for the selected region
+                             newcoreline@.Data[[3]] <- tmp[idx1:idx2]    #save the transmission Factor values in the new coreline
+                         }
                          newcoreline@Symbol <- Symbol
                          ## add extracted coreline to original XPSSample
                          idx <- length(XPSSample) + 1
@@ -243,8 +294,9 @@ XPSExtract <- function() {
                          assign("activeSpectIndx", idx, envir=.GlobalEnv)
                          assign("activeSpectName", Symbol, envir=.GlobalEnv)
                          plot(XPSSample)
+                         Finalize <<- TRUE
                      })
-         tkgrid(OKBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+         tkgrid(GETBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 
   }
 
@@ -272,12 +324,17 @@ XPSExtract <- function() {
          Element <<- NULL
          Orbital <<- NULL
          Eidx <<- NA
-
+         Finalize <<- FALSE
          WinSize <<- as.numeric(XPSSettings$General[4])
   }
 
 #----- Variables -----
-  XPSSample <- NULL
+  activeFName <- get("activeFName", envir = .GlobalEnv)
+  if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+      tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+      return()
+  }
+  XPSSample <- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
   coreline <- NULL
   oldcoreline <- coreline
   Object <- NULL
@@ -289,6 +346,7 @@ XPSExtract <- function() {
   NO.Fit <- FALSE
   Element <- NULL
   Orbital <- NULL
+  Finalize <- FALSE
 
 #Coreline boundaries
   point.coords$x <- NULL
@@ -309,6 +367,7 @@ XPSExtract <- function() {
   WinSize <- as.numeric(XPSSettings$General[4])
   WinScale  <- NULL
   cat("\n Please select the portion of the Survey containing the CoreLine to extract. \n")
+  graphics.off()
   plot.new()
 
 #----- Widget definition
@@ -323,7 +382,7 @@ XPSExtract <- function() {
   Eframe1 <- ttklabelframe(Egroup1, text="XPS Sample and Core line Selection", borderwidth=2, padding=c(5,5,5,5) )
   tkgrid(Eframe1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-  XS <- tclVar()
+  XS <- tclVar(activeFName)
   XPS.Sample <- ttkcombobox(Eframe1, width = 15, textvariable = XS, values = FNameList)
   tkgrid(XPS.Sample, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
   tkbind(XPS.Sample, "<<ComboboxSelected>>", function(){
@@ -377,15 +436,7 @@ XPSExtract <- function() {
   tkgrid(OptFrame, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
   SelRegBtn <- tkbutton(OptFrame, text="SELECT REGION", width=20, command=function(){
-                        CLine <- tclvalue(CL)
-                        CLine <- unlist(strsplit(CLine, "\\."))   #"number." and "CL name" are separated
-                        coreline <<- as.integer(CLine[1])   # Coreline index
-                        oldcoreline <<- coreline
-                        Object <<- XPSSample[[coreline]]
-                        Xlimits <<- c(min(Object@.Data[[1]]), max(Object@.Data[[1]]))
-                        Ylimits <<- c(min(Object@.Data[[2]]), max(Object@.Data[[2]]))
-                        point.index <<- 1
-                        replot()
+#                        replot()
                         OldCoords <<- Object@Boundaries
                         SelReg <<- SelReg+1
                         txt <- paste("Left Mouse Button to Define the Region to Extract\n",
@@ -476,18 +527,28 @@ XPSExtract <- function() {
 
 
 #---- Buttons ----
-  SaveFrame <- ttklabelframe(Egroup1, text="Plot", borderwidth=2, padding=c(5,5,5,5) )
+  SaveFrame <- ttklabelframe(Egroup1, text="Save Data", borderwidth=2, padding=c(5,5,5,5) )
   tkgrid(SaveFrame, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
 
   SaveBtn <- tkbutton(SaveFrame, text="SAVE", width=11, command=function(){
+                        if (Finalize == FALSE){
+                            tkmessageBox(message="Please Define Element and Orbital and then Press GET SPECTRUM", title="WARNING", icon="warning")
+                            return()
+                        }
                         assign(activeFName, XPSSample, envir = .GlobalEnv)
                         assign("activeSpectIndx", coreline, envir = .GlobalEnv)
                         assign("activeSpectName", XPSSample[[coreline]]@Symbol, envir = .GlobalEnv)
                         XPSSaveRetrieveBkp("save")
+                        Finalize <<- FALSE
+                        plot(XPSSample)
                  })
   tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
   SaveExitBtn <- tkbutton(SaveFrame, text="SAVE & EXIT", width=15,  command=function(){
+                        if (Finalize == FALSE){
+                            tkmessageBox(message="Please Define Element and Orbital and then Press GET SPECTRUM", title="WARNING", icon="warning")
+                            return()
+                        }
                         XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                         assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
                         assign(activeFName, XPSSample, envir = .GlobalEnv)
@@ -496,6 +557,7 @@ XPSExtract <- function() {
                         tkdestroy(Ewindow)  #this calls the handlerdestroy(Ewindow...)
                         XPSSaveRetrieveBkp("save")
                         plot(XPSSample)
+                        UpdateXS_Tbl()
                  })
   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 

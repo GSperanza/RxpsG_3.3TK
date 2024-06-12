@@ -289,7 +289,11 @@ XPSAnalysis <- function() {
          SetZoom <<- FALSE
          # if boundaries already defined
          if (hasBaseline(Object[[coreline]]) ) {
-            LL <- length(Object[[coreline]]@RegionToFit$x)
+           LL <- length(Object[[coreline]]@RegionToFit$x)
+            BType <<- Object[[coreline]]@Baseline$type
+            NN <- nchar(BType)
+            BL_type <- paste(toupper(substr(BType, 1, 1)), substr(BType, 2, NN), sep="")
+            tclvalue(BL) <- BL_type
             point.coords$x <<- c(Object[[coreline]]@RegionToFit$x[1], Object[[coreline]]@RegionToFit$x[LL])
             point.coords$y <<- c(Object[[coreline]]@RegionToFit$y[1], Object[[coreline]]@RegionToFit$y[LL])
             Xlimits <<- range(Object[[coreline]]@RegionToFit$x)
@@ -300,22 +304,15 @@ XPSAnalysis <- function() {
             point.coords$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
             Xlimits <<- range(Object[[coreline]]@.Data[1])
             Ylimits <<- range(Object[[coreline]]@.Data[2])
+            Object[[coreline]] <<- XPSsetRSF(Object[[coreline]], Object[[coreline]]@RSF)
          } else {
             Reset.Baseline()   #defines the spectral limits and marker positions
-         }
-         if (hasBaseline(Object[[coreline]]) ) {
-             BType <<- Object[[coreline]]@Baseline$type
-             NN <- nchar(BType)
-             BLtype <- paste(toupper(substr(BType, 1, 1)), substr(BType, 2, NN), sep="")
-             tclvalue(BL) <- BLtype
-             Xlimits <<- range(Object[[coreline]]@RegionToFit$x)
-             Ylimits <<- range(Object[[coreline]]@RegionToFit$y)
          }
          if (hasComponents(Object[[coreline]]) ) {
              tcl(NB,"select", 1)  #Select NBpage=2 'select' works on base 0
              tcl(nbComponents,"select", 0)
              CompNames <<- names(Object[[coreline]]@Components)
-             tkconfigure(DelComponents, values=c(CompNames, "All"))
+             tkconfigure(DelComponents, values=c(CompNames, "Fit"))
              tkconfigure(FitComponents, values=CompNames)
          }
          Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
@@ -335,15 +332,16 @@ XPSAnalysis <- function() {
 
      Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])
      Object[[coreline]] <<- XPSbaseline(Object[[coreline]], BType, deg, Wgt, splinePoints )
-     Object[[coreline]] <<- XPSsetRSF(Object[[coreline]], Object[[coreline]]@RSF)
      replot()
      WidgetState(T2group1, "normal")
   }
 
   Reset.Baseline <- function(h, ...) {
-     tkconfigure(T1Lab1, text="               ")
-     tkconfigure(T1Lab2, text="               ")
-     tkdestroy(BLBtn)
+     ClearWidget(T1group2)
+     T1Lab1 <<- ttklabel(T1group2, text="               ")     #add a void row
+     tkgrid(T1Lab1, row = 1, column = 1, padx=5, pady=5, sticky="w")
+     T1Lab2 <<- ttklabel(T1group2, text="               ")     #add a void row
+     tkgrid(T1Lab2, row = 2, column = 1, padx=5, pady=5, sticky="w")
      if (coreline != 0) {   #coreline != "All spectra"
         if (FreezeLimits == FALSE) {  #ZOOM not activated
            if (Object[[coreline]]@Flags[1] == TRUE){  #Binding Energy scale
@@ -357,7 +355,7 @@ XPSAnalysis <- function() {
            idx2 <- findXIndex(Object[[coreline]]@.Data[[1]], point.coords$x[2])
            point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][idx2]
            Ylimits <<- c(min(Object[[coreline]]@.Data[[2]][idx1:idx2]), max(Object[[coreline]]@.Data[[2]][idx1:idx2]))
-             Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
+           Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
            splinePoints <<- list(x=NULL, y=NULL)  #reset preivous baseline
         } else {  #a zoom is present: we preserve Xlimits and Ylimits and point.coords values
            Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
@@ -368,107 +366,6 @@ XPSAnalysis <- function() {
        Object[[coreline]]@Boundaries <<- point.coords
   }
 
-
-  updateOutput <- function(...) {
-     if (coreline != 0 ) {
-           disp <- tclvalue(DT)
-           if (disp == 1) {
-               tclvalue(DispTxt[2]) <- FALSE  #cleares the checkButton2
-               XPScalc(Object[[coreline]])
-           } #CheckButton 1 selected
-           if (disp == 2 && hasFit(Object[[coreline]])) {
-               tclvalue(DispTxt[1]) <- FALSE  #cleares the checkButton1
-               XPSquantify(Object)
-           }
-     }
-  }
-
-  add.component <- function() {
-     if (coreline != 0 && hasBaseline(Object[[coreline]]) ) {
-          if (is.null(point.coords$x[1])) {
-             return() 
-         } else {
-             LL <- length(point.coords$x)
-             for(ii in 1:LL){
-                 Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = tclvalue(FF),
-                                                 peakPosition = list(x = point.coords$x[point.index], y = point.coords$y[point.index]))
-                 #--- update fit
-                 tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
-                 CompNames <<- names(Object[[coreline]]@Components)
-                 tkconfigure(DelComponents, values=c(CompNames, "All"))  #Update component selection in MOVE COMP panel
-                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
-
-                 Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
-                 replot()
-             }
-         }
-     }
-  }
-
-  del.component <- function(h, ...) {
-     answ <- tclVar("")
-     txt <- "All Constraints will be lost! Proceed anyway?"
-     answ <- tkmessageBox(message=txt, type="yesno", title="WARNING", icon="warning")
-     if (tclvalue(answ) == "yes") {
-         LL<-length(Object[[coreline]]@Components)
-         for (ii in 1:LL) { #remove all CONSTRAINTS
-               Object[[coreline]]<<-XPSConstrain(Object[[coreline]],ii,action="remove",variable=NULL,value=NULL,expr=NULL)
-         }
-         if (coreline != 0 && hasComponents(Object[[coreline]]) ) {
-             Component <- tclvalue(FC)
-             if (Component != "All"){
-                 Component <- grep(Component, CompNames)
-                 Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=Component)
-                 CompNames <<- names(slot(Object[[coreline]],"Components"))
-                 if (length(Object[[coreline]]@Components) > 0 ) {
-                     #update fit without deteted component
-                     tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
-                     Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
-                 }
-                 tkconfigure(DelComponents, values=c(CompNames, "All"))  #Update component selection in MOVE COMP panel
-                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
-             } else {
-                 Object[[coreline]] <<- XPSremove(Object[[coreline]], "all")
-                 CompNames <<- ""
-                 tkconfigure(DelComponents, values=c(CompNames, "All"))  #Update component selection in MOVE COMP panel
-                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
-             }
-             #---Update Fit Component Combobox
-             tclvalue(FC) <- ""
-             tclvalue(PS) <- "Normal"
-             point.coords <<- list(x=NULL,y=NULL)
-             replot()
-         }
-     }
-  }
-
-  move.Comp <- function(...) {
-     compIndx <- tclvalue(MFC)
-     compIndx <- unlist(strsplit(compIndx, split="C"))   #index selected component
-     compIndx <- as.integer(compIndx[2])
-     if (coreline != 0) {
-          xx <- point.coords$x[point.index]
-          yy <- point.coords$y[point.index]
-
-          varmu <- getParam(Object[[coreline]]@Components[[compIndx]],variable="mu")
-          minmu <- varmu$start-varmu$min
-          maxmu <- varmu$max-varmu$start
-          newmu <- c(xx, xx-minmu, xx+maxmu)
-          FuncName <- Object[[coreline]]@Components[[compIndx]]@funcName
-          yy <- yy - Object[[coreline]]@Baseline$y[max(which(Object[[coreline]]@Baseline$x > xx))+1]
-          newh <- GetHvalue(Object[[coreline]],compIndx, FuncName, yy)  #provides the correct yy value for complex functions
-          newh <- c(newh, 0, 5*newh)
-
-          Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="mu", value=newmu)
-          Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="h", value=newh)
-          Object[[coreline]]@Components[[compIndx]] <<- Ycomponent(Object[[coreline]]@Components[[compIndx]], x=Object[[coreline]]@RegionToFit$x, y=Object[[coreline]]@Baseline$y)
-
-          tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
-          Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y) )
-          Object[[coreline]] <<- sortComponents(Object[[coreline]]) #order components in decreasing order
-          updateOutput()
-     }
-  }
 
   BLSelect <- function(){
      Ctrl <- 1
@@ -484,31 +381,16 @@ XPSAnalysis <- function() {
      } else if (BType == "Spline" && length(splinePoints)==0) { #splinePoints not defined skip XPSBaseline()
          tkmessageBox(message="Please select the spline points with the LEFT mouse button!", title="WARNING", icon="warning")
          splinePoints <<- list(x=NULL, y=NULL)
-         Reset.Baseline()
      } else if (hasBoundaries(Object[[coreline]]) == FALSE) {
          tkmessageBox(message="Set BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
-         Reset.Baseline()
      }
-
-     #Resets the Baseline Radio_Panel in the initial form
-     if(tclvalue(tkwinfo("exists", BLParam)) == "1") {
-        tkdestroy(BLParam)
-        BLParam <<- tclVar("")
-     }
-     if(tclvalue(tkwinfo("exists", BLBtn)) == "1") {
-        tkdestroy(BLBtn)
-        BLBtn <<- tclVar("")
-     }
-     tkconfigure(T1Lab1, text="               ") #add an empty rows
-     tkconfigure(T1Lab2, text="               ") #add a second empty row
+     Reset.Baseline()
 
      switch(BType,
 #--- BaseLine type 1
             "Linear" = {
                         #fast generation of background do not need background reset
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
-                        tkconfigure(T1Lab1, text="               ") #add an empty rows
-                        tkconfigure(T1Lab2, text="               ") #add a second empty row
                         Make.Baseline()
                         replot()
                         GetCurPos(SingClick=FALSE)
@@ -517,23 +399,22 @@ XPSAnalysis <- function() {
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
                         tkconfigure(T1Lab1, text="Polynom degree:")
                         BLvalue <- tclVar()
-                        BLParam <<- ttkcombobox(T1group1, width = 10, textvariable = BLvalue, values = c("1","2","3","4","5","6") )
-                        tkgrid(BLParam, row = 9, column = 1, padx=130, sticky="w")
-                        BLBtn <<- tkbutton(T1group1, text="Make BaseLine", command=function(){
+                        BLParam <<- ttkcombobox(T1group2, width = 10, textvariable = BLvalue, values = c("1","2","3","4","5","6") )
+                        tkgrid(BLParam, row = 2, column = 1, padx=5, pady=5, sticky="w")
+                        BLBtn <<- tkbutton(T1group2, text="Make BaseLine", command=function(){
                                          deg <<- as.numeric(tclvalue(BLvalue))
                                          Make.Baseline()
                                          replot()
                                          GetCurPos(SingClick=FALSE)
                                       })
-                                      tkgrid(BLBtn, row = 10, column = 1, sticky="w")
+                                      tkgrid(BLBtn, row = 2, column = 2, sticky="w")
                        },
             "Spline" = {
                         Marker <<- list(Points=point.coords, col=3, cex=1.15, lwd=2, pch=16)
-                        tkconfigure(T1Lab1, text=" Press Make Baseline: Left button select spline points - Right button EXIT")
-                        cat("\n Press Make Baseline: Left button select spline points - Right button EXIT")
-                                         BLBtn <<- tkbutton(T1group1, text="Make Spline Baseline", command=function(){
+                        tkconfigure(T1Lab1, text="Left button select spline points - Right button EXIT")
+                        cat("\nLeft button select spline points - Right button EXIT  then press MAKE SPLINE BASELINE")
+                                         BLBtn <<- tkbutton(T1group2, text="Make Spline Baseline", command=function(){
                                             #--- Interactive mouse control ---
-                                            GetCurPos(SingClick=FALSE)
                                             if (length(splinePoints$x) == 2) {
                                                 BType <<- "linear" #"linear" #plot Linear baseline until splinePoints are selected
                                                 decr <- FALSE #Kinetic energy set
@@ -557,14 +438,13 @@ XPSAnalysis <- function() {
                                             Make.Baseline()
                                             replot()
                                          })
-                                         tkgrid(BLBtn, row = 10, column = 1, sticky="w")
+                                         tkgrid(BLBtn, row = 2, column = 1, padx=5, pady=5, sticky="w")
+                                         GetCurPos(SingClick=FALSE)
                        },
 #--- BaseLine type 2
             "Shirley" = {
                         #fast generation of background do not need background reset
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
-                        tkconfigure(T1Lab1, text="               ") #add an empty rows
-                        tkconfigure(T1Lab2, text="               ") #add a second empty row
                         Make.Baseline()
                         replot()
                         GetCurPos(SingClick=FALSE)
@@ -572,8 +452,6 @@ XPSAnalysis <- function() {
             "2P.Shirley" = {
                         #fast generation of background do not need background reset
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
-                        tkconfigure(T1Lab1, text="               ") #add an empty rows
-                        tkconfigure(T1Lab2, text="               ") #add a second empty row
                         Make.Baseline()
                         replot()
                         GetCurPos(SingClick=FALSE)
@@ -582,43 +460,45 @@ XPSAnalysis <- function() {
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
                         tkconfigure(T1Lab1, text="Distortion Parameter Ds")
                         BLvalue <- tclVar("0.3")
-                        BLParam <<- ttkentry(T1group1, textvariable=BLvalue, width=10, foreground="gray")
-                        tkgrid(BLParam, row = 9, column = 1, padx=160, sticky="w")
+                        BLParam <<- ttkentry(T1group2, textvariable=BLvalue, width=10, foreground="gray")
+                        tkgrid(BLParam, row = 2, column = 1, padx=5, pady=5, sticky="w")
                         tkbind(BLParam, "<FocusIn>", function(K){
                                          tkconfigure(BLParam, foreground="red")
                                  })
                         tkbind(BLParam, "<Key-Return>", function(K){
                                          tkconfigure(BLParam, foreground="black")
                                  })
-                        BLBtn <<- tkbutton(T1group1, text="Make Baseline", command=function(){
+                        ww <- as.numeric(tkwinfo("reqwidth", BLParam))+20
+                        BLBtn <<- tkbutton(T1group2, text="Make Baseline", command=function(){
                                          Wgt <<- as.numeric(tclvalue(BLvalue))
                                          slot(Object[[coreline]],"Boundaries") <<- point.coords
                                          Make.Baseline()
                                          replot()
                                          GetCurPos(SingClick=FALSE)
                                  })
-                        tkgrid(BLBtn, row = 10, column = 1, sticky="w")
+                        tkgrid(BLBtn, row = 2, column = 1, padx=ww, pady=5, sticky="w")
                        },
             "LP.Shirley" = {
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
                         tkconfigure(T1Lab1, text="B coeff.")
                         BLvalue <- tclVar("0.005")
-                        BLParam <<- ttkentry(T1group1, textvariable=BLvalue, width=10, foreground="black")
-                        tkgrid(BLParam, row = 9, column = 1, padx=80, sticky="w")
+                        BLParam <<- ttkentry(T1group2, textvariable=BLvalue, width=10, foreground="black")
+                        tkgrid(BLParam, row = 2, column = 1, padx=5, pady=5, sticky="w")
                         tkbind(BLParam, "<FocusIn>", function(K){
                                          tkconfigure(BLParam, foreground="red")
                                  })
                         tkbind(BLParam, "<Key-Return>", function(K){
                                          tkconfigure(BLParam, foreground="black")
                                  })
-                        BLBtn <<- tkbutton(T1group1, text="Make Baseline", command=function(){
+                        ww <- as.numeric(tkwinfo("reqwidth", BLParam))+20
+                        BLBtn <<- tkbutton(T1group2, text="Make Baseline", command=function(){
                                          Wgt <<- as.numeric(tclvalue(BLvalue))
                                          Object[[coreline]]@Boundaries <<- point.coords
                                          Make.Baseline()
                                          replot()
                                          GetCurPos(SingClick=FALSE)
                                  })
-                        tkgrid(BLBtn, row = 10, column = 1, sticky="w")
+                        tkgrid(BLBtn, row = 2, column = 1, padx=ww, pady=5, sticky="w")
                        },
 #--- BaseLine type 3
             "2P.Tougaard" = {
@@ -643,27 +523,137 @@ XPSAnalysis <- function() {
                         Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
                         tkconfigure(T1Lab1, text="C coeff.") #add an empty rows
                         BLvalue <<- tclVar("0.5")
-                        BLParam <<- ttkentry(T1group1, textvariable=BLvalue, width=10, foreground="black")
-                        tkgrid(BLParam, row = 9, column = 1, padx=80, sticky="w")
+                        BLParam <<- ttkentry(T1group2, textvariable=BLvalue, width=10, foreground="black")
+                        tkgrid(BLParam, row = 2, column = 1, padx=5, pady=5, sticky="w")
                         tkbind(BLParam, "<FocusIn>", function(K){
                                          tkconfigure(BLParam, foreground="red")
                                  })
                         tkbind(BLParam, "<Key-Return>", function(K){
                                          tkconfigure(BLParam, foreground="black")
                                  })
-                       BLBtn <<- tkbutton(T1group1, text="Make Baseline", command=function(){
+                        ww <- as.numeric(tkwinfo("reqwidth", BLParam))+20
+                        BLBtn <<- tkbutton(T1group2, text="Make Baseline", command=function(){
                                          Wgt <<- as.numeric(tclvalue(BLvalue))
                                          Object[[coreline]]@Boundaries <<- point.coords
                                          Make.Baseline()
                                          replot()
                                          GetCurPos(SingClick=FALSE)
                                  })
-                        tkgrid(BLBtn, row = 10, column = 1, sticky="w")
+                        tkgrid(BLBtn, row = 2, column = 1, padx=ww, pady=5, sticky="w")
                        }
              )
   }
 
+  add.component <- function() {
+     if (coreline != 0 && hasBaseline(Object[[coreline]]) ) {
+          if (is.null(point.coords$x[1])) {
+             return() 
+         } else {
+             LL <- length(point.coords$x)
+             for(ii in 1:LL){
+                 Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = tclvalue(FF),
+                                                 peakPosition = list(x = point.coords$x[point.index], y = point.coords$y[point.index]))
+                 #--- update fit
+                 tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
+                 CompNames <<- names(Object[[coreline]]@Components)
+                 tkconfigure(DelComponents, values=c(CompNames, "Fit"))  #Update component selection in MOVE COMP panel
+                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
+
+                 Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
+                 replot()
+             }
+         }
+     }
+  }
+
+  del.component <- function(h, ...) {
+     answ <- tclVar("")
+     txt <- "All Constraints will be lost! Proceed anyway?"
+     answ <- tkmessageBox(message=txt, type="yesno", title="WARNING", icon="warning")
+     if (tclvalue(answ) == "yes") {
+         LL<-length(Object[[coreline]]@Components)
+         for (ii in 1:LL) { #remove all CONSTRAINTS
+               Object[[coreline]]<<-XPSConstrain(Object[[coreline]],ii,action="remove",variable=NULL,value=NULL,expr=NULL)
+         }
+         if (coreline != 0 && hasComponents(Object[[coreline]]) ) {
+             Component <- tclvalue(FC)
+             if (Component != "Fit"){
+                 Component <- grep(Component, CompNames)
+                 Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=Component)
+                 CompNames <<- names(slot(Object[[coreline]],"Components"))
+                 if (length(Object[[coreline]]@Components) > 0 ) {
+                     #update fit without deteted component
+                     tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
+                     Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y))
+                 }
+                 tkconfigure(DelComponents, values=c(CompNames, "Fit"))  #Update component selection in MOVE COMP panel
+                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
+             } else {
+                 Object[[coreline]] <<- XPSremove(Object[[coreline]], "fit")
+                 CompNames <<- ""
+                 tkconfigure(DelComponents, values=c(CompNames, "Fit"))  #Update component selection in MOVE COMP panel
+                 tkconfigure(FitComponents, values=CompNames)  #Update component selection in MOVE COMP panel
+             }
+             #---Update Fit Component Combobox
+             tclvalue(FC) <- ""
+             tclvalue(PS) <- "Normal"
+             point.coords <<- list(x=NULL,y=NULL)
+             replot()
+         }
+     }
+  }
+
+  move.Comp <- function(...) {
+     compIndx <- tclvalue(MFC)
+     compIndx <- unlist(strsplit(compIndx, split="C"))   #index selected component
+     compIndx <- as.integer(compIndx[2])
+     if (coreline != 0) {
+          xx <- point.coords$x[point.index]
+          yy <- point.coords$y[point.index]
+
+          varmu <- getParam(Object[[coreline]]@Components[[compIndx]],variable="mu")
+          minmu <- varmu$start-varmu$min
+          maxmu <- varmu$max-varmu$start
+          newmu <- c(xx, xx-minmu, xx+maxmu)
+          FuncName <- Object[[coreline]]@Components[[compIndx]]@funcName
+          idx <- findXIndex(Object[[coreline]]@Baseline$x, xx)
+          yy <- yy - Object[[coreline]]@Baseline$y[idx]
+          newh <- GetHvalue(Object[[coreline]],compIndx, FuncName, yy)  #provides the correct yy value for complex functions
+          newh <- c(newh, 0, 5*newh)
+
+          Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="mu", value=newmu)
+          Object[[coreline]]@Components[[compIndx]] <<- setParam(Object[[coreline]]@Components[[compIndx]], parameter=NULL, variable="h", value=newh)
+          Object[[coreline]]@Components[[compIndx]] <<- Ycomponent(Object[[coreline]]@Components[[compIndx]], x=Object[[coreline]]@RegionToFit$x, y=Object[[coreline]]@Baseline$y)
+
+          tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
+          Object[[coreline]]@Fit$y <<- ( colSums(t(tmp)) - length(Object[[coreline]]@Components)*(Object[[coreline]]@Baseline$y) )
+          Object[[coreline]] <<- sortComponents(Object[[coreline]]) #order components in decreasing order
+          updateOutput()
+     }
+  }
+
+  updateOutput <- function(...) {
+     if (coreline != 0 ) {
+           disp <- tclvalue(DT)
+           if (disp == 1) {
+               tclvalue(DispTxt[2]) <- FALSE  #cleares the checkButton2
+               XPScalc(Object[[coreline]])
+           } #CheckButton 1 selected
+           if (disp == 2 && hasFit(Object[[coreline]])) {
+               tclvalue(DispTxt[1]) <- FALSE  #cleares the checkButton1
+               XPSquantify(Object)
+           }
+     }
+  }
+
+
+
 #---  Variables  -----------------------------
+  activeFName <- get("activeFName", envir = .GlobalEnv)
+  if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+      tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+      return()
+  }
 
   FNameList <- XPSFNameList() #list of XPSSamples
   if(is.null(FNameList)) {
@@ -709,6 +699,8 @@ XPSAnalysis <- function() {
 
   BLParam <- tclVar("")
   BLBtn <- tclVar("")
+  T1Lab1 <- NULL
+  T1Lab2 <- NULL
 
 #----- ANALYSIS GUI -----------------------------
   MainWindow <- tktoplevel()
@@ -782,7 +774,7 @@ XPSAnalysis <- function() {
   tkadd(NB, T1group1, text="  Baseline  ")
 
   T1Frame1 <- ttklabelframe(T1group1, text = " Baseline Functions ", borderwidth=2)
-  tkgrid(T1Frame1, row = 5, column = 1)
+  tkgrid(T1Frame1, row = 1, column = 1)
 
   BL <- tclVar("")
   BaselineType <- NULL
@@ -791,41 +783,42 @@ XPSAnalysis <- function() {
       BaselineType[ii] <- ttkradiobutton(T1Frame1, text=BaseLines1[ii], variable=BL, value=BaseLines1[ii], 
       command=function(){ 
       BLSelect() })
-      tkgrid(unlist(BaselineType[ii]), row=6, column=ii, padx=5, pady=3, sticky="w")
+      tkgrid(unlist(BaselineType[ii]), row = 2, column = ii, padx=5, pady=3, sticky="w")
   }
   LL <- ii
   for(ii in 1:length(BaseLines2)){
       BaselineType[(ii+LL)] <- ttkradiobutton(T1Frame1, text=BaseLines2[ii], variable=BL, value=BaseLines2[ii], command=function(){ BLSelect() })
-      tkgrid(unlist(BaselineType[(ii+LL)]), row=7, column=ii, padx=5, pady=3, sticky="w")
+      tkgrid(unlist(BaselineType[(ii+LL)]), row = 3, column = ii, padx=5, pady=3, sticky="w")
   }
   LL <- ii+LL
   for(ii in 1:length(BaseLines3)){
       BaselineType[(ii+LL)] <- ttkradiobutton(T1Frame1, text=BaseLines3[ii], variable=BL, value=BaseLines3[ii], command=function(){ BLSelect() })
-      tkgrid(unlist(BaselineType[(ii+LL)]), row=8, column=ii, padx=5, pady=3, sticky="w")
+      tkgrid(unlist(BaselineType[(ii+LL)]), row = 4, column = ii, padx=5, pady=3, sticky="w")
   }
   BaselineType <- unlist(BaselineType)
 
-  T1Lab1 <- ttklabel(T1group1, text="               ")     #add a void row
-  tkgrid(T1Lab1, row = 9, column = 1, padx=5, pady=7, sticky="w")
-  T1Lab2 <- ttklabel(T1group1, text="               ")     #add a void row
-  tkgrid(T1Lab2, row = 10, column = 1, padx=5, pady=7, sticky="w")
+  T1group2 <- ttkframe(T1group1,  borderwidth=2, padding=c(0,0,0,0) )  #definition of the first NB page
+  tkgrid(T1group2, row = 5, column = 1, padx=0, pady=3, sticky="w")
+
+  T1Lab1 <- ttklabel(T1group2, text="               ")     #add a void row
+  tkgrid(T1Lab1, row = 1, column = 1, padx=5, pady=5, sticky="w")
+  T1Lab2 <- ttklabel(T1group2, text="               ")     #add a void row
+  tkgrid(T1Lab2, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
   T1Frame2 <- ttklabelframe(T1group1, text = " Reset ", borderwidth=2)
-  tkgrid(T1Frame2, row = 11, column = 1, sticky="w")
+  tkgrid(T1Frame2, row = 6, column = 1, sticky="w")
   BLReset <- tkbutton(T1Frame2, text="   Reset Baseline   ", command=function(){
                    splinePoints <<- list(x=NULL, y=NULL)
                    tclvalue(BL) <- ""
                    BType <<- ""  #otherwise conflict between mouseRGT-selected points for zooming and for splinePoints
                    Reset.Baseline()
                    Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
-                   tkconfigure(T1Lab1, text="               ") #add an empty rows
-                   tkconfigure(T1Lab2, text="               ") #add a second empty row
                    replot()
                 })
-  tkgrid(BLReset, row = 12, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(BLReset, row = 7, column = 1, padx=5, pady=5, sticky="w")
 
   T1Frame3 <- ttklabelframe(T1group1, text = " Plot ", borderwidth=2)
-  tkgrid(T1Frame3, row = 13, column = 1, sticky="w")
+  tkgrid(T1Frame3, row = 8, column = 1, sticky="w")
 
   ZRbutton <- tkbutton(T1Frame3, text="SET ZOOM REGION", command=function(){
                    point.coords <<- list(x=NULL, y=NULL)   #point.coords contain the X, Y data ranges
@@ -869,7 +862,7 @@ XPSAnalysis <- function() {
                    replot()
                    GetCurPos(SingClick=FALSE)
                 })
-  tkgrid(ZRbutton, row = 13, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(ZRbutton, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
   MZbutton <- tkbutton(T1Frame3, text="  MAKE ZOOM  ", command=function(){
                    if (Object[[coreline]]@Flags[1]) { #Binding energy set
@@ -893,7 +886,7 @@ XPSAnalysis <- function() {
                    replot()
                    WidgetState(ZObutton, "normal")
                 })
-  tkgrid(MZbutton, row = 13, column = 2, padx=5, pady=5, sticky="w")
+  tkgrid(MZbutton, row = 1, column = 2, padx=5, pady=5, sticky="w")
 
   ZObutton <- tkbutton(T1Frame3, text="   ZOOM OUT   ", command=function(){
                    Xlimits <<- range(Object[[coreline]]@.Data[1])  #Set plot limits to the whole coreline extension
@@ -930,14 +923,14 @@ XPSAnalysis <- function() {
                    WidgetState(MZbutton, "disabled")
                    WidgetState(ZObutton, "disabled")
                 })
-  tkgrid(ZObutton, row = 13, column = 3, padx=5, pady=5, sticky="w")
+  tkgrid(ZObutton, row = 1, column = 3, padx=5, pady=5, sticky="w")
 
 #----- TAB2: Components -----
   T2group1 <- ttkframe(NB,  borderwidth=2, padding=c(5,5,5,5) )  #definition of the first NB page
   tkadd(NB, T2group1, text=" Components ")
 
   nbComponents <- ttknotebook(T2group1)
-  tkgrid(nbComponents, row = 14, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(nbComponents, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
 #----- SubNotebook: Fit Components -----
   T2group2 <- ttkframe(nbComponents,  borderwidth=2, padding=c(5,5,5,5) )  #definition of the first NB page
@@ -947,14 +940,14 @@ XPSAnalysis <- function() {
 
 #----- Add/Delete component subtab
   T2Frame1 <- ttklabelframe(T2group2, text = " Component LineShapes ", borderwidth=2)
-  tkgrid(T2Frame1, row = 15, column = 1, sticky="w")
+  tkgrid(T2Frame1, row = 1, column = 1, sticky="w")
 
   FF <- tclVar("")
   fitFunction <- ttkcombobox(T2Frame1, width = 20, textvariable = FF, values = FitFunct)
   tkbind(fitFunction, "<<ComboboxSelected>>", function(){
                       cat("\n Selected Fit Function: ", tclvalue(FF))
                 })
-  tkgrid(fitFunction, row = 16, column=1, padx=5, pady=5, sticky="w")
+  tkgrid(fitFunction, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
   FC <- tclVar("")
   DelComponents <- ttkcombobox(T2Frame1, width = 10, textvariable = FC, values = CompNames)
@@ -964,15 +957,15 @@ XPSAnalysis <- function() {
                       compIndx <- unlist(strsplit(compIndx, split="C"))   #index of the selected component (numeric)
                       compIndx <<- as.integer(compIndx)
                 })
-  tkgrid(DelComponents, row = 16, column=2, padx=5, pady=5, sticky="w")
+  tkgrid(DelComponents, row = 1, column = 2, padx=5, pady=5, sticky="w")
 
 
   T2Frame2 <- ttklabelframe(T2group2, text = " Set Fit Components ", borderwidth=2)
-  tkgrid(T2Frame2, row = 17, column = 1, sticky="w")
+  tkgrid(T2Frame2, row = 2, column = 1, sticky="w")
 
 
   tkgrid(ttklabel(T2Frame2, text="Select Fit Function and Press 'Add'"),
-                  row = 17, column = 1, padx=5, pady=5, sticky="w")
+                  row = 1, column = 1, padx=5, pady=5, sticky="w")
 
   add_btn <- tkbutton(T2Frame2, text="       ADD      ", command=function(){
                    if (tclvalue(FF) == "") {
@@ -988,16 +981,16 @@ XPSAnalysis <- function() {
                    }
                    GetCurPos(SingClick=FALSE)
                 })
-  tkgrid(add_btn, row = 18, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(add_btn, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
   del_btn <- tkbutton(T2Frame2, text="     DELETE     ", command=function(){
                    del.component()
                 })
-  tkgrid(del_btn, row = 18, column = 1, padx=c(185, 5), pady=5, sticky="w")
+  tkgrid(del_btn, row = 2, column = 1, padx=c(185, 5), pady=5, sticky="w")
 
 #----- Move component subtab
   T2Frame3 <- ttklabelframe(T2group3, text = " Select Fit Component ", borderwidth=2)
-  tkgrid(T2Frame3, row = 20, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(T2Frame3, row = 1, column = 1, padx=5, pady=5, sticky="w")
   MFC <- tclVar("")
   FitComponents <- ttkcombobox(T2Frame3, width = 15, textvariable = MFC, values = CompNames)
   tkbind(FitComponents, "<<ComboboxSelected>>", function(){
@@ -1009,58 +1002,61 @@ XPSAnalysis <- function() {
                                tcl("update", "idletasks")
                                GetCurPos(SingClick=FALSE)
                            })
-  tkgrid(FitComponents, row = 21, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(FitComponents, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
   T2Frame4 <- ttklabelframe(T2group3, text = " Print ", borderwidth=2)
-  tkgrid(T2Frame4, row = 23, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(T2Frame4, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
   DispTxt <- c("Area table",  "Quantification table")
   DT <- tclVar(FALSE)
   for(ii in 1:2){
      tkgrid( tkcheckbutton(T2Frame4, text=DispTxt[ii], variable=DT, onvalue = ii, offvalue = 0,
           command=function(){ updateOutput() }),
-          row = 24, column = ii, padx=5, pady=5, sticky="w")
+          row = 1, column = ii, padx=5, pady=5, sticky="w")
+#          tclvalue(DispTxt[ii]) <- FALSE # checkbuttons unset
   }
 
   #--- plot type : Residual or simple
   T2Frame5 <- ttklabelframe(T2group1, text = " Plot ", borderwidth=2)
-  tkgrid(T2Frame5, row = 25, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(T2Frame5, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
   PlotStyle=c("Normal", "Residue")
   PS <- tclVar("")
   for(ii in 1:length(PlotStyle)){
       plotFit <- ttkradiobutton(T2Frame5, text=PlotStyle[ii], variable=PS, value=PlotStyle[ii],
                               command=function(){ replot() })
-      tkgrid(plotFit, row = 26, column=ii, padx=15, pady=5, sticky="w")
+      tkgrid(plotFit, row = 1, column = ii, padx=15, pady=5, sticky="w")
   }
   tclvalue(PS) <- "Normal"
 
 #----- SAVE&CLOSE buttons -----
   ButtFrame <- ttklabelframe(MainGroup, text = " Save & Exit ", borderwidth=2)
-  tkgrid(ButtFrame, row = 27, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(ButtFrame, row = 5, column = 1, padx=5, pady=5, sticky="w")
 
   resetBtn <- tkbutton(ButtFrame, text="         RESET        ", command=function(){
                   tclvalue(BL) <- ""
                   tkconfigure(T1Lab1, text="               ") #add an empty rows
                   tkconfigure(T1Lab2, text="               ") #add a second empty row
-                  Object<<-get(activeFName, envir = .GlobalEnv)
-                  if (length(Object[[coreline]]@Components) > 0) {
-                      Xlimits <<- range(Object[[coreline]]@RegionToFit[1])
-                      Ylimits <<- range(Object[[coreline]]@RegionToFit[2])
-                  } else if (length(Object[[coreline]]@Components) == 0) {
-                      Xlimits <<- range(Object[[coreline]]@.Data[1])
-                      Ylimits <<- range(Object[[coreline]]@.Data[2])
-                      Reset.Baseline()
-                      Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
-                      splinePoints <<- point.coords
-                      tcl(NB, "select", 0)
+                  Object <<- get(activeFName, envir = .GlobalEnv)
+                  Xlimits <<- range(Object[[coreline]]@.Data[1])
+                  if (Object[[coreline]]@Flags[1] == TRUE){
+                      Xlimits <<- sort(Xlimits, decreasing=TRUE)
                   }
+                  Ylimits <<- range(Object[[coreline]]@.Data[2])
+                  LL <- length(Object[[coreline]]@.Data[[2]])
+                  point.coords$x <<- Xlimits
+                  point.coords$y <<- c(Object[[coreline]]@.Data[[2]][1], Object[[coreline]]@.Data[[2]][LL])
+                  Object[[coreline]]@Boundaries$x <<- Xlimits
+                  Object[[coreline]]@Boundaries$y <<- Ylimits
+                  Marker <<- list(Points=point.coords, col=2, cex=2, lwd=1.5, pch=10)
+                  splinePoints <- list(x=NULL, y=NULL)
+                  tcl(NB, "select", 0)
                   WidgetState(ZRbutton, "disabled")
                   WidgetState(MZbutton, "disabled")
                   WidgetState(ZObutton, "disabled")
                   replot()
               })
-  tkgrid(resetBtn, row = 28, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(resetBtn, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
   saveBtn <- tkbutton(ButtFrame, text="         SAVE         ", command=function(){
                   coreline <<- tclvalue(CL)
@@ -1072,7 +1068,7 @@ XPSAnalysis <- function() {
                   coreline <<- as.integer(coreline[1])
                   plot(Object[[activeSpectIndx]])
               })
-  tkgrid(saveBtn, row = 28, column = 2, padx=5, pady=5, sticky="w")
+  tkgrid(saveBtn, row = 1, column = 2, padx=5, pady=5, sticky="w")
 
   savexitBtn <- tkbutton(ButtFrame, text="    SAVE & EXIT    ", command=function(){
                   EXIT <<- TRUE
@@ -1088,7 +1084,7 @@ XPSAnalysis <- function() {
                   coreline <<- as.integer(coreline[1])
                   plot(Object[[activeSpectIndx]])
               })
-  tkgrid(savexitBtn, row = 29, column = 1, padx=5, pady=5, sticky="w")
+  tkgrid(savexitBtn, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
   exitBtn <- tkbutton(ButtFrame, text="         EXIT          ", command=function(){
                   EXIT <<- TRUE
@@ -1098,13 +1094,13 @@ XPSAnalysis <- function() {
                   tkdestroy(MainWindow)
                   plot(Object)
               })
-  tkgrid(exitBtn, row = 29, column = 2, padx=5, pady=5, sticky="w")
+  tkgrid(exitBtn, row = 2, column = 2, padx=5, pady=5, sticky="w")
 
 #----- State bar -----
   tkSep <- ttkseparator(MainGroup, orient="horizontal")
-  tkgrid(tkSep, row = 31, column = 1, padx = 5, pady = 5, sticky="we")
+  tkgrid(tkSep, row = 6, column = 1, padx = 5, pady = 5, sticky="we")
   StatusBar <- ttklabel(MainGroup, text=" Status : ", relief="sunken", foreground="blue")
-  tkgrid(StatusBar, row = 32, column = 1, padx = 5, pady = 5, sticky="we")
+  tkgrid(StatusBar, row = 7, column = 1, padx = 5, pady = 5, sticky="we")
 
 #----- Disable until XPSSample&Core Line Selected -----
   WidgetState(T1Frame1, "disabled")
@@ -1120,7 +1116,9 @@ XPSAnalysis <- function() {
   tcl(nbComponents,"select", 0)  #Set NB page=1, Select works on base 0
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0
   tcl("update", "idletasks") #Complete the idle tasks
-  tkwait.window(MainWindow)
+#  tkwait.window(MainWindow)
+
+
 }
 
 

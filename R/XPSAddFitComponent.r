@@ -3,10 +3,10 @@
 #  Fit parameter setting: position, sigma, intensity
 ##  =================================================
 
-#' @title XPSaddFitComponent adds a fit component to the XPSCoreLine
-#' @description XPSaddFitComponent() adds a fit component to the XPSCoreLine object. 
+#' @title XPSAddFitComponent adds a fit component to the XPSCoreLine
+#' @description XPSAddFitComponent() adds a fit component to the XPSCoreLine object. 
 #'   This function is called after the definition of the baseline (\code{XPSbaseline}). 
-#'   Different types of function could be added as component, see \code{\link{XPSfitAlgorithms}}
+#'   Different types of function could be added as component, see \code{\link{XPSFitAlgorithms}}
 #'   for a list of the implemented functions.
 #' @param Object XPSCoreLine object
 #' @param type name of the fitting function used. Default "Gauss"
@@ -21,15 +21,15 @@
 #' @return Usually the values \code{xCenter} and \code{Amplitude} are get trough
 #'   a click with the mouse on the plot of the XPSCoreLine. All the parameters
 #'   will be added to the slot \code{Components} of the XPSCoreLine.
-#' @seealso \link{XPSfitAlgorithms}, \link{XPSbaseline}, \link{findXIndex}
+#' @seealso \link{XPSFitAlgorithms}, \link{XPSbaseline}, \link{findXIndex}
 #' @examples
 #' \dontrun{
-#' 	XPSdata[["C1s"]] <- XPSaddFitComponent(XPSdata[["C1s"]], type="Voigt", range_h=3)
+#' 	XPSdata[["C1s"]] <- XPSAddFitComponent(XPSdata[["C1s"]], type="Voigt", range_h=3)
 #' }
 #' @export
 #'
 
-XPSaddFitComponent <- function(Object, type="Gauss", range_h=5, range_mu=1.5, peakPosition=NULL, ...)
+XPSAddFitComponent <- function(Object, type="Gauss", range_h=5, range_mu=1.5, peakPosition=NULL, ...)
 {
 	 Object <- XPSaddComponent(Object, type, range_h, range_mu, peakPosition, ...)
  	plot(Object)

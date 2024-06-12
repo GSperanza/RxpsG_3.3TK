@@ -5,7 +5,7 @@
 #'   the XPS-Core-Lines together with their best fit to be plotted in 
 #'   individual panels. XPSCompare permits the selection of plotting options
 #'   for a personalized data representation.
-#'   This function is based on the (/code{Lattice}) Package.
+#'   This function is based on the (\code{Lattice}) Package.
 #' @examples
 #' \dontrun{
 #' 	XPSCompare()
@@ -58,7 +58,8 @@ XPSCompare <- function(){
                RowNames <- c(paste("Xmin (min=", axMin, "): ", sep=""),
                              paste("Xmax (max=", axMax, "): ", sep=""),
                              "N. ticks")
-               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, Width=15, Env=environment())
+               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, 
+                                      Width=15, Modify=TRUE, Env=environment())
                axParam <- as.numeric(unlist(axParam[[1]]))
                axMin <- axParam[1]     #X or Y scale min value
                axMax <- axParam[2]     #X or Y scale max value
@@ -372,14 +373,15 @@ XPSCompare <- function(){
 
 
 #----- Variables -----
-   if (exists("activeFName", envir=.GlobalEnv)==FALSE){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
+   activeFName <- get("activeFName", envir=.GlobalEnv)  #load the name of the active FNamw (string)
    FName <- get(activeFName, envir=.GlobalEnv)   #load the active FName
-   ActiveFName <- get("activeFName", envir=.GlobalEnv)  #load the name of the active FNamw (string)
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)#index of the active coreline
-   SpectList <- XPSSpectList(ActiveFName)   #list of the active XPSSample core lines
+   SpectList <- XPSSpectList(activeFName)   #list of the active XPSSample core lines
    FNameListTot <- as.array(XPSFNameList())     #List of all XPSSamples loaded in the workspace
    LL <- NULL
 #   jj <- 1
@@ -1466,7 +1468,7 @@ cat("\n Scales", tclvalue(yScale), idx)
                              Tick.Increment <- as.data.frame(Tick.Increment, stringsAsFactors=FALSE)
                              Tick.Increment <- DFrameTable(Data="Tick.Increment", Title="SET X TICK INCREMENT",
                                                     ColNames=c("Core-Lines", "Increment"), RowNames="",
-                                                    Width=18, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment())
                              Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
                              x_at <- list()
                              x_labels <- list()
@@ -1511,7 +1513,8 @@ cat("\n Scales", tclvalue(yScale), idx)
 #                                         row=2, column=1, pady=5, sticky="w")
                              PanelTitles <- as.data.frame(FNamesCoreLines$CoreLines)
                              Plot_Args$PanelTitles <<- DFrameTable(Data=PanelTitles, Title="EDIT TITLES",
-                                                           ColNames="Titles", RowNames="", Width=20, Env=environment())
+                                                                   ColNames="Titles", RowNames="", Width=20,
+                                                                   Modify=TRUE, Env=environment())
                  })
    tkgrid(T4_PanelTitles, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -1529,7 +1532,7 @@ cat("\n Scales", tclvalue(yScale), idx)
                              Tick.Increment <- as.data.frame(Tick.Increment, stringsAsFactors=FALSE)
                              Tick.Increment <- DFrameTable(Data="Tick.Increment", Title="SET Y TICK INCREMENT",
                                                     ColNames=c("Core-Lines", "Increment"), RowNames="",
-                                                    Width=18, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment())
                              Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
                              y_at <- list()
                              y_labels <- list()
@@ -1694,7 +1697,7 @@ cat("\n Scales", tclvalue(yScale), idx)
                              Legends <- as.data.frame(Legends, stringsAsFactors=FALSE)
                              Legends <- DFrameTable(Data="Legends", Title="XPS SAMPLE LEGENDS",
                                                     ColNames=c("Core-Lines", "Legends"), RowNames="",
-                                                    Width=18, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment())
                              Legends <- unlist(Legends[2]) #first element of Legends is the XS-names
                              Plot_Args$auto.key$text <<- Legends
                              CtrlPlot()

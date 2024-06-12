@@ -350,7 +350,11 @@ XPSAnalReport <- function(){
    }
 
 #----- variabili -----
-
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
    FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
    if (length(FNameList) == 0){
        tkmessageBox(message="No XPS Samples found. Please load XPS Data", title="WARNING", icon="warning")

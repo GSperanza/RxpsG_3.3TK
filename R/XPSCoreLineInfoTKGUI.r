@@ -18,20 +18,22 @@ XPSCoreLineFitInfo <- function() {
       FName <- get(SelectedFName,envir=.GlobalEnv) #carico in SampID il relativo XPSSAmple
       SpectList <- XPSSpectList(SelectedFName)
       tkconfigure(InfoObj2, values = SpectList)
-      clear_treeview(InfoTable)
+      clear_treeview(FitTbl)
       tcl(ShowParam, "delete", "0.0", "end")
       plot(FName)
    }
 
 
    SetSpectrum <- function(h,...){
-      activeFName <- tclvalue(XS)
+      activeFName <<- tclvalue(XS)
       assign("activeFName", activeFName,envir=.GlobalEnv) #loas activeXPSSample
       coreline <- tclvalue(CL)
       if (coreline != ""){
           coreline <- unlist(strsplit(coreline, "\\."))   #"number." and "CL name" are separated
+          activeSpectName <<- coreline[2]
           assign("activeSpectName",coreline[2], envir=.GlobalEnv)
           Indx <<- as.integer(coreline[1])
+          activeSpectIndx <<- Indx
           assign("activeSpectIndx", Indx, envir=.GlobalEnv)
           FName <- get(activeFName, envir=.GlobalEnv)
           plot(FName[[Indx]])
@@ -89,7 +91,7 @@ XPSCoreLineFitInfo <- function() {
 #      RSF <- encodeString(RSF, width=10, justify="right")
 #      BE <- encodeString(BE, width=10, justify="right")
 #      Conc <- encodeString(Conc, width=10, justify="right")
-      fitParam <- data.frame(CompNames, FitFnctn, Area, FWHM, RSF, BE, Conc, stringsAsFactors=FALSE)
+      fitParam <<- data.frame(CompNames, FitFnctn, Area, FWHM, RSF, BE, Conc, stringsAsFactors=FALSE)
       return(fitParam)
    }
 
@@ -97,16 +99,15 @@ XPSCoreLineFitInfo <- function() {
 #----- variabili -----
 
    FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
-   if(is.na(activeFName) || is.null(activeFName) || length(activeFName)==0){
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if(length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
       tkmessageBox(message="Please Select an XPS Sample to Proceed", title="WARNING", icon="warning")
       return()
    }
    FName <- get(activeFName, envir = .GlobalEnv)
    Indx <- activeSpectIndx
-   if(is.na(Indx) || is.null(Indx) || length(Indx)==0){
-      tkmessageBox(message="Please Select a Core Line to Proceed", title="WARNING", icon="warning")
-      return()
-   }
+   if (length(Indx) == 0) { Indx <- 1 }
+   activeSpectName <- FName[[Indx]]@Symbol
    N_comp=length(FName[[Indx]]@Components)
    SpectList <- XPSSpectList(activeFName)
    sumCoreLine <- 0
@@ -120,11 +121,12 @@ XPSCoreLineFitInfo <- function() {
    Conc <- NULL
    fitParam <- NULL
    CLTable <- list()
-   InfoTable <- list()
+   SpectTbl <- list()
+   FitTbl <- list()
 
 #--- CTRL on Fit
-   if (length(FName[[Indx]]@Components) == 0){  #no information se il Baseline non presente
-      txt <- paste("No Fit found for", activeFName," - ", activeSpectName, sep=" ")
+   if (length(FName[[Indx]]@Baseline$x) == 0){  #no information se il Baseline non presente
+      txt <- paste("No Baseline Found for", activeFName," - ", activeSpectName, sep=" ")
       tkmessageBox(message=txt, title = "CORE LINE INFO",  icon = "warning")
       return()
    }
@@ -137,7 +139,7 @@ XPSCoreLineFitInfo <- function() {
 
    InfoGroup1 <- ttkframe(InfoFwin,  borderwidth=2, padding=c(5,5,5,5))
    tkgrid(InfoGroup1, row = 1, column = 1, padx= 5, pady = 5, sticky="w")
-   
+
 # --- Spect-Selection ---
    InfoGroup2 <- ttkframe(InfoGroup1,  borderwidth=2, padding=c(5,5,5,5))
    tkgrid(InfoGroup2, row = 1, column = 1, padx= 5, pady = 5, sticky="w")
@@ -161,137 +163,168 @@ XPSCoreLineFitInfo <- function() {
    tkgrid(InfoObj2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
    tkbind(InfoObj2, "<<ComboboxSelected>>", function(){
                           SetSpectrum()
-                          tkconfigure(SpectInfo1, text="") #cancel previous comments
-                          tkconfigure(SpectInfo3, text="")
-                          tkconfigure(SpectInfo4, text="")
-                          tkconfigure(SpectInfo5, text="")
-
-                          txt=paste(FName@Filename, "     Core-Line:  ",activeSpectName, sep="")
-                          SpectInfo1 <- ttklabel(InfoGroup1, text=txt)
-                          tkgrid(SpectInfo1, row = 4, column = 1, padx = 20, pady=5, sticky="w")
-
-                          fitrng <- round(range(FName[[Indx]]@RegionToFit$x),2)
-                          txt <- paste("Extension of the fit region:  ", fitrng[1], "-", fitrng[2], sep="")
-                          SpectInfo3 <- ttklabel(InfoGroup1, text=txt)
-                          tkgrid(SpectInfo3, row = 6, column = 1, padx = 20, pady=5, sticky="w")
-
-                          fitrng <- round(range(FName[[Indx]]@RegionToFit$y),2)
-                          txt <- paste("Intensity of the fitted spectrum:  ",fitrng[1],"-", fitrng[2])
-                          SpectInfo4 <- ttklabel(InfoGroup1, text=txt)
-                          tkgrid(SpectInfo4, row = 7, column = 1, padx = 20, pady=5, sticky="w")
-
-                          BLtype <- FName[[Indx]]@Baseline$type
-                          txt <- paste("Base Line Type:  ",BLtype)
-                          SpectInfo5 <- ttklabel(InfoGroup1, text=txt)
-                          tkgrid(SpectInfo5, row = 8, column = 1, padx = 20, pady=5, sticky="w")
+                          fitrng1 <- fitrng2 <- c("  ", "  ")
+                          if (length(FName[[Indx]]@RegionToFit$x) > 0) {
+                              fitrng1 <- round(range(FName[[Indx]]@RegionToFit$x),2)
+                              fitrng2 <- round(range(FName[[Indx]]@RegionToFit$y),2)
+                          }
+                          EStep <- abs(FName[[Indx]]@.Data[[1]][1]- FName[[Indx]]@.Data[[1]][2])
+                          EStep <- round(EStep,3)
+                          BLtype <- FName[[Indx]]@Baseline$type[1]
+                          txt <- ""
+                          txt <- paste(" Source Data: ", FName@Filename, "\n",
+                                       "Core-Line:  ",activeSpectName, "\n",
+                                       "Fit Parameters: \n",
+                                       "Extension of the fit region:  ", fitrng1[1], " - ", fitrng1[2], "\n",
+                                       "Energy Step:  ", EStep, "\n",
+                                       "Spectral Intensity Range:  ",fitrng2[1],"-", fitrng2[2], "\n",
+                                       "Base Line Type:  ", BLtype, collapse="")
+                          tcl(SpectTbl, "delete", "0.0", "end") #cancel previous comments
+                          tkinsert(SpectTbl, "0.0", txt) #cancel previous comments
 
                           if (length(FName[[Indx]]@Components) == 0){  #no information if Baseline not defined
-                             clear_treeview(InfoTable)
+                             clear_treeview(FitTbl)
                              tcl(ShowParam, "delete", "0.0", "end")
-
                              txt <- paste("No Fit found for", activeSpectName, sep=" ")
                              tkmessageBox(message=txt, title = "CORE LINE INFO",  icon = "warning")
                           } else {
-                             CLTable <- SetDataFrame()
+                             CLTable <<- SetDataFrame()
                              tcl(ShowParam, "delete", "0.0", "end")
-                             updateTable(InfoTable, CLTable)
+                             updateTable(FitTbl, CLTable) #update Fit Info Tbl
                           }
          })
+#--- Spectrum Info
+   Infoframe3 <- ttklabelframe(InfoGroup1, text="Spectrum Info", borderwidth=0, padding=c(5,5,5,5))
+   tkgrid(Infoframe3, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
+   SpectTbl <- tktext(Infoframe3, width=72, height=5)
+   tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   SpectInfo0 <- ttklabel(InfoGroup1, text="Source Data: ")
-   tkgrid(SpectInfo0, row = 3, column = 1, padx = 20, pady=5, sticky="w")
-
-   txt=paste(FName@Filename, "     Core-Line:  ",activeSpectName, sep="")
-   SpectInfo1 <- ttklabel(InfoGroup1, text=txt)
-   tkgrid(SpectInfo1, row = 4, column = 1, padx = 20, pady=5, sticky="w")
-
-   SpectInfo2 <- ttklabel(InfoGroup1, text="Fit Parameters: ")
-   tkgrid(SpectInfo2, row = 5, column = 1, padx = 20, pady=5, sticky="w")
-
-   fitrng <- round(range(FName[[Indx]]@RegionToFit$x),2)
+   fitrng1 <- fitrng2 <- c("  ", "  ")
+   if (length(FName[[Indx]]@RegionToFit$x) > 0) {
+       fitrng1 <- round(range(FName[[Indx]]@RegionToFit$x),2)
+       fitrng2 <- round(range(FName[[Indx]]@RegionToFit$y),2)
+   }
    EStep <- abs(FName[[Indx]]@.Data[[1]][1]- FName[[Indx]]@.Data[[1]][2])
    EStep <- round(EStep,3)
-   txt <- paste("Extension of the fit region:  ", fitrng[1], "-", fitrng[2],
-                "     Energy Step:  ", EStep, sep="")
-   SpectInfo3 <- ttklabel(InfoGroup1, text=txt)
-   tkgrid(SpectInfo3, row = 6, column = 1, padx = 20, pady=5, sticky="w")
-
-   fitrng <- round(range(FName[[Indx]]@RegionToFit$y),2)
-   txt <- paste("Intensity of the fitted spectrum:  ",fitrng[1],"-", fitrng[2])
-   SpectInfo4 <- ttklabel(InfoGroup1, text=txt)
-   tkgrid(SpectInfo4, row = 7, column = 1, padx = 20, pady=5, sticky="w")
-
    BLtype <- FName[[Indx]]@Baseline$type[1]
-   txt <- paste("Base Line Type:  ",BLtype)
-   SpectInfo5 <- ttklabel(InfoGroup1, text=txt)
-   tkgrid(SpectInfo5, row = 8, column = 1, padx = 20, pady=5, sticky="w")
+   txt <- ""
+   txt <- paste(" Source Data: ", FName@Filename, "\n",
+                "Core-Line:  ", activeSpectName, "\n",
+                "Fit Parameters: \n",
+                "Extension of the fit region:  ", fitrng1[1], " - ", fitrng1[2], "\n",
+                "Energy Step:  ", EStep, "\n",
+                "Spectral Intensity Range:  ",fitrng2[1],"-", fitrng2[2], "\n",
+                "Base Line Type:  ", BLtype, collapse="")
+   tkinsert(SpectTbl, "0.0", txt) #write report in SpectTbl Win
 
-   InfoGroup3 <- ttklabelframe(InfoGroup1, text="Component Parameteters", borderwidth=0, padding=c(0,0,0,0))
-   tkgrid(InfoGroup3, row = 9, column = 1, padx = 5, pady = 5, sticky="w")
+#--- Fit Component Info
+   Infoframe4 <- ttklabelframe(InfoGroup1, text="Component Parameteters", borderwidth=0, padding=c(5,5,5,5))
+   tkgrid(Infoframe4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
 
    if (length(FName[[Indx]]@Components) > 0){
        CLTable <- SetDataFrame()
-       InfoTable <- XPSTable(parent=InfoGroup3, items=CLTable, NRows=5,
+       FitTbl <- XPSTable(parent=Infoframe4, items=CLTable, NRows=5,
                           ColNames=c("C Names", "FitFnct", "Area", "FWHM", "RSF", "BE", "Conc."),
                           Width=c(80, 110, 150, 60, 80, 80, 80) )
 
-       tkbind(InfoTable, "<Double-1>", function() {  #bind the table elements to the LEFT mouse but doubleClick
-                          selItems <- tclvalue(tcl(InfoTable, "selection" ))  # Get the selected items
-                          selRow <- lapply(selItems, function(x) {
-                                            tclvalue(tcl(InfoTable, "index", x))
-                                     })
-                          selRow <- as.numeric(unlist(selRow))+1 #treeview row index start from 0
-                          selComp <- CLTable[[1]][selRow]
-                          CompIndx <- grep(selComp, names(FName[[Indx]]@Components))
-                          activeFName <- get("activeFName", envir=.GlobalEnv) #set the activeSpectrum be equal to the last loaded file
-                          FName <- get(activeFName, envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato
-                          Indx <- get("activeSpectIndx", envir=.GlobalEnv)
-                          FunctName <- FName[[Indx]]@Components[[CompIndx]]@funcName
-                          if (FunctName == "VBtop"){
-                             tkmessageBox(message="No Additional Information for VBtop Analysis", title="INFO", icon="info")
-                             return()
+       tkbind(FitTbl, "<Double-1>", function() {  #bind the table elements to the LEFT mouse but doubleClick
+                          if (length(FName[[Indx]]@Components) > 0 ){
+                              selItems <- tclvalue(tcl(FitTbl, "selection" ))  # Get the selected items
+                              selRow <- lapply(selItems, function(x) {
+                                                tclvalue(tcl(FitTbl, "index", x))
+                                         })
+                              selRow <- as.numeric(unlist(selRow))+1 #treeview row index start from 0
+                              selComp <- CLTable[[1]][selRow]
+                              CompIndx <- grep(selComp, names(FName[[Indx]]@Components))
+                              activeFName <- get("activeFName", envir=.GlobalEnv) #set the activeSpectrum be equal to the last loaded file
+                              FName <- get(activeFName, envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato
+                              Indx <- get("activeSpectIndx", envir=.GlobalEnv)
+                              FunctName <- FName[[Indx]]@Components[[CompIndx]]@funcName
+                              if (FunctName == "VBtop"){
+                                 tkmessageBox(message="No Additional Information for VBtop Analysis", title="INFO", icon="info")
+                                 return()
+                              }
+                              tcl(ShowParam, "delete", "0.0", "end") #cancel the SwhoParam table
+
+                              fitParam <<- NULL
+                              FP <- FName[[Indx]]@Components[[CompIndx]]@param
+                              FP <- round(FP, 3)
+                              VarNames <- rownames(FName[[Indx]]@Components[[CompIndx]]@param)
+
+                              options(stringsAsFactors=FALSE) #Without this option the class(fitParam$VarNames)== FACTOR e non CHARACTER
+                              fitParam <<- c(fitParam, paste("Fit Component: ", CompIndx, "\n"))
+                              fitParam <<- c(fitParam, paste("Parameter", "        Start", "            Min", "            Max", sep=""), "\n")
+                              LL <- length(FP[[1]])
+                              for (ii in 1:LL){
+                                   fitParam <<- c(fitParam, paste(encodeString(VarNames[ii], width=7, justify="right"),
+                                                                 encodeString(FP$start[ii], width=15, justify="right"),
+                                                                 encodeString(FP$min[ii], width=15, justify="right"),
+                                                                 encodeString(FP$max[ii], width=15, justify="right"),sep=""), "\n")
+                              }
+
+                              fitParam <<- paste(fitParam, collapse="") #eliminates brakets {} from fitParam
+                              tkinsert(ShowParam, "0.0", fitParam) #write report in ShowParam Win
                           }
-                          tcl(ShowParam, "delete", "0.0", "end") #cancel the SwhoParam table
-
-                          fitParam <- NULL
-                          FP <- FName[[Indx]]@Components[[CompIndx]]@param
-                          FP <- round(FP, 3)
-                          VarNames <- rownames(FName[[Indx]]@Components[[CompIndx]]@param)
-
-                          options(stringsAsFactors=FALSE) #Without this option the class(fitParam$VarNames)== FACTOR e non CHARACTER
-                          fitParam <- c(fitParam, paste("      Parameter", "          Start", "            Min", "            Max", sep=""), "\n")
-                          LL <- length(FP[[1]])
-                          for (ii in 1:LL){
-                               fitParam <- c(fitParam, paste(encodeString(VarNames[ii], width=15, justify="right"),
-                                                             encodeString(FP$start[ii], width=15, justify="right"),
-                                                             encodeString(FP$min[ii], width=15, justify="right"),
-                                                             encodeString(FP$max[ii], width=15, justify="right"),sep=""), "\n")
-                          }
-
-                          fitParam <- paste(fitParam, collapse="") #eliminates brakets {} from fitParam
-                          tkinsert(ShowParam, "0.0", fitParam) #write report in ShowParam Win
              })
-
    } else {
        txt <- paste("No Fit found for", activeSpectName, sep=" ")
        tkmessageBox(message=txt, title = "CORE LINE INFO",  icon = "warning")
-       CLTable <<- as.data.frame(list("   ", "    ", "    ", "    ", "    ", "    ", "    ", "    "))
+       CLTable <- data.frame(list("   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "), stringsAsFactors=FALSE)
        names(CLTable) <- c("C Names", "Fit", "Fnct", "Area", "FWHM", "RSF", "BE", "Conc.")
        #generates an empty table
-       InfoTable <<- XPSTable(parent=InfoGroup3, items=CLTable,
+       FitTbl <- XPSTable(parent=Infoframe4, items=CLTable,
                           ColNames=c("C Names", "Fit", "Fnct", "Area", "FWHM", "RSF", "BE", "Conc."),
-                          NRows=5, Width=c(80, 110, 150, 60, 80, 80, 80) )
+                          NRows=5, Width=c(80, 110, 150, 60, 80, 80, 80))
    }
-   addScrollbars(parent=InfoGroup3, widget=InfoTable, type="y", Row=1, Col=1, Px=0, Py=0)
+   addScrollbars(parent=Infoframe4, widget=FitTbl, type="y", Row=1, Col=1, Px=0, Py=0)
 
+   CopyBtn1 <- tkbutton(InfoGroup1, text=" Copy Table ", command=function(){
+                          SpectData <- data.frame(A="File Name: ", B=FName@Filename, stringsAsFactors=FALSE)
+                          SpectData <- rbind(SpectData, c(" ", " "))
+                          rownames(SpectData) <- NULL
+                          colnames(SpectData) <- NULL
+                          for(ii in 1:length(CLTable)){
+                              NChr <- max(nchar(CLTable[[ii]]))
+                              CLTable[[ii]] <<- encodeString(CLTable[[ii]], width=NChr, quote="", justify=c("right"))
+                              if (NChr < 6 || is.na(NChr)) { #NChr <- 5 }
+                                  CLTable[[ii]] <<- paste(CLTable[[ii]],"", sep="\t")
+                              }
+                          }
 
-   ShowParam <- tktext(InfoGroup1, width=72, height=5)
-   tkgrid(ShowParam, row = 10, column = 1, padx = 5, pady = 5, sticky="w")
+                          ClipBoard <- file(description="clipboard")
+                          open(ClipBoard, "w")
+                          write.table(SpectData, file=ClipBoard, append=TRUE, eol="\n", sep="\t", na="    ",
+                                      dec=".", quote=FALSE, row.names=FALSE, col.names=TRUE )
+                          write.table(CLTable, file=ClipBoard, append=TRUE, eol="\n", sep="   ", na="    ",
+                                      dec=".", quote=FALSE, row.names=FALSE, col.names=TRUE )
+                          flush(ClipBoard)
+                          close(ClipBoard)
+                          cat("\n Table copied to clipboard")
+             })
+   tkgrid(CopyBtn1, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
+
+   Infoframe5 <- ttklabelframe(InfoGroup1, text="Fit Component Info", borderwidth=0, padding=c(5,5,5,5))
+   tkgrid(Infoframe5, row = 6, column = 1, padx = 5, pady = 5, sticky="w")
+   ShowParam <- tktext(Infoframe5, width=72, height=5)
+   tkgrid(ShowParam, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+   CopyBtn2 <- tkbutton(InfoGroup1, text=" Copy Table ", command=function(){
+                          fitParam <<- strsplit(fitParam, "\n")
+                          fitParam <<- data.frame(A=fitParam, stringsAsFactors=FALSE)
+                          rownames(fitParam) <<- NULL
+                          colnames(fitParam) <<- NULL
+                          ClipBoard <- file(description="clipboard")
+                          open(ClipBoard, "w")
+                          write.table(fitParam, file=ClipBoard, append=TRUE, eol="\n", sep="\t", na="    ",
+                                      dec=".", quote=FALSE, row.names=FALSE, col.names=TRUE )
+                          flush(ClipBoard)
+                          close(ClipBoard)
+                          cat("\n Table copied to clipboard")
+             })
+   tkgrid(CopyBtn2, row = 7, column = 1, padx = 5, pady = 5, sticky="w")
 
    ExitBtn <- tkbutton(InfoGroup1, text=" EXIT ", width=20, command=function(){
                           tkdestroy(InfoFwin)
          })
-   tkgrid(ExitBtn, row = 11, column = 1, padx = 50, pady=5, sticky="w")
-
-
+   tkgrid(ExitBtn, row = 8, column = 1, padx = 5, pady=5, sticky="w")
 }

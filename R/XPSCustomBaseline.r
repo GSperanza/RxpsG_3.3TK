@@ -498,12 +498,12 @@ Tougaard3P <- function(object, limits){
 #
 # which may be expressed by a three paramenter B, C, C', D function:
 #
-# Tougaard4p = Integral( BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT   where T=E'-E
+# Tougaard4p = Integral( BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT )   where T=E'-E
 #
 #'  @title  Tougaard4P four parameters Tougaard Baseline
 #'  @description Tougaard4P is a Tougaard Baseline defined usinf
 #'   the four parameters B, C, C' and D
-#'   Tougaard4p = Integral{ BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT }
+#'   Tougaard4p = Integral( BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT )
 #'   J(T) = the measured spectrum
 #'   B*T/[(C + C'*T^2)^2 + D*T^2] = Modified Universal Cross Section
 #'   T=energy loss = E'-E

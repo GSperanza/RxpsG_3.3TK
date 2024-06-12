@@ -39,15 +39,16 @@ XPSAnnotate <- function(){
        InitialGraph <- graph
     }
 #--- variables
-   if (is.na(activeFName)){
-       tkmessageBox("No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
 
    FName <- get(activeFName, envir=.GlobalEnv)   #Load the active XPSSample
-   ActiveFName <- get("activeFName", envir=.GlobalEnv)  #Load the XPSSample name
+   activeFName <- get("activeFName", envir=.GlobalEnv)  #Load the XPSSample name
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)#index of Active CoreLine
-   SpectList <- XPSSpectList(ActiveFName)                   #List of all Corelines in the XPSSample
+   SpectList <- XPSSpectList(activeFName)                   #List of all Corelines in the XPSSample
 
    FontColor <- XPSSettings$Colors
    FontSize <- c(0.6,0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,3)

@@ -444,13 +444,18 @@ XPSCnvDcnv <- function(x, y, deco=FALSE){
 
 
 #--- Variables ---
-   CutOFF <- NULL
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
    FName <- get(activeFName,envir=.GlobalEnv)
    FNameList <- XPSFNameList() #list of XPSSamples
    SpectList <- XPSSpectList(activeFName)
    SpectIdx1 <- -1  #inital value must be non-null
    SpectIdx2 <- -1
    CLName <- ""
+   CutOFF <- NULL
    CvDcv <- new("XPSSample")
    Eref <- NULL
    CvDcv[[1]] <- NULL

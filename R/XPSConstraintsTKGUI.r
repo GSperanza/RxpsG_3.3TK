@@ -5,12 +5,12 @@
 #This function is based on the XPSConstrain() function
 
 #' @title XPSConstraints is a user interface to add a fit constraints
-#' @description  XPSConstraints function is a user interface to simplyfy
+#' @description  XPSConstraints function is a user interface to simplify
 #    the setting of the fitting parameters to perform the best fit of a XPSCoreLine
 #'   It adds constraints among fit components defined for a XPSCoreLine object.
-#'   This function is called after the definition of the baseline (\code{XPSbaseline})
-#'   and fitting components (\code{XPSaddFitComponent}).
-#' @seealso \link{XPSConstrain}, \link{XPSbaseline}, \link{XPSaddFitComponent}, \link{XPSfitAlgorithms}
+#'   This function is called after the definition of the baseline using 
+#'   (\code{XPSbaseline}) and fitting components with (\code{XPSAddFitComponent}).
+#' @seealso \link{XPSConstrain}, \link{XPSAddFitComponent}, \link{XPSFitAlgorithms}
 #' @examples
 #' \dontrun{
 #' 	XPSConstraints()
@@ -28,7 +28,7 @@ XPSConstraints <- function(){
            switch(operation,
            "fix" = {
               FName[[SpectIndx]] <<- XPSConstrain(FName[[SpectIndx]],Nc1,action=operation,variable=parameter,value=setValue, expr=NULL)
-              if (parameter=="sigma") {
+              if (parameter == "sigma") {
                  FName[[SpectIndx]] <<- FixCtrl(FName[[SpectIndx]])  #controls that no other links present for ComponentToLink otherwise errors are generated
               }
            },
@@ -51,7 +51,7 @@ XPSConstraints <- function(){
                      }
                   }
               }
-              if (parameter=="sigma") {
+              if (parameter == "sigma") {
 #Attention: here we first save all links in SigmaCtrl
 #then when pressing the button SAVE the setlinks() and LinkCtrl() are called to control all links on sigma
 #and then XPSConstrain() is executed to set the links and save informarion in the XPSSample
@@ -66,7 +66,7 @@ XPSConstraints <- function(){
                  }
               } else {
                  value <- NULL
-                 expression=paste(parameter,Nc2,linkExpression,sep="") #save linked component and link expression in the XPSSample
+                 expression <- paste(parameter,Nc2,linkExpression,sep="") #save linked component and link expression in the XPSSample
                  if (LL == 0){
                     cat("\n Please specify the Fit component!\n")
                     return()
@@ -105,7 +105,6 @@ XPSConstraints <- function(){
            Saved <<- FALSE
    }
 
-   checkFitFunctName <- function(){ }
 
 #---------- SetLinks ----------
 
@@ -169,7 +168,7 @@ XPSConstraints <- function(){
               }
           }
       }
-      cat("\n ==> Link Cconsistency OK!")
+      cat("\n ==> Link Consistency OK!")
 
 
       while(LWrng>0) {
@@ -273,8 +272,8 @@ XPSConstraints <- function(){
       CNames <- c("Start", "Min", "Max")
       fitParam <<- as.matrix(fitParam)
       fitParam <<- as.data.frame(fitParam, stringsAsFactors=FALSE) #in the dataframe add a column with variable names
-      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames,
-                               RowNames=ParNames, Width=15, Env=environment(), parent=NULL)
+      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames, 
+                               Width=15, Modify=TRUE, Env=environment(), parent=NULL)
       FName[[SpectIndx]]@Components[[CompIndx]]@param <<- fitParam #save parameters in the slot of XPSSample
       operation <<- "edit"
       component1 <<- selectedComp
@@ -286,7 +285,8 @@ XPSConstraints <- function(){
 
 
 #===== variables =====
-   if (is.na(activeFName) || is.null(activeFName) || length(activeFName)==0){
+   activeFName <- get("activeFName",envir=.GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load XPS Spectra", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
@@ -748,7 +748,8 @@ XPSConstraints <- function(){
               tclvalue(SelFitComp2) <<- FALSE
           }
 
-      }
+      } #ParamCkCtrl() end
+
 
 #---  HndlrSetLinks generates the checkbox table considering that parameters 
 #     may be related to different fitting functions:
@@ -840,35 +841,37 @@ XPSConstraints <- function(){
                              tclvalue(SelFitComp2) <<- FALSE
                          }
 
-                         linkExpression <<- ""
                          LinkFrame3 <- ttklabelframe(LinkGroup1, text = "LINK OPERATIONS", borderwidth=2)
                          tkgrid(LinkFrame3, row = 3, column=1, padx = 5, pady = 5, sticky="we")
-                         tkgrid( ttklabel(LinkFrame3, text="Example1: link mu(C2) = mu(C1) +1.3 eV"),
-                                          row = 1, column=1, padx = 5, pady = 3, sticky="w")
-                         tkgrid( ttklabel(LinkFrame3, text="=>   check mu(C2)   check C1 as reference   Set Link Expression = +1.3"),
-                                          row = 2, column=1, padx = 5, pady = 3, sticky="w")
-                         tkgrid( ttklabel(LinkFrame3, text="Example2: link h(C4) = h(C3) * 0.5"),
-                                          row = 3, column=1, padx = 5, pady = 3, sticky="w")
-                         tkgrid( ttklabel(LinkFrame3, text="=>   check h(C4)   check C3 as reference   Set Link Expression = *0.5"),
-                                          row = 4, column=1, padx = 5, pady = 3, sticky="w")
-
-                         Expression <- tclVar("Link Expression?")  #sets the initial msg
-                         LinkExpr <- ttkentry(LinkFrame2, textvariable=Expression, foreground="grey")
+                         linkExpression <<- ""
+                         EXPR <- tclVar("Link Expression?")  #sets the initial msg
+                         LinkExpr <- ttkentry(LinkFrame3, textvariable=EXPR, width=40, foreground="grey")
                          tkbind(LinkExpr, "<FocusIn>", function(K){
                                            tkconfigure(LinkExpr, foreground="red")
-                                           tclvalue(Expression) <- ""
+                                           tclvalue(EXPR) <- ""
                          })
                          tkbind(LinkExpr, "<Key-Return>", function(K){
                                            tkconfigure(LinkExpr, foreground="black")
-                                           linkExpression <<-(tclvalue(Expression))
-                                           tclvalue(Expression) <- "Link Expression?"
+                                           linkExpression <<- tclvalue(EXPR)
                          })
-                         tkgrid(LinkExpr, row = 8, column=1, padx=5, pady=5, sticky="we")
+                         tkgrid(LinkExpr, row = 1, column=1, padx=5, pady=5, sticky="w")
+
+                         tkgrid( ttklabel(LinkFrame3, text="Example1: link mu(C2) = mu(C1) +1.3 eV"),
+                                          row = 2, column=1, padx = 5, pady = 3, sticky="w")
+                         tkgrid( ttklabel(LinkFrame3, text="=>   check mu(C2)   check C1 as reference   Set Link Expression = +1.3"),
+                                          row = 3, column=1, padx = 5, pady = 3, sticky="w")
+                         tkgrid( ttklabel(LinkFrame3, text="Example2: link h(C4) = h(C3) * 0.5"),
+                                          row = 4, column=1, padx = 5, pady = 3, sticky="w")
+                         tkgrid( ttklabel(LinkFrame3, text="=>   check h(C4)   check C3 as reference   Set Link Expression = *0.5"),
+                                          row = 5, column=1, padx = 5, pady = 3, sticky="w")
+
 
                          LinkGroup4 <- ttkframe(LinkGroup1, borderwidth=0, padding=c(0,0,0,0))
                          tkgrid(LinkGroup4, row = 9, column = 1, padx = 0, pady = 0, sticky="w")
 
-                         Button1 <- tkbutton(LinkGroup4, text="  SET LINKS  ", width=20, command=function(){
+                         SetBtn <- tkbutton(LinkGroup4, text="  SET LINKS  ", width=20, command=function(){
+                                           tkconfigure(LinkExpr, foreground="grey")
+                                           tclvalue(EXPR) <- "Link Expression?"
                                            component2 <<- tclvalue(SelFitComp2)
 #-------------------------------------------------------------------------------------------------------------------------------
 #                                          #control on the linked sigma parameter:
@@ -890,26 +893,26 @@ XPSConstraints <- function(){
 #                                              }
 #                                          }
 #-------------------------------------------------------------------------------------------------------------------------------
-                                           if (length(component1)==0 || component2 == "0"){
-                                               tkmessageBox(message="Error: Parameter-To-Link or Reference-Component not set!", title ="WRONG COMPONENT SELECTION", icon="error")
+                                           if (length(component1)==0 || length(component2)==0){
+                                               tkmessageBox(message="Error: Component to link or Reference Component not set!", title ="WRONG COMPONENT SELECTION", icon="error")
                                                return()
                                            }
                                            operation <<- "link"
                                            setCommand()
                                            ResetLinks()  #after link selection, resets checks and prepare for further link setting
                          })
-                         tkgrid(Button1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+                         tkgrid(SetBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-                         Button2 <- tkbutton(LinkGroup4, text="  RESET LINKS  ", width=20, command=function(){
+                         ResetBtn <- tkbutton(LinkGroup4, text="  RESET LINKS  ", width=20, command=function(){
                                            ResetLinks()
                          })
-                         tkgrid(Button2, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+                         tkgrid(ResetBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
-                         Button3 <- tkbutton(LinkGroup4, text="  EXIT  ", width=20, command=function(){
+                         ExitBtn <- tkbutton(LinkGroup4, text="  EXIT  ", width=20, command=function(){
                                             tkdestroy(LinkFCwin)
                          })
-                         tkgrid(Button3, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
-      }
+                         tkgrid(ExitBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+      } #HndlrSetLinks() end
 
 
       T3frame1 <- ttklabelframe(T3group1, text = "SET LINKS", borderwidth=2)
@@ -1071,6 +1074,10 @@ XPSConstraints <- function(){
       tkgrid(ButtReload, row = 6, column = 1, padx = 5, pady = 5, sticky="w")
 
       ButtExit <- tkbutton(Optframe, text="EXIT", width=20, command=function(){
+                           SpectName <<- names(FName)[SpectIndx]  #name of the active CoreLine
+#                           assign(activeFName, FName, envir=.GlobalEnv)
+#                           assign("activeSpectName", SpectName, envir=.GlobalEnv)
+#                           assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
                            if (Saved){
                               tkdestroy(mainFCwin)
                            } else {
@@ -1081,6 +1088,7 @@ XPSConstraints <- function(){
                            }
                            XPSSaveRetrieveBkp("save")
                            plot(FName[[SpectIndx]])
+                           UpdateXS_Tbl()
                      })
       tkgrid(ButtExit, row = 7, column = 1, padx = 5, pady = 5, sticky="w")
 

@@ -137,6 +137,11 @@ XPSDepthProfile <- function() {
      }
 
 #--- Variables
+     activeFName <- get("activeFName", envir = .GlobalEnv)
+     if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+         tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+         return()
+     }
      options(warn = -1)
      N.XS <- NULL
      N.CL <- NULL
@@ -170,7 +175,8 @@ XPSDepthProfile <- function() {
             "deepskyblue4","brown4","olivedrab","blueviolet",     "grey40","orangered","green3","blue3",
             "steelblue4","yellow","yellowgreen","turquoise3",  "plum1","magenta3", "darkturquoise")
 
-     if (is.na(activeFName)==TRUE){
+     activeFName <- get("activeFName", envir = .GlobalEnv)
+     if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
          tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
          return()
      }

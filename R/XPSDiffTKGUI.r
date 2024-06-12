@@ -316,16 +316,39 @@ XPSDiff <- function(){
       tkconfigure(D1CoreLine, values=SpectList)
       return(Idx)
    }
+   
+   ResetVars <- function(RstBkp=TRUE){
+      XPSDiffted[[1]] <<- NULL
+      Differentiated <<- NULL
+      DiffBkp <<- NULL
+      Corners <<- list(x=NULL, y=NULL)
+      LocPos <<- list()
+      MaxMinD <<- NULL
+      DiffDeg <<- 0
+      S1 <<- ""   #to store the 'XPSSample@Symbol'
+      S2 <<- ""   #to store 'D.x' if differentiation was performed
+      S3 <<- ""   #to store '/U0395' if Max/Min diff was done
+      if (RstBkp == TRUE) { BackGnd <<- NULL }
+
+      tclvalue(DDeg) <- ""
+      tclvalue(DNeg) <- FALSE
+      tclvalue(AmpliDeg) <- ""
+      WidgetState(DiffButt, "disabled")
+      WidgetState(ResButt, "disabled")
+      WidgetState(MaxMinBtn, "disabled")
+      WidgetState(RestartButt, "disabled")
+      WidgetState(SaveNewButt, "disabled")
+      WidgetState(OverWButt, "disabled")
+   }
 
 
 #--- Variables
     plot.new()
-    if (length(activeFName)==0){
-       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
-       return()
+    activeFName <- get("activeFName", envir = .GlobalEnv)
+    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+        return()
     }
-
-#    activeFName <- get("activeFName", envir=.GlobalEnv)  #cload the XPSSample name (string)
     XPSSample <- get(activeFName, envir=.GlobalEnv)  #load the active XPSSample (data)
     FNameList <- XPSFNameList()                  #list of loaded XPSSamples
     SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv) #load the index of the active CoreLine
@@ -343,7 +366,6 @@ XPSDiff <- function(){
     S1 <- ""   #to store the 'XPSSample@Symbol'
     S2 <- ""   #to store 'D.x' if differentiation was performed
     S3 <- ""   #to store '/U0395' if Max/Min diff was done
-
 
 #----- Main Panel
 
@@ -383,6 +405,7 @@ XPSDiff <- function(){
     D1CoreLine <- ttkcombobox(D1frame2, width = 20, textvariable = CL, values = SpectList)
     tkgrid(D1CoreLine, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
     tkbind(D1CoreLine, "<<ComboboxSelected>>", function(){
+                        ResetVars()
                         XPSCLname <- tclvalue(CL)
                         tmp <- unlist(strsplit(XPSCLname, "\\."))   #skip the ".NUMBER" at beginning CoreLine name
                         SpectIndx <<- as.integer(tmp[1])
@@ -424,7 +447,7 @@ XPSDiff <- function(){
                         CLBkp <<- XPSSample[[SpectIndx]]         #backUp original data
                    })
 
-    D1frame3 <- ttklabelframe(D1Group1, text="Update File Lists", borderwidth=2, padding=c(5,5,5,5) )
+    D1frame3 <- ttklabelframe(D1Group1, text="Update File List", borderwidth=2, padding=c(5,5,5,5) )
     tkgrid(D1frame3, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
     UpdateButt <- tkbutton(D1frame3, text="  UPDATE  ", width=20, command=function(){
                         DiffBkp <<- NULL
@@ -503,35 +526,30 @@ XPSDiff <- function(){
                         DiffBkp <<- Differentiated
 #                        BkgSubtraction(XPSSample[[SpectIndx]]@.Data[[2]])  #plotData needs the backgrnd to be defined
                         plotData()
+                        WidgetState(MaxMinBtn, "normal")
+                        WidgetState(RestartButt, "normal")
                         WidgetState(SaveNewButt, "normal")
                         WidgetState(OverWButt, "normal")
-
                  })
      tkgrid(DiffButt, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+     WidgetState(DiffButt, "disabled")
 
      ResButt <- tkbutton(D2frame1, text=" RESET ", width=15, command=function(){
-                        SpectIndx <<- grep(S1, names(XPSSample))  #restore original selected CL index
-                        DiffBkp <<- NULL
-                        BackGnd <<- NULL
-                        XPSDiffted[[1]] <- NULL
-                        Differentiated <<- NULL
-                        DiffDeg <<- 0
-                        S1 <<- S2 <<- S3 <<- ""
-                        tclvalue(DDeg) <- ""
-                        tclvalue(AmpliDeg) <- ""
-                        tclvalue(XS) <- ""
-                        tclvalue(CL) <- ""
-                        tclvalue(DNeg) <- 0
+                        ResetVars(RstBkp=FALSE)
                         XPSSample[[SpectIndx]] <<- CLBkp
                         plot(XPSSample[[SpectIndx]])
+                        tclvalue(XS) <- ""
+                        tclvalue(CL) <- ""
                         WidgetState(DiffButt, "disabled")
                         WidgetState(ResButt, "disabled")
+                        WidgetState(MaxMinBtn, "disabled")
+                        WidgetState(RestartButt, "disabled")
                         WidgetState(SaveNewButt, "disabled")
                         WidgetState(OverWButt, "disabled")
 
                  })
      tkgrid(ResButt, row = 1, column = 4, padx = 4, pady = 5, sticky="w")
-
+     WidgetState(ResButt, "disabled")
 
 # --- Line 3 ---
     D3frame1 <- ttklabelframe(mainFrame, text="Amplify Diff. Data", borderwidth=2, padding=c(5,5,5,5) )
@@ -545,7 +563,7 @@ XPSDiff <- function(){
     tkbind(AmpliDiff, "<Key-Return>", function(K){
                            tkconfigure(AmpliDiff, foreground="black")
                         AA <- as.numeric(tclvalue(AmpliDeg))
-                        Differentiated[[2]] <<- AA*DiffBkp[[2]]
+                        XPSDiffted[[1]]@.Data[[2]] <<- Differentiated[[2]] <<- AA*DiffBkp[[2]]
                         plotData()
                  })
     tkgrid(AmpliDiff, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -562,36 +580,58 @@ XPSDiff <- function(){
     D4Group1 <- ttkframe(mainFrame, borderwidth=0, padding=c(0,0,0,0) )
     tkgrid(D4Group1, row = 4, column = 1, padx = 0, pady = 0, sticky="w")
 
+    RestartButt <- tkbutton(D4Group1, text=" RESTART WITH A NEW ANALYSIS ", command=function(){
+                        ResetVars()
+                        tclvalue(XS) <- ""
+                        tclvalue(CL) <- ""
+                        XPSSaveRetrieveBkp("save")
+                 })
+    tkgrid(RestartButt, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+
+
+
     SaveNewButt <- tkbutton(D4Group1, text=" SAVE AS A NEW CORE LINE ", command=function(){
                         SaveFName("NewCL")
                         BackGnd <<- NULL
+                        tclvalue(XS) <- ""
+                        tclvalue(CL) <- ""
                         tclvalue(DDeg) <- ""
                         XPSSaveRetrieveBkp("save")
+                        WidgetState(RestartButt, "disabled")
                         WidgetState(SaveNewButt, "disabled")
                         WidgetState(OverWButt, "disabled")
 
                  })
-    tkgrid(SaveNewButt, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+    tkgrid(SaveNewButt, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
     OverWButt <- tkbutton(D4Group1, text=" OVERWRITE PREVIOUS DIFFERENTIATION ", command=function(){
                         SaveFName("Overwrite")
                         BackGnd <<- NULL
+                        tclvalue(XS) <- ""
+                        tclvalue(CL) <- ""
                         tclvalue(DDeg) <- ""
                         XPSSaveRetrieveBkp("save")
+                        WidgetState(RestartButt, "disabled")
                         WidgetState(SaveNewButt, "disabled")
                         WidgetState(OverWButt, "disabled")
                  })
-    tkgrid(OverWButt, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+    tkgrid(OverWButt, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
-    exitBtn <- tkbutton(D4Group1, text=" EXIT ", width=15, command=function(){
-                    tkdestroy(DiffWindow)
-                    XPSSaveRetrieveBkp("save")
+    exitBtn <- tkbutton(D4Group1, text=" SAVE & EXIT ", width=15, command=function(){
+                        assign("activeFName", activeFName, envir=.GlobalEnv)
+                        assign(activeFName, XPSSample, envir=.GlobalEnv)
+                        assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
+                        tkdestroy(DiffWindow)
+                        XPSSaveRetrieveBkp("save")
+                        UpdateXS_Tbl()
                  })
-    tkgrid(exitBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+    tkgrid(exitBtn, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
 
     WidgetState(DiffDegree, "disabled")
     WidgetState(DiffButt, "disabled")
     WidgetState(ResButt, "disabled")
+    WidgetState(RestartButt, "disabled")
     WidgetState(SaveNewButt, "disabled")
     WidgetState(OverWButt, "disabled")
 

@@ -1,10 +1,37 @@
+#UpdateXS_Tbl function to refresh the loist of loaded XPSSamples
+#UpdateXS_Tbl also set the actual XPSSample as highlighted
+#
+  UpdateXS_Tbl <- function(){
+      #update XPS_Table
+      XS_Tbl_Ptr <- get("Tbl_Ptr", envir=.GlobalEnv)
+      FNameList <- XPSFNameList(warn=FALSE)
+      updateTable(widget=XS_Tbl_Ptr[[2]], items=FNameList)
+      if (tclvalue(tkyview(XS_Tbl_Ptr[[2]])) != "0.0 1.0"
+          && length(YScroll) == 0) {
+          YScroll <- addScrollbars(XS_Tbl_Ptr[[1]], XS_Tbl_Ptr[[2]], type = "y", Row = 1, Col = 1, Px = 0, Py = 0)
+      }
+      #now set the actual element in the XS_Tbl
+      activeFName <<- get("activeFName", envir=.GlobalEnv)
+      if (length(activeFName) > 0){
+          idx <- which(FNameList == activeFName)      #index of the XPSSample_Name in tle FNameList
+          IdxList <- tclvalue(tcl(XS_Tbl_Ptr[[2]], "children", ""))  #get the indexes of the tktreeview elements
+          IdxList <- unlist(strsplit(IdxList, " "))         #ttkreview indexes sre of the type 'I001', "I002'...
+          idx <- IdxList[idx]  #select the actual element index
+          tcl(XS_Tbl_Ptr[[2]], "selection", "set", idx)  #set the actual XPSSample as selected in the MAIN-GUI
+      }
+  }
+
+
 # xps() opens the main GUI of the RxpsG package to call the various
 # functions to analyze XPS spectra
-#'
-#' @title xps is the main interface of the Package RxpsG
+#' @name RxpsG
+#' @title 'RxpsG' is the main interface of the Package RxpsG
 #' @description xps() activates the RxpsG front-end to use
 #'   all the functions to load raw data perform the spectral
 #'   analysis and plot raw and analyzed spectra
+#' @keywords internal  
+#' @aliases RxpsG RxpsG-package
+#' @rdname RxpsG
 #' @examples
 #'  \dontrun{
 #'  xps()
@@ -12,8 +39,7 @@
 #' @export
 #'
 
-
-
+   
 xps <- function(){
 
 options(warn = -1) #switch off warnings
@@ -24,14 +50,12 @@ options(guiToolkit = "tcltk")
 Pkgs <- utils::installed.packages(lib.loc=.libPaths())  #matrix of installed packages: names and additional  information
 Pkgs <- unname(Pkgs[, 1])                  #retain only the pakage names
 assign("Pkgs", Pkgs, envir=.GlobalEnv)     #save the list of installed Packages
-NeededPckgs <- c("RxpsG", "digest", "import", "latticeExtra", "memoise", "minpack.lm", "signal")
+NeededPckgs <- c("RxpsG", "import", "latticeExtra", "minpack.lm", "signal")
 sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if the package 'RxpsG' is correctly installed
                           cat("\n ERROR Package", x, " not installed!")
                           cat("\n Please control correct installation of required packages:")
-                          cat("\n digest
-                               \n import
+                          cat("\n import
                                \n latticeExtra
-                               \n memoise
                                \n minpack.lm
                                \n signal "
                              )
@@ -40,7 +64,13 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                     })
 
 
-#====Now check installation of optional packages and import optional functions==
+##====Now check installation of optional packages and import optional functions==
+   baseline <- get("baseline", envir=.GlobalEnv)
+   baseline.peakDetection <- get("baseline.peakDetection", envir=.GlobalEnv)
+   modFit <- get("modFit", envir=.GlobalEnv)
+   gradient <- get("gradient", envir=.GlobalEnv)
+   mra <- get("mra", envir=.GlobalEnv)
+   dwt <- get("dwt", envir=.GlobalEnv)
 # The following imports are placed in the macros where call to external functions are used
 if( is.na(match("baseline", Pkgs)) == FALSE ){  #check if the package 'baseline' is installed
 # baseline is not loaded in the NAMESPACE cannot use isNamespaceLoaded
@@ -48,24 +78,28 @@ if( is.na(match("baseline", Pkgs)) == FALSE ){  #check if the package 'baseline'
 # see also: https://import.rticulate.org
    baseline <- baseline::baseline
    baseline.peakDetection <- baseline::baseline.peakDetection
+   assign("baseline", baseline, envir=.GlobalEnv)
+   assign("baseline.peakDetection", baseline.peakDetection, envir=.GlobalEnv)      
 }
 if( is.na(match("FME", Pkgs)) == FALSE ){  #check if the package 'FME' is installed
-   modFit <- FME::modFit              #cannot use import::here because FME not listed in DESCRIPTION
+   modFit <- FME::modFit              #cannot use import::here because FME listed in Suggested
+   assign("modFit", modFit, envir=.GlobalEnv)
 }
 
 if( is.na(match("rootSolve", Pkgs)) == FALSE ){ #check if the package 'rootSolve' is installed
-   gradient <- rootSolve::gradient    #cannot use import::here because rootSolve not listed in DESCRIPTION
+   gradient <- rootSolve::gradient    #cannot use import::here because rootSolve listed in Suggested
+   assign("gradient", gradient, envir=.GlobalEnv)   
 }
 if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets' is installed
-   mra <- wavelets::mra               #cannot use import::here because rootSolve not listed in DESCRIPTION
+   mra <- wavelets::mra               #cannot use import::here because wavelets isted in Suggested
    dwt <- wavelets::dwt
-   wt.filter <- wavelets::wt.filter
+   assign("mra", mra, envir=.GlobalEnv) 
+   assign("dwt", dwt, envir=.GlobalEnv)
 }
 
 
 #===== Default variable settings =====
    activeFName <- activeSpectIndx <- activeSpectName <- XPSSettings <- Pkgs <- NULL
-
    FNameList <- ""
    XPSSample <- NULL
    SpectList <- NULL
@@ -97,24 +131,18 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       return(XPSSample)
   }
 
-  UpdateXS_Tbl <- function(items){
-      updateTable(widget=XS_Tbl, items=items)
-      if (tclvalue(tkyview(XS_Tbl)) != "0.0 1.0"
-          && length(YScroll) == 0) {
-          YScroll <<- addScrollbars(MainGroup, XS_Tbl, type = "y", Row = 1, Col = 1, Px = 0, Py = 0)
-      }
-  }
-
 #===== XPS main Panel ======
-  MainWindow <- tktoplevel()
-  tkwm.title(MainWindow,"RxpsG MAIN")
-  tkwm.geometry(MainWindow, "+50+50")
-  MainGroup <- ttkframe(MainWindow, borderwidth=5, padding=c(5,5,5,20))
+  activeFName <- NULL
+  RxpsGMainWindow <- tktoplevel()
+  tkwm.title(RxpsGMainWindow,"RxpsG MAIN")
+  tkwm.geometry(RxpsGMainWindow, "+50+50")
+  MainGroup <- ttkframe(RxpsGMainWindow, borderwidth=5, padding=c(5,5,5,5))
   tkgrid(MainGroup, row=1, column=1)
+  quartz <- NULL
 
 #===== Menu FILE: options definition =====
-  menuBar <- tkmenu(MainWindow)
-  tkconfigure(MainWindow, menu = menuBar)
+  menuBar <- tkmenu(RxpsGMainWindow)
+  tkconfigure(RxpsGMainWindow, menu = menuBar)
 
   FileMenu <- tkmenu(menuBar)
   tkadd(menuBar, "cascade", label = "File", menu = FileMenu)
@@ -137,16 +165,16 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
        cat("\n ==> ATTENTION: File RxpsGTK.gif not found!")
        cat("\n ==> Check correct installation of RxpsG package")
        cat("\n ==> Check if ...R/Library/RxpsG/extdata directory is present")
-       tkdestroy(MainWindow)
+       tkdestroy(RxpsGMainWindow)
        return(invisible(1))
   }
   if (file.exists(IMGpath)==FALSE ) {
        cat("\n ==> ATTENTION: File RxpsGTK.gif not found!")
        cat("\n ==> Check correct installation of RxpsG package")
-       tkdestroy(MainWindow)
+       tkdestroy(RxpsGMainWindow)
        return(invisible(1))
   }  
-  
+
   Img <- try(tcl("image","create","photo", file=IMGpath), silent=TRUE)
   if ((tryCatch({
           ImgLabel <- tklabel(MainGroup, image = Img)
@@ -156,42 +184,55 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       )) == FALSE){
       tkmessageBox(message="RxpsGTK.gif not readable. Please verify the file integrity", title="ERROR", icon="error")
   }
-  tkgrid(ImgLabel, row=1, column=2, padx=c(0,10), pady=c(0,10), sticky="news")
+  tkgrid(ImgLabel, row=1, column=2, padx=c(0,5), pady=c(0,5), sticky="news")
+
 
 #===== XPSSample Table =====
   XS_Tbl <- ttktreeview(MainGroup,
                           columns = c("XPS Samples"),
                           displaycolumns=0,
                           show = "headings",
-                          height = 11,
+                          height = 3,
                           selectmode = "browse"
   )
+
   tcl(XS_Tbl, "heading", 0, text="XPS Samples")
   tcl(XS_Tbl, "column", 0, width=180)
   tkgrid(XS_Tbl, row = 1, column=1, padx = 0, pady = c(0, 10), sticky="news")
   tkgrid.columnconfigure(MainGroup, 1, weight=4)
-  UpdateXS_Tbl(items=FNameList)
+
+  assign("Tbl_Ptr", list(MainGroup, XS_Tbl), envir=.GlobalEnv)
+  UpdateXS_Tbl()
 
   tkbind(XS_Tbl, "<Double-1>", function() {  #bind the table elements to the LEFT mouse button PRESS
-      activeFName <<- unlist(unname((get_selected_treeview(XS_Tbl))))
-      XPSSample <<- get(activeFName, envir=.GlobalEnv)  #retrive the selected XPSSample
+      activeFName <- unlist(unname(get_selected_treeview(XS_Tbl)))
+      XPSSample <- get(activeFName, envir=.GlobalEnv)  #retrive the selected XPSSample
       assign("activeFName", activeFName, envir=.GlobalEnv)
+      txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+      tkwm.title(RxpsGMainWindow,txt)
       plot(XPSSample)
 
   })
   tkbind(XS_Tbl, "<Button-3>", function() {   #bind the table elements to the RIGHT mouse button PRESS
-      posxy <- tclvalue(tkwinfo("pointerxy", MainWindow))  #read the cursor position
+      posxy <- tclvalue(tkwinfo("pointerxy", RxpsGMainWindow))  #read the cursor position
       posxy <- as.integer(unlist(strsplit(posxy, " ")))    #and transform to integer
       activeFName <<- get_selected_treeview(XS_Tbl)     
+      XPSSample <- get(activeFName, envir=.GlobalEnv)
       SpectList <- XPSSpectList(activeFName)    #retrieve the list of CoreLines from the selected XPSSample
       CLmenu <- tkmenu(XS_Tbl, tearoff=FALSE) #generates a menu container         
       sapply(SpectList, function(x) tcl(CLmenu, "add", "command", label=x, command=function(){  #populate the menu container  
                             CL <- unlist(strsplit(x, "\\."))
                             activeSpectIndx <<- as.integer(CL[1])
+                            activeSpectName <<- CL[2]
+                            if (hasComponents(XPSSample[[activeSpectIndx]])) {
+                                XPSSample[[activeSpectIndx]] <- sortComponents(XPSSample[[activeSpectIndx]])
+                            }
                             plot(XPSSample[[activeSpectIndx]])
                             assign("activeSpectName", activeSpectName, envir=.GlobalEnv)
                             assign("activeSpectIndx", activeSpectIndx, envir=.GlobalEnv)
-                            XPSFitInfo()
+                            if (hasFit(XPSSample[[activeSpectIndx]])){
+                                XPSFitInfo()
+                            }
                         }))
 
       PopUpMenu <- tkpopup(CLmenu, posxy[1], posxy[2]) #link the container with a popupmenu
@@ -225,15 +266,12 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
             assign(activeFName, XPSSample, envir=.GlobalEnv)  #Save the XPSSample name as active in the .Global env
 
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
             cat("\n")
             print(summary(XPSSample))
-#            Gdev <- unlist(XPSSettings$General[6])         #retrieve the Graphic-Window type
-#            Gdev <- strsplit(Gdev, "title")
-#            Gdev <- paste(Gdev[[1]][1], " title='",activeFName,"')", sep="")     #add the correct window title
-#            graphics.off() #switch off the graphic window
-#            eval(parse(text=Gdev),envir=.GlobalEnv) #switches the new graphic window ON
             plot(XPSSample)
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "   Load Old Scienta files", command = function() {
@@ -258,10 +296,12 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
             assign("activeSpectName", XPSComponent[2], envir=.GlobalEnv)  # save the name of the first Core Line of the loaded XPSSample as active Spectrum Name
             assign(activeFName, XPSSample, envir=.GlobalEnv)    #save the loaded XPSSample in the GlobalEnv.
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
             cat("\n")
             print(summary(XPSSample))
             plot(XPSSample)
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "   Load PXT+RPL Data", command = function() {
@@ -289,10 +329,12 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
             assign(activeFName, XPSSample, envir=.GlobalEnv)
 
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
             cat("\n")
             print(summary(XPSSample))
             plot(XPSSample)
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "= Load Analyzed Data", command = function() {
@@ -347,49 +389,57 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
 #---Controls on XPSSample
             XPSSample <- CtrlSurname(XPSSample)
             XPSSample <- XPSpkgCtrl(XPSSample) #controls the "package" attributes "package" if it is  the old Rxps version
-#---Assignments
+#---Save vars
             XPSComponent <- unlist(strsplit(names(XPSSample)[1], "\\."))    #drop the "NUMBER." at beginninf of the coreline name
             assign("activeSpectIndx", 1, envir=.GlobalEnv)  #save the index corresponding to the active CoreLine in the .GlobalEnv.
             assign("activeSpectName", XPSComponent[2], envir=.GlobalEnv)  #salvo l'INDICE del file caricato come ATTIVO nel GlobalEnv.
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
             cat("\n")
             print(summary(XPSSample))
             plot(XPSSample)
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "= Save Analyzed Data", command = function() {
             XPSSaveData() #errmsg==1 XPSSaveData()executed regularly
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
       })
 
       tkadd(FileMenu, "command", label = "   Import Ascii", command = function() {
-            XPSSample <- XPSImport.Ascii()
+            XPSImport.Ascii()
+            activeFName <- get("activeFName", envir=.GlobalEnv)
+            XPSSample <- get(activeFName, envir=.GlobalEnv)
             if (is.null(XPSSample)) {
                cat("\n Import Ascii file Interrupted")
             } else {
                Items <- XPSFNameList()
-               UpdateXS_Tbl(items=Items)
+               UpdateXS_Tbl()
                plot(XPSSample)
             }
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "   Export Ascii", command = function() {
-            XPSSample <- get(activeFName, envir=.GlobalEnv)
             XPSExportAscii()
       })
 
       tkadd(FileMenu, "command", label = "   Split PXT Data File", command = function() {
             XPSSplit()
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
       })
 
       tkadd(FileMenu, "command", label = "   Change Spectrum Name", command = function() {
             XPSSpectNameChange()
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
+            activeFName <<- get("activeFName", envir=.GlobalEnv)
+            txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "   Remove Current XPS-Sample", command = function() {
@@ -405,10 +455,12 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                assign("activeSpectIndx", activeSpectIndx, envir=.GlobalEnv)
 
                Items <- XPSFNameList(warn=FALSE)
-               UpdateXS_Tbl(items=Items)
+               UpdateXS_Tbl()
                if (LL > 0){
                   XPSSample <- get(activeFName,envir=.GlobalEnv)
                   plot(XPSSample)
+                  txt <- paste("RxpsG Working on: ", activeFName, collapse="")
+                  tkwm.title(RxpsGMainWindow,txt)
                } else {
                   graphics.off() #switch off the graphic window
                   O_Sys <- Sys.info()[1]
@@ -426,6 +478,8 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                                        import::from(grDevices,quartz)
                                        quartz(title= ' ')   #quartz() does allow setting the opening position
                                    })
+                  txt <- paste("RxpsG MAIN", activeFName, collapse="")
+                  tkwm.title(RxpsGMainWindow,txt)
                }
             }
       })
@@ -460,6 +514,9 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                                     import::from(grDevices,quartz)
                                     quartz(title= ' ')   #quartz() does allow setting the opening position
                                    })
+
+               txt <- paste("RxpsG MAIN", activeFName, collapse="")
+               tkwm.title(RxpsGMainWindow,txt)
             } else {
               return()
             }
@@ -476,15 +533,19 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       tkadd(FileMenu, "command", label = "   Retrieve BKP-data", command = function() {
             XPSSaveRetrieveBkp("retrieve")
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
             FNameList <- XPSFNameList() #read the list of XPSSample loaded in the .GlobalEnv
+            activeFName <<- FNameList[1]
+            assign("activeFName", activeFName, envir=.GlobalEnv)
             XPSSample <- get(FNameList[1], envir=.GlobalEnv)
             plot(XPSSample)
+            txt <- paste("RxpsG MAIN", activeFName, collapse="")
+            tkwm.title(RxpsGMainWindow,txt)
       })
 
       tkadd(FileMenu, "command", label = "   Refresh XPS Sample List", command = function() {
             Items <- XPSFNameList()
-            UpdateXS_Tbl(items=Items)
+            UpdateXS_Tbl()
       })
 
       tkadd(FileMenu, "command", label = "   Quit", command = function() {
@@ -492,10 +553,10 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
             answ <- tclvalue(ReturnVal)
             if (answ == "yes"){
                XPSSaveData()
-               tkdestroy(MainWindow)
+               tkdestroy(RxpsGMainWindow)
             }
             else if (answ == "no"){
-                tkdestroy(MainWindow)
+                tkdestroy(RxpsGMainWindow)
             }
       })
 
@@ -513,6 +574,11 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       })
 
       tkadd(AnalysisMenu, "command", label = "   FIT Lev.Marq.", command = function() {
+             activeFName <- get("activeFName", envir = .GlobalEnv)
+             if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+                 tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+                 return()
+             }
              XPSSample <- get(activeFName,envir=.GlobalEnv)
              indx <- get("activeSpectIndx",envir=.GlobalEnv)
              XPSSample[[indx]] <- XPSFitLM(XPSSample[[indx]], , plt=TRUE)
@@ -524,6 +590,11 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                 txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
                 tkmessageBox(message=txt, title="WARNING", icon="error")
                 return()
+             }
+             activeFName <- get("activeFName", envir = .GlobalEnv)
+             if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+                 tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+                 return()
              }
              XPSSample <- get(activeFName,envir=.GlobalEnv)
              indx <- get("activeSpectIndx",envir=.GlobalEnv)
@@ -558,7 +629,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
              }
              if (length(indx) == 0){
                 answ <- tkmessageBox(message="Sorry, no survey in this XPSsample. Proceed anyway?", type="yesno", title="SPECTRUM ERROR", icon = "warning")
-                if (tclvalue(answ) == "no") return
+                if (tclvalue(answ) == "no") return()
                 XPSExtract()
              } else if (indx > 0){
                 assign("activeSpectIndx", indx[1], envir=.GlobalEnv)
@@ -627,6 +698,8 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       tkadd(PlotMenu, "command", label = "Plot", command = function() {
              #Load the active XPSSample
              XPSSample <- get(activeFName,envir=.GlobalEnv)
+             indx <- get(activeSpectIndx,envir=.GlobalEnv)
+             XPSSample[[indx]] <- sortComponents(XPSSample[[indx]])
              plot(XPSSample)
       })
 
@@ -662,21 +735,21 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
              XPSSetGraphDev()
       })
 
-      tkadd(PlotMenu, "command", label = "Set GUI Window Size", command = function() {
-          XPSSetWinSize()
+      tkadd(PlotMenu, "command", label = "Set Graphic Window Size", command = function() {
+             XPSSetWinSize()
       })
 
 #===== MENU infoFile =====
       tkadd(InfoHelpMenu, "command", label = "XPS Sample Info", command = function() {
-          XPSSampleInfo()
+             XPSSampleInfo()
       })
 
       tkadd(InfoHelpMenu, "command", label = "Core Line Fit Info", command = function() {
-          XPSCoreLineFitInfo()
+             XPSCoreLineFitInfo()
       })
    
       tkadd(InfoHelpMenu, "command", label = "Analysis Report", command = function() {
-          XPSAnalReport()
+             XPSAnalReport()
       })
 
       tkadd(InfoHelpMenu, "command", label = "Help", command = function() {
@@ -725,7 +798,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
 #--- get System info and apply correspondent XPS Settings ---
    graphics.off()                            #reset graphic window
    O_Sys <- unname(tolower(Sys.info()["sysname"]))
-   
+   O_Sys <- tolower(O_Sys)
    switch (O_Sys,
            "linux" =   {
                         X11(type='cairo', xpos=700, ypos=20, title= ' ')
@@ -747,7 +820,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                        })
 
    XPSSettings$General[6] <- Gdev
-   
+
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
       tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
       XPSSetWD()
@@ -765,7 +838,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
    FNameList <- XPSFNameList(warn=FALSE) #list of XPSSamples
 
    if(length(FNameList) > 0) {
-      activeFName <<- FNameList[1]
+      activeFName <- FNameList[1]
       activeSpectIndx <<- 1
       activeSpectName <<- names
       XPSSample <- get(activeFName, envir=.GlobalEnv)
@@ -775,7 +848,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       assign("activeSpectName", activeSpectName, envir=.GlobalEnv)
       SpectList <- XPSSpectList(activeFName) #list of Corelines in selected XPSSample
       Items <- FNameList
-      UpdateXS_Tbl(items=Items)
+      UpdateXS_Tbl()
       plot(XPSSample)
    }
 }

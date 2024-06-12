@@ -246,7 +246,7 @@ XPSCustomPlot <- function(){
        }
 
        ConvertCoords <- function(pos){
-               X1 <- min(Xlim)  #Xlim, Ylim parameters passed to XPSLattAnnotate()
+               X1 <- min(Xlim)
                if ( tclvalue(REVAX) == 1) {
                    X1 <- max(Xlim)   #Binding Energy Set
                }
@@ -503,8 +503,8 @@ XPSCustomPlot <- function(){
                RowNames <- c("Start", "Step", "N.Ticks")
                ColNames <- c("Info", "Data")
                Title <- "CUSTOM SCALE"
-               AxisData <- DFrameTable(Data=AxisData, Title=Title, ColNames=ColNames,
-                                        RowNames=RowNames, Width=c(20, 10), Env=environment())
+               AxisData <- DFrameTable(Data=AxisData, Title=Title, ColNames=ColNames, RowNames=RowNames,
+                                       Width=c(20, 10), Modify=TRUE, Env=environment())
                AxisData <- as.numeric(unlist(AxisData[[2]]))
 
                if (AxisData[1]=="?" || AxisData[1]=="" || AxisData[1]==" " || is.na(AxisData[1])){
@@ -768,13 +768,20 @@ XPSCustomPlot <- function(){
 
 
 #===== VARIABLES =====
-   if (exists("activeFName")==FALSE){
-       tkmessageBox(message="Load an XPSSample to Plot please.", title="WARNING: XPSSAMPLE LACKING", icon="warning")
+
+   activeFName <- get("activeFName", envir = .GlobalEnv)
+   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
+       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
+       return()
+   }
+   FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
+   if (length(FNameList) == 0){
+       tkmessageBox(message="No XPS Samples found. Please load XPS Data", title="WARNING", icon="warning")
        return()
    }
    FName <- get(activeFName, envir=.GlobalEnv)
-   ActiveFName <- get("activeFName", envir=.GlobalEnv)
-   SpectList <- XPSSpectList(ActiveFName)      #list of all the corelines of the activeXPSSample
+   activeFName <- get("activeFName", envir=.GlobalEnv)
+   SpectList <- XPSSpectList(activeFName)      #list of all the corelines of the activeXPSSample
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)
    SpectName <- get("activeSpectName", envir=.GlobalEnv)
    if(is.na(activeSpectName) || is.null(activeSpectName) || length(activeSpectName)==0){
