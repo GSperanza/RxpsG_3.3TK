@@ -33,11 +33,14 @@ XPSConstrain(
 XPSConstrain function allows a direct setting of the
   constraints needed for the best fit of a Core-Line. 
   Generally constraints are set more easily by using the
-  /code{XPSConstraintsGUI()} function, a simple and powerful GUI.
+  \code{XPSConstraintsGUI()} function, a simple and powerful GUI.
 }
 \examples{
 \dontrun{
  XPSConstrain(XPSCoreline[[3]], ncomponent=2, action="link", variable="mu", expr="mu1+1.5")
  XPSConstrain(XPSCoreline[[2]], ncomponent=3, action="link", variable="sigma", expr="sigma1")
 }
+}
+\seealso{
+\link{XPSConstraints}, \link{XPSAddFitComponent}, \link{XPSFitAlgorithms}
 }

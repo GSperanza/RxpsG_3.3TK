@@ -11,7 +11,7 @@ XPSCompare provides a userfriendly interface to select
   the XPS-Core-Lines together with their best fit to be plotted in 
   individual panels. XPSCompare permits the selection of plotting options
   for a personalized data representation.
-  This function is based on the (/code{Lattice}) Package.
+  This function is based on the (\code{Lattice}) Package.
 }
 \examples{
 \dontrun{

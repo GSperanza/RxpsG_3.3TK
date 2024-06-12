@@ -6,17 +6,16 @@
 \usage{
 XPSImport.Ascii()
 }
-\value{
-XPSImport.Ascii returns and object of class 'XPSSample' with
-  data loaded into a XPSCoreLine slot
-}
 \description{
 Function allowing import of textual (ascii) file data
   Options are available to account for header and data separator
   Options are also provided to store data in an object of class 'XPSSample'
+  XPSImport.Ascii saves the imported data in the .GlobalEnv
 }
 \examples{
 \dontrun{
  XPSImport.Ascii()
+ activeFName <- get("activeFName", envir=.GlobalEnv)
+ XPSSample <- get(activeFName, envir=.GlobalEnv)
 }
 }

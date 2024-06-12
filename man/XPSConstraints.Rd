@@ -7,10 +7,10 @@
 XPSConstraints()
 }
 \description{
-XPSConstraints function is a user interface to simplyfy
+XPSConstraints function is a user interface to simplify
   It adds constraints among fit components defined for a XPSCoreLine object.
-  This function is called after the definition of the baseline (\code{XPSbaseline})
-  and fitting components (\code{XPSaddFitComponent}).
+  This function is called after the definition of the baseline using 
+  (\code{XPSbaseline}) and fitting components with (\code{XPSAddFitComponent}).
 }
 \examples{
 \dontrun{
@@ -18,5 +18,5 @@ XPSConstraints function is a user interface to simplyfy
 }
 }
 \seealso{
-\link{XPSConstrain}, \link{XPSbaseline}, \link{XPSaddFitComponent}, \link{XPSfitAlgorithms}
+\link{XPSConstrain}, \link{XPSAddFitComponent}, \link{XPSFitAlgorithms}
 }

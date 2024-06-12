@@ -10,7 +10,7 @@ XPSOverlay()
 function to superpose plots of CoreLine spectra
   Provides a userfriendly interface to select XPS-Corelines to overlay
   and a selection of plotting options for a personalized data representation
-  This function is based on the (/code{Lattice}) package.
+  This function is based on the (\code{Lattice}) package.
 }
 \examples{
 \dontrun{
