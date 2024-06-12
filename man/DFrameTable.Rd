@@ -10,6 +10,7 @@ DFrameTable(
   ColNames = "",
   RowNames = "",
   Width = 10,
+  Modify = TRUE,
   Env,
   parent = NULL,
   Row = NULL,
@@ -30,6 +31,8 @@ Data == DATA.FRAME containing the items to be listed in
 \item{RowNames}{the names of the DFrameTable rownames}
 
 \item{Width}{the width of the DFrameTable columns}
+
+\item{Modify}{logical TRUE (default) to modify the selected item FALSE to simply return it}
 
 \item{Env}{the environment containing the object of class data.frame to print}
 

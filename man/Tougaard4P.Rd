@@ -5,7 +5,7 @@
 \title{@title  Tougaard4P four parameters Tougaard Baseline
  @description Tougaard4P is a Tougaard Baseline defined usinf
   the four parameters B, C, C' and D
-  Tougaard4p = Integral{ BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT }
+  Tougaard4p = Integral( BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT )
   J(T) = the measured spectrum
   B*T/[(C + C'*T^2)^2 + D*T^2] = Modified Universal Cross Section
   T=energy loss = E'-E
@@ -28,7 +28,7 @@ Return the 4parameter Tougaard background.
 @title  Tougaard4P four parameters Tougaard Baseline
  @description Tougaard4P is a Tougaard Baseline defined usinf
   the four parameters B, C, C' and D
-  Tougaard4p = Integral{ BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT }
+  Tougaard4p = Integral( BT/[(C + C'*T^2)^2 + D*T^2] * J(E)dT )
   J(T) = the measured spectrum
   B*T/[(C + C'*T^2)^2 + D*T^2] = Modified Universal Cross Section
   T=energy loss = E'-E
