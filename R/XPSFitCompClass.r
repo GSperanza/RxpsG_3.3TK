@@ -200,6 +200,47 @@ setMethod("Ycomponent", signature(object="fitComponents"),
 	}
 )
 
+##==============================================================================
+# returns the width of a 'mixed' fit component
+##==============================================================================
+#' @title ComponentWidth
+#' @description 'ComponentWidth' computes the FWHM of 'mixed' fit components
+#'   such as "GaussLorentzProd", "GaussLorentzSum", "AsymmGauss", "AsymmLorentz"
+#'   "AsymmVoigt", "AsymmGaussLorentz", "AsymmGaussVoigt", "AsymmGaussLorentzProd" ||
+#'   "DoniachSunjicGauss", "DoniachSunjicGaussTail"
+#' @param object an object of class \code{XPSCoreLine}
+#' @param idx numeric is the index of the fitting component
+#' @return 'ComponentWidth' returns the FWHM of the fit component
+#' @rdname XPSFitClassesMethods
+setGeneric("ComponentWidth", function(object, idx)   standardGeneric("ComponentWidth"))
+#' @title ComponentWidth
+#' @description 'ComponentWidth' computes the FWHM of 'mixed' fit components
+#'   such as "GaussLorentzProd", "GaussLorentzSum", "AsymmGauss", "AsymmLorentz"
+#'   "AsymmVoigt", "AsymmGaussLorentz", "AsymmGaussVoigt", "AsymmGaussLorentzProd" ||
+#'   "DoniachSunjicGauss", "DoniachSunjicGaussTail"
+#' @param object an object of class \code{XPSCoreLine}
+#' @param idx numeric is the index of the fitting component
+#' @return 'ComponentWidth' returns the FWHM of the fit component
+#' @rdname XPSFitClassesMethods
+#' @examples
+#' \dontrun{
+#'   ComponentWidth(test[["C1s"]], idx=2)
+#' }
+#' @export
+setMethod("ComponentWidth", signature(object = "XPSCoreLine"),
+	function(object, idx)
+	{
+    tmp <- object@Components[[idx]]@ycoor - object@Baseline$y
+    MaxComp <- max(tmp)
+    idx <- which(tmp > MaxComp/2)
+    idx1 <- idx[1]
+    idx2 <- idx[length(idx)]+1
+    CompWidth <- abs(object@Baseline$x[idx1] - object@Baseline$x[idx2])
+    return(CompWidth)
+ }
+)
+
+
 
 ## fitAlgorithms is a list containing the default data defining each of the fit functions
 fitAlgorithms <- list(

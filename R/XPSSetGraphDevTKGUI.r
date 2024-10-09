@@ -72,10 +72,11 @@ XPSSetGraphDev <- function() {
                         tkconfigure(WSvalue, text=txt)
                         graphics.off() #switch off the graphic window
                         O_Sys <- tclvalue(OS)
+                        O_Sys <- tolower(O_Sys)
                         switch (O_Sys,
-                            "Linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
-                            "Windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
-                            "macOS" = {VerMajor <- as.numeric(version[6])
+                            "linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
+                            "windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ', width=WinSize, height=WinSize )" },
+                            "darwin"  = {VerMajor <- as.numeric(version[6])
                                          VerMinor <- as.numeric(version[7])
                                          if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
                                              txt <- paste("This R version does not support quartz graphic device.\n",
@@ -84,8 +85,19 @@ XPSSetGraphDev <- function() {
                                              return()
                                          }
                                          tkmessageBox(message="Cannot set Graphic Window Dimensions for MacOS", title="WARNING", icon="warning")
-                                         import::from(grDevices, quartz)
-                                         quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         return()
+                                        },
+                            "macos"   = {VerMajor <- as.numeric(version[6])
+                                         VerMinor <- as.numeric(version[7])
+                                         if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
+                                             txt <- paste("This R version does not support quartz graphic device.\n",
+                                                          "Install R.3.6.2 or a higher version.", collapse="")
+                                             tkmessageBox(message=txt, type="ERROR", icon="error")
+                                             return()
+                                         }
+                                         tkmessageBox(message="Cannot set Graphic Window Dimensions for MacOS", title="WARNING", icon="warning")
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
                                          return()
                                    })
                         XPSSettings$General[4] <<- WinSize
@@ -102,10 +114,11 @@ XPSSetGraphDev <- function() {
    for(ii in 1:LL){
        OS_Radio <- ttkradiobutton(OS_Group, text=OSList[ii], variable=OS, value=OSList[ii], command=function(){
                         O_Sys <- tclvalue(OS)
+                        O_Sys <- tolower(O_Sys)
                         switch (O_Sys,
-                            "Linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ')" },
-                            "Windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ')"},
-                            "macOS" = {VerMajor <- as.numeric(version[6])
+                            "linux"   = {Gdev <- "X11(type='cairo', xpos=700, ypos=20, title=' ')" },
+                            "windows" = {Gdev <- "x11(xpos=700, ypos=20, title=' ')"},
+                            "darwin" =  {VerMajor <- as.numeric(version[6])
                                          VerMinor <- as.numeric(version[7])
                                          if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
                                              txt <- paste("This R version does not support quartz graphic device.\n",
@@ -113,12 +126,20 @@ XPSSetGraphDev <- function() {
                                              tkmessageBox(message=txt, type="ERROR", icon="error")
                                              return()
                                          }
-                                         import::from(grDevices, quartz)
-                                         quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         Gdev <- "quartz(title= ' ')"
+                                       },
+                            "macos"   = {VerMajor <- as.numeric(version[6])
+                                         VerMinor <- as.numeric(version[7])
+                                         if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
+                                             txt <- paste("This R version does not support quartz graphic device.\n",
+                                                          "Install R.3.6.2 or a higher version.", collapse="")
+                                             tkmessageBox(message=txt, type="ERROR", icon="error")
+                                             return()
+                                         }
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
                                          Gdev <- "quartz(title= ' ')"
                                        })
-
-
                         XPSSettings$General[6] <<- Gdev
        })
        tkgrid(OS_Radio, row = 1, column = ii, padx = 5, pady = 5, sticky="w")
@@ -129,10 +150,11 @@ XPSSetGraphDev <- function() {
                         Gdev <- XPSSettings$General[6]
                         graphics.off()
                         O_Sys <- tclvalue(OS)
+                        O_Sys <- tolower(O_Sys)
                         switch (O_Sys,
-                            "Linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
-                            "Windows" = {x11(xpos=700, ypos=20, title= ' ')},
-                            "macOS" = {VerMajor <- as.numeric(version[6])
+                            "linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
+                            "windows" = {x11(xpos=700, ypos=20, title= ' ')},
+                            "darwin"  = {VerMajor <- as.numeric(version[6])
                                          VerMinor <- as.numeric(version[7])
                                          if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {                                            
                                              txt <- paste("This R version does not support quartz graphic device.\n",
@@ -140,8 +162,18 @@ XPSSetGraphDev <- function() {
                                              tkmessageBox(message=txt, type="ERROR", icon="error")
                                              return()
                                          }
-                                         import::from(grDevices, quartz)
-                                         quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
+                                         Gdev <- "quartz(title= ' ')"
+                                       },
+                            "macOS"   = {VerMajor <- as.numeric(version[6])
+                                         VerMinor <- as.numeric(version[7])
+                                         if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {                                            
+                                             txt <- paste("This R version does not support quartz graphic device.\n",
+                                                          "Install R.3.6.2 or a higher version.", collapse="")
+                                             tkmessageBox(message=txt, type="ERROR", icon="error")
+                                             return()
+                                         }
+                                         grDevices::quartz(title= ' ')   #quartz() does allow setting the opening position
                                          Gdev <- "quartz(title= ' ')"
                                        })
                         tkconfigure(WS_Slider, variable=7)

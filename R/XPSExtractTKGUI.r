@@ -212,12 +212,16 @@ XPSExtract <- function() {
 #443      Au   4p1/2 643  843.6 0.000  0.00
 #475      Au      4s 759  727.6 0.409  1.92
                          if (Object@Flags[3] == FALSE) {   #eliminate rows corresponding to
-                             idx <- which(is.na(Element$RSF_K))# NAs present in RSF_K column
-                             Element <- Element[-idx, ]
+                             idx <- which(is.na(Element$RSF_K))# NAs present in RSF_K column Kratod
+                             if (length(idx) > 0) {
+                                 Element <- Element[-idx, ]
+                             }
                              Object@RSF <<- Element$RSF_K
                          } else {
-                             idx <- which(is.na(Element$RSF_S))#  NAs present in RSF_S column
-                             Element <- Element[-idx, ]
+                             idx <- which(is.na(Element$RSF_S))#  NAs present in RSF_S column Scienta
+                             if (length(idx) > 0) {
+                                 Element <- Element[-idx, ]
+                             }
                              Object@RSF <<- Element$RSF_S
                          }
                          #now identify rows corresponding to the selected orbital
@@ -234,8 +238,8 @@ XPSExtract <- function() {
                                  Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
                              }
                          } else {  #orbital is like 1s, 2p, 3d... LS not indicated
-#    Element Orbital  BE     KE RSF_K RSF_S
-#333       N      1s 397 1089.6 0.477   1.8
+#    Element Orbital  BE     KE    RSF_K   RSF_S
+#333       N     1s   397  1089.6  0.477   1.8
 #just one element identified by idx
                              if (Object@Flags[3] == FALSE) {
                                  Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra

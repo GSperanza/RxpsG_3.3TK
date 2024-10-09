@@ -44,6 +44,7 @@ XPSCoreLineFitInfo <- function() {
 
 
    SetDataFrame <- function() {
+
       activeFName <- get("activeFName", envir=.GlobalEnv)
       FName <- get(activeFName, envir=.GlobalEnv)
       Indx <- get("activeSpectIndx", envir=.GlobalEnv)
@@ -62,7 +63,7 @@ XPSCoreLineFitInfo <- function() {
           } else {
               sumComp[jj] <- sum(FName[[Indx]]@Components[[jj]]@ycoor-FName[[Indx]]@Baseline$y)/RSF  #contributo della singola componente
           }
-      }          
+      }
 #---Set DataFrame Table
       RSF <- NULL
       for(jj in 1:N_Comp){ #jj runs on the FitComponents
@@ -78,7 +79,20 @@ XPSCoreLineFitInfo <- function() {
           } else {
               FitFnctn <- rbind(FitFnctn, unlist(FName[[Indx]]@Components[[jj]]@funcName))
               Area <- rbind(Area,round(sumComp[jj], 2))
-              FWHM <- rbind(FWHM,round(FName[[Indx]]@Components[[jj]]@param[3,1], 2)) #FWHM component jj
+              if (fnName[jj] == "GaussLorentzProd" ||
+                  fnName[jj] == "GaussLorentzSum" ||
+                  fnName[jj] == "AsymmGauss" ||
+                  fnName[jj] == "AsymmLorentz" ||
+                  fnName[jj] == "AsymmVoigt" ||
+                  fnName[jj] == "AsymmGaussLorentz" ||
+                  fnName[jj] == "AsymmGaussVoigt" ||
+                  fnName[jj] == "AsymmGaussLorentzProd" ||
+                  fnName[jj] == "DoniachSunjicGauss" ||
+                  fnName[jj] == "DoniachSunjicGaussTail" ){
+                  FWHM <- ComponentWidth(FName[[Indx]], jj)
+              } else {
+                  FWHM <- rbind(FWHM,round(FName[[Indx]]@Components[[jj]]@param[3,1], 2)) #FWHM component jj
+              }
               RSF <- rbind(RSF,unlist(FName[[Indx]]@Components[[jj]]@rsf)) #RSF component jj
               BE <- rbind(BE,round(FName[[Indx]]@Components[[jj]]@param["mu","start"], 2)) #BE component jj
               Conc <- rbind(Conc,round(100*sumComp[jj]/sumCoreLine, 2))  #Concentration component jj
@@ -180,7 +194,8 @@ XPSCoreLineFitInfo <- function() {
                                        "Spectral Intensity Range:  ",fitrng2[1],"-", fitrng2[2], "\n",
                                        "Base Line Type:  ", BLtype, collapse="")
                           tcl(SpectTbl, "delete", "0.0", "end") #cancel previous comments
-                          tkinsert(SpectTbl, "0.0", txt) #cancel previous comments
+                          tcl(SpectTbl, "insert", "0.0", txt) #cancel previous comments
+#                          tkinsert(SpectTbl, "0.0", txt) #cancel previous comments
 
                           if (length(FName[[Indx]]@Components) == 0){  #no information if Baseline not defined
                              clear_treeview(FitTbl)
@@ -196,7 +211,7 @@ XPSCoreLineFitInfo <- function() {
 #--- Spectrum Info
    Infoframe3 <- ttklabelframe(InfoGroup1, text="Spectrum Info", borderwidth=0, padding=c(5,5,5,5))
    tkgrid(Infoframe3, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-   SpectTbl <- tktext(Infoframe3, width=72, height=5)
+   SpectTbl <- tktext(Infoframe3, width=72, height=5, background="white")
    tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    fitrng1 <- fitrng2 <- c("  ", "  ")
@@ -215,7 +230,11 @@ XPSCoreLineFitInfo <- function() {
                 "Energy Step:  ", EStep, "\n",
                 "Spectral Intensity Range:  ",fitrng2[1],"-", fitrng2[2], "\n",
                 "Base Line Type:  ", BLtype, collapse="")
-   tkinsert(SpectTbl, "0.0", txt) #write report in SpectTbl Win
+print(txt)
+
+#   tkinsert(SpectTbl, "0.0", txt) #write report in SpectTbl Win
+   tcl(SpectTbl, "insert", "0.0", txt) #cancel previous comments
+
 
 #--- Fit Component Info
    Infoframe4 <- ttklabelframe(InfoGroup1, text="Component Parameteters", borderwidth=0, padding=c(5,5,5,5))
@@ -270,10 +289,10 @@ XPSCoreLineFitInfo <- function() {
        txt <- paste("No Fit found for", activeSpectName, sep=" ")
        tkmessageBox(message=txt, title = "CORE LINE INFO",  icon = "warning")
        CLTable <- data.frame(list("   ", "   ", "   ", "   ", "   ", "   ", "   ", "   "), stringsAsFactors=FALSE)
-       names(CLTable) <- c("C Names", "Fit", "Fnct", "Area", "FWHM", "RSF", "BE", "Conc.")
+       names(CLTable) <- c("C Names", "FitFnct", "Area", "FWHM", "RSF", "BE", "Conc.")
        #generates an empty table
        FitTbl <- XPSTable(parent=Infoframe4, items=CLTable,
-                          ColNames=c("C Names", "Fit", "Fnct", "Area", "FWHM", "RSF", "BE", "Conc."),
+                          ColNames=c("C Names", "FitFnct", "Area", "FWHM", "RSF", "BE", "Conc."),
                           NRows=5, Width=c(80, 110, 150, 60, 80, 80, 80))
    }
    addScrollbars(parent=Infoframe4, widget=FitTbl, type="y", Row=1, Col=1, Px=0, Py=0)

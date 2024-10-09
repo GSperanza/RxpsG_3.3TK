@@ -132,7 +132,21 @@ XPSFitInfo <- function(){
 
             for(jj in 1:N_comp){ #jj runs on the fit components
                Area <- sprintf("%1.2f",sumComp[jj]) #area componente jj linea di core ii
-               FWHM <- sprintf("%1.2f",FName[[Indx]]@Components[[jj]]@param["sigma", "start"]) #FWHM componente ii
+               if (fnName[jj] == "GaussLorentzProd" ||
+                   fnName[jj] == "GaussLorentzSum" ||
+                   fnName[jj] == "AsymmGauss" ||
+                   fnName[jj] == "AsymmLorentz" ||
+                   fnName[jj] == "AsymmVoigt" ||
+                   fnName[jj] == "AsymmGaussLorentz" ||
+                   fnName[jj] == "AsymmGaussVoigt" ||
+                   fnName[jj] == "AsymmGaussLorentzProd" ||
+                   fnName[jj] == "DoniachSunjicGauss" ||
+                   fnName[jj] == "DoniachSunjicGaussTail" ){
+                   FWHM <- ComponentWidth(FName[[Indx]], jj)
+                   FWHM <- sprintf("%1.2f",FWHM) #FWHM componente jj
+               } else {
+                   FWHM <- sprintf("%1.2f",FName[[Indx]]@Components[[jj]]@param["sigma", "start"]) #FWHM componente ii
+               }
                RSF <- sprintf("%1.3f",FName[[Indx]]@Components[[jj]]@rsf) #RSF componente ii
                BE <- sprintf("%1.2f",FName[[Indx]]@Components[[jj]]@param["mu","start"]) #BE componente ii
                Conc <- sprintf("%1.2f",100*sumComp[jj]/sumCoreLine)  #Concentrazione componente ii
