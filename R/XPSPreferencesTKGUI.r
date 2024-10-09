@@ -268,6 +268,7 @@ XPSPreferences <- function() {
                              XPSSettings$General[7] <<- WorkingDir     #personal Working Dir
                              XPSSettings$General[8] <<- tclvalue(CHRM) #personal Working Dir
                              for (jj in 9:20){ XPSSettings$General[jj] <<- NA }
+                             GStyleParam <<- get("GStyleParam", envir=environment()) #if Style has been modified, load the new one
                              XPSSettings$Colors <<- gsub("\\s", "", Colors)   #removes all the blank spaces from  Color string vector
                              XPSSettings$LType <<- gsub("\\s", "",GStyleParam$LType)     #removes all the blank spaces from  LType string vector
                              XPSSettings$Symbols <<- gsub("\\s", "",GStyleParam$Symbols) #removes all the blank spaces from  Symbols string vector

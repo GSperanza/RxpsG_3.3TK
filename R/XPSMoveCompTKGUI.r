@@ -367,7 +367,7 @@ XPSMoveComp <- function(){
       CNames <- c("Start", "Min", "Max")
       fitParam <<- as.matrix(fitParam) #this is needed to construct correctly the data.frame
       fitParam <<- data.frame(fitParam, stringsAsFactors=FALSE) #in the dataframe add a column with variable names
-      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames, 
+      fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames,
                                Width=15, Modify=TRUE, Env=environment(), parent=NULL)
 #--- Save changes ---
       Object@Components[[FComp]]@param <<- fitParam #save parameters in the slot of XPSSample
@@ -495,12 +495,11 @@ XPSMoveComp <- function(){
         Object@Boundaries$y <- Ylimits
      }
      plot(Object)
-
      if (Check.PE() == FALSE) { return() }
 
 #--- Widget ---
      MCWindow <- tktoplevel()
-     tkwm.title(MCWindow,"XPS ANALYSIS")
+     tkwm.title(MCWindow,"XPS MOVE COMPONENTS")
      tkwm.geometry(MCWindow, "+100+50")   #position respect topleft screen corner
      tkbind(MCWindow, "<Destroy>", function(){
                            EXIT <<- TRUE
@@ -584,8 +583,9 @@ XPSMoveComp <- function(){
      tkgrid(LMFitbutton, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      MFFitbutton <- tkbutton(MCFrame4, text=" FIT Modfit ", width=20, command=function(){
-                           if( is.na(match("FME", Pkgs)) == TRUE ){       #check if the package 'FME' is installed
-                               txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
+                           FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
+                           if( FME.PKG == FALSE ){       #check if the package 'FME' is installed
+                               txt <- "Package 'FME' is NOT Installed. \nCannot Execute the 'ModFit' Option"
                                tkmessageBox(message=txt, title="WARNING", icon="error")
                                return()
                            }
@@ -702,6 +702,7 @@ XPSMoveComp <- function(){
                            assign(activeFName, XPSSample, envir = .GlobalEnv)
                            replot()
                            XPSSaveRetrieveBkp("save")
+                           UpdateXS_Tbl()
                   })
      tkgrid(SAVbutton, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
 

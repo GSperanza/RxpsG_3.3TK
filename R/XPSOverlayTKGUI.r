@@ -401,7 +401,7 @@ XPSOverlay <- function(){
    SelectedNames <- list(XPSSample=NULL, CoreLines=NULL, Ampli=NULL)
    NamesList <- list(XPSSample=NULL, CoreLines=NULL)
    SpectName <- ""
-   
+
    T1CoreLineCK <- NULL
 
    plot.new()                                 #reset graphical window
@@ -1046,7 +1046,7 @@ XPSOverlay <- function(){
                              RevAx <- as.logical(as.numeric(tclvalue(REVERSE)))   #the X axis reversed?
 
                              #First zoom area corner
-                             pos <- grid.locator(unit = "points")
+                             pos <- grid::grid.locator(unit = "points")
                              if (FName[[CLname]]@Flags[1] && RevAx==TRUE) { #Binding energy set
                                 pos1$x <- X2-as.numeric(pos$x)*RangeX/width    #reversed scale
                              } else if (! FName[[CLname]]@Flags[1] && RevAx==FALSE) { #Kinetic energy scale
@@ -1062,7 +1062,7 @@ XPSOverlay <- function(){
                              panel.superpose(x=pos1$x,y=pos1$y,subscripts=c(1,1),groups=1, type="p", pch=3, cex=1, lwd=1.5, col="blue")
 
                              #Second zoom area corner
-                             pos <- grid.locator(unit = "points")
+                             pos <- grid::grid.locator(unit = "points")
                              if (FName[[CLname]]@Flags[1] && RevAx==TRUE) { #Binding energy set
                                 pos2$x <- X2-as.numeric(pos$x)*RangeX/width    #reversed scale
                              }  else if (! FName[[CLname]]@Flags[1] && RevAx==FALSE) { #Kinetic energy scale
@@ -1220,7 +1220,7 @@ XPSOverlay <- function(){
                                 width <- max(convertX(unit(xx, "native"), "points", TRUE))
                                 height <- max(convertY(unit(yy, "native"), "points", TRUE))
                                 while (! is.null(pos)) {
-                                      pos <- grid.locator(unit = "points")
+                                      pos <- grid::grid.locator(unit = "points")
                                       if (is.null(pos)) break ## non-left click
                                       if (FName[[SpectIndx]]@Flags[1] && RevAx==TRUE) { #Binding energy set
                                           pos$x <- X2-as.numeric(pos$x)*RangeX/width      #reversed scale

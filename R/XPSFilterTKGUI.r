@@ -388,8 +388,6 @@ XPSFilter <- function() {
 
    msSmoothMRA <- function(){
       FiltInfo <<- paste("Wavelets filter, N.wavelets: ", tclvalue(F5WavN), " Degree: ", tclvalue(F5Deg), sep="")
-      mra <- get("mra", envir=.GlobalEnv)
-      mra <- get("dwt", envir=.GlobalEnv)      
       RawData <<- NULL
       Filtered <<- NULL
       coeff <<- NULL
@@ -413,7 +411,7 @@ XPSFilter <- function() {
       if (RejLev > maxLevels){
          tkmessageBox(message="Attention: Nlevel must be < 1/2 * Filter Order", title="BAD DEGREE OF NOISE REJECTION", icon="error")
       }
-      Response <- mra(RawData, filter = WTfilt, n.levels = maxLevels,
+      Response <- wavelets::mra(RawData, filter = WTfilt, n.levels = maxLevels,
                       method = "modwt", boundary="periodic", fast=TRUE)
       Response <- sapply(c(Response@D[RejLev], Response@S[RejLev]), cbind)
       Filtered <<- rowSums(Response)
@@ -425,7 +423,7 @@ XPSFilter <- function() {
           RawData <<- c(rep(RawData[1],NPad), RawData, rep(RawData[LL],NPad)) #NPad Padding at edges
           LL <- length(RawData)
       }
-      Response <- dwt(RawData, filter = WTfilt, n.levels = maxLevels, boundary="periodic", fast=TRUE)
+      Response <- wavelets::dwt(RawData, filter = WTfilt, n.levels = maxLevels, boundary="periodic", fast=TRUE)
       ff <- 10-RejLev+1
       coeff <<- Response@V[[ff]]/sum(Response@V[[ff]]) #the higher the level selected for Response@V the higher the detail degree
       PlotData()
@@ -848,15 +846,17 @@ XPSFilter <- function() {
    F5group3 <- ttkframe(F5group1,  borderwidth=0, padding=c(0,0,0,0) )
    tkgrid(F5group3, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
    F5filter <- tkbutton(F5group3, text="FILTER", width=15, command=function(){
+                        wavelets.PKG <- get("wavelets.PKG", envir=.GlobalEnv)
+                        if( wavelets.PKG == FALSE ){      #check if the package 'wavelets' is installed
+                            txt <- "Package 'wavelets' is NOT Installed. \nCannot Execute the 'Wavelets filtering' Option"
+                            tkmessageBox(message=txt, title="WARNING", icon="error")
+                            return()
+                        }
+
                         if(tclvalue(XS) == "" || tclvalue(CL) == ""){
                            tkmessageBox(message="Please select The XPSSample and the Core-Line to filter",
                                         title = "WARNING", icon="warning")
                            return()
-                        }
-                        if( is.na(match("wavelets", Pkgs)) == TRUE ){      #check if the package 'wavelets' is installed
-                            txt <- "Package 'wavelets' not installed. \nOption 'Wavelets filtering' cannot be done"
-                            tkmessageBox(message=txt, title="WARNING", icon="error")
-                            return()
                         }
                         msSmoothMRA()
                         WidgetState(F5Response, "normal")
@@ -1149,6 +1149,7 @@ XPSFilter <- function() {
                            idx2 <- which(FName[[TestIdx]]@.Data[[1]] == rng[2])
                            FName[[TestIdx]]@RegionToFit$y <<- Filtered[idx1:idx2]
                         }
+                        assign("activeFName", activeFName, envir=.GlobalEnv)
                         assign(activeFName, FName,envir=.GlobalEnv)      #Save the modified XPSSample in the globalEnv
 #                        assign("activeSpectIndx", TestIdx, envir=.GlobalEnv)  #set the activeSpectIndx be the smoothed core line
                         RawData <<- NULL
@@ -1156,6 +1157,7 @@ XPSFilter <- function() {
                         BackGnd <<- 0
                         plot(FName)
                         XPSSaveRetrieveBkp("save")
+                        UpdateXS_Tbl()
                   })
    tkgrid(SaveTestButt, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 

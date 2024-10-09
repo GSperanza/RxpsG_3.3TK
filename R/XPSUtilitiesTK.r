@@ -506,9 +506,13 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
        return(Data)
    } else {
        if (Modify == TRUE){
+
            SetBtn <- tkbutton(DFFrame, text=" SET CHANGES ", command=function(){
                             remove("DFWinExists", envir=.GlobalEnv)
-                            XPSSaveRetrieveBkp("save")
+                            ClassFilter <- function(x) inherits(get(x), "XPSSample" )
+                            if (length(Filter(ClassFilter, ls(.GlobalEnv))) > 0){
+                                XPSSaveRetrieveBkp("save")
+                            }
                             assign(VarName, Data, envir=Env) #modified data has to be assigned using the original name
                             return(Data)
                           })

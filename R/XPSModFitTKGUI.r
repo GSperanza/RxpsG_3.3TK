@@ -27,14 +27,12 @@
 #'
 
 XPSModFit <- function(Object, plt=TRUE, ...) {
-       if (is.na(match("FME", Pkgs))==TRUE || is.na(match("rootSolve", Pkgs))==TRUE){
-           txt = c("Package 'FME' or Package 'rootSolve' not Installed.\n",
-                   "Cannot execute Model Fitting...")
+       FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
+       if (FME.PKG == FALSE){
+           txt = "Package 'FME' not Installed. \nCannot Execute the 'Model Fitting' option"
            tkmessageBox(message=txt, title="ERROR", icon="error")
            return()
        }
-       modFit <- get("modFit", envir=.GlobalEnv)
-       gradient <- get("gradient", envir=.GlobalEnv)
 
 # ==============================================================
 # showListParam: formatted print of a list of parameters
@@ -197,49 +195,49 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
      if (method=="Marq") {
         if (is.na(MaxIter)) MaxIter <<- 10000
         ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Marq", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Marq", control=ctrl)
      }
      if (method=="Newton") {
         if (is.na(MaxIter)) MaxIter <<- 10000
         ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
         cat("\n Iterations are starting please wait")
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Newton", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Newton", control=ctrl)
      }
      if (method=="Port") {
         if (is.na(MaxIter)) MaxIter <<- 200
         ctrl <- list(rel.tol=Tolerance, eval.max=200, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Port", hessian=TRUE, control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Port", hessian=TRUE, control=ctrl)
      }
      if (method=="Nelder-Mead") {
         if (is.na(MaxIter)) MaxIter <<- 200
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Nelder-Mead", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Nelder-Mead", control=ctrl)
      }
      if (method=="CG") {
         if (is.na(MaxIter)) MaxIter <<- 200
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="CG", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="CG", control=ctrl)
      }
      if (method=="BFGS") {
         if (is.na(MaxIter)) MaxIter <<- 200
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="BFGS", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="BFGS", control=ctrl)
      }
      if (method=="L-BFGS-B") {
         if (is.na(MaxIter)) MaxIter <<- 200
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="L-BFGS-B", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="L-BFGS-B", control=ctrl)
      }
      if (method=="SANN") {
         if (is.na(MaxIter)) MaxIter <<- 200
         if (Verbose) traceFit=1
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="SANN", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="SANN", control=ctrl)
      }
      if (method=="Pseudo") {
         if (is.na(MaxIter)) MaxIter <<- 5000
         ctrl <- list(varleft=Tolerance, numiter=MaxIter, verbose=Verbose)
-        FitEstimation <- modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Pseudo", control=ctrl)
+        FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Pseudo", control=ctrl)
      }
 
      #--- SUMMARY of fit model and PLOT FIT RESULT

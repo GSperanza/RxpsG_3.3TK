@@ -65,37 +65,23 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
 
 
 ##====Now check installation of optional packages and import optional functions==
-   baseline <- get("baseline", envir=.GlobalEnv)
-   baseline.peakDetection <- get("baseline.peakDetection", envir=.GlobalEnv)
-   modFit <- get("modFit", envir=.GlobalEnv)
-   gradient <- get("gradient", envir=.GlobalEnv)
-   mra <- get("mra", envir=.GlobalEnv)
-   dwt <- get("dwt", envir=.GlobalEnv)
-# The following imports are placed in the macros where call to external functions are used
-if( is.na(match("baseline", Pkgs)) == FALSE ){  #check if the package 'baseline' is installed
-# baseline is not loaded in the NAMESPACE cannot use isNamespaceLoaded
 # cannot use import:: since it requires the library to be listed in the DESCRIPTION imports
 # see also: https://import.rticulate.org
-   baseline <- baseline::baseline
-   baseline.peakDetection <- baseline::baseline.peakDetection
-   assign("baseline", baseline, envir=.GlobalEnv)
-   assign("baseline.peakDetection", baseline.peakDetection, envir=.GlobalEnv)      
-}
-if( is.na(match("FME", Pkgs)) == FALSE ){  #check if the package 'FME' is installed
-   modFit <- FME::modFit              #cannot use import::here because FME listed in Suggested
-   assign("modFit", modFit, envir=.GlobalEnv)
-}
+# the Macros where function of the following libraries are used contain the command
+# library::function as direct call of the needed command. For example in XPSModFit.r
+# if FME.PKG == TRUE  FME::modfit() command is used.
 
-if( is.na(match("rootSolve", Pkgs)) == FALSE ){ #check if the package 'rootSolve' is installed
-   gradient <- rootSolve::gradient    #cannot use import::here because rootSolve listed in Suggested
-   assign("gradient", gradient, envir=.GlobalEnv)   
-}
-if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets' is installed
-   mra <- wavelets::mra               #cannot use import::here because wavelets isted in Suggested
-   dwt <- wavelets::dwt
-   assign("mra", mra, envir=.GlobalEnv) 
-   assign("dwt", dwt, envir=.GlobalEnv)
-}
+   baseline.PKG <- "baseline" %in% Pkgs
+   assign("baseline.PKG",baseline.PKG, envir=.GlobalEnv)
+
+   FME.PKG <- "FME" %in% Pkgs
+   assign("FME.PKG",FME.PKG, envir=.GlobalEnv)
+
+   rootSolve.PKG <- "rootSolve" %in% Pkgs
+   assign("rootSolve.PKG",rootSolve.PKG, envir=.GlobalEnv)
+
+   wavelets.PKG <- "wavelets" %in% Pkgs
+   assign("wavelets.PKG",wavelets.PKG, envir=.GlobalEnv)
 
 
 #===== Default variable settings =====
@@ -138,6 +124,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
   tkwm.geometry(RxpsGMainWindow, "+50+50")
   MainGroup <- ttkframe(RxpsGMainWindow, borderwidth=5, padding=c(5,5,5,5))
   tkgrid(MainGroup, row=1, column=1)
+  Gdev <- NULL
   quartz <- NULL
 
 #===== Menu FILE: options definition =====
@@ -464,10 +451,11 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                } else {
                   graphics.off() #switch off the graphic window
                   O_Sys <- Sys.info()[1]
+                  O_Sys <- tolower(O_Sys)
                   switch (O_Sys,
-                          "Linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
-                          "Windows" = {x11(xpos=700, ypos=20, title= ' ')},
-                          "macOS" = {VerMajor <- as.numeric(version[6])
+                          "linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
+                          "windows" = {x11(xpos=700, ypos=20, title= ' ')},
+                          "darwin"  = {VerMajor <- as.numeric(version[6])
                                        VerMinor <- as.numeric(version[7])
                                        if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
                                            txt <- paste("This R version does not support quartz graphic device.\n",
@@ -475,9 +463,18 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                                            tkmessageBox(message=txt, type="ERROR", icon="error")
                                            return()
                                        }
-                                       import::from(grDevices,quartz)
                                        quartz(title= ' ')   #quartz() does allow setting the opening position
-                                   })
+                                     },
+                          "macos"   = {VerMajor <- as.numeric(version[6])
+                                       VerMinor <- as.numeric(version[7])
+                                       if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
+                                           txt <- paste("This R version does not support quartz graphic device.\n",
+                                                        "Install R.3.6.2 or a higher version.", collapse="")
+                                           tkmessageBox(message=txt, type="ERROR", icon="error")
+                                           return()
+                                       }
+                                       quartz(title= ' ')   #quartz() does allow setting the opening position
+                                     })
                   txt <- paste("RxpsG MAIN", activeFName, collapse="")
                   tkwm.title(RxpsGMainWindow,txt)
                }
@@ -500,10 +497,11 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                clear_treeview(widget=XS_Tbl)
                graphics.off() #switch off the graphic window
                O_Sys <- Sys.info()[1]
+               O_Sys <- tolower(O_Sys)
                switch (O_Sys,
-                       "Linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
-                       "Windows" = {x11(xpos=700, ypos=20, title= ' ')},
-                       "macOS" = {VerMajor <- as.numeric(version[6])
+                       "linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
+                       "windows" = {x11(xpos=700, ypos=20, title= ' ')},
+                       "darwin"  = {VerMajor <- as.numeric(version[6])
                                     VerMinor <- as.numeric(version[7])
                                     if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
                                         txt <- paste("This R version does not support quartz graphic device.\n",
@@ -511,9 +509,18 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                                         tkmessageBox(message=txt, type="ERROR", icon="error")
                                         return()
                                     }
-                                    import::from(grDevices,quartz)
                                     quartz(title= ' ')   #quartz() does allow setting the opening position
-                                   })
+                                  },
+                       "macos"   = {VerMajor <- as.numeric(version[6])
+                                    VerMinor <- as.numeric(version[7])
+                                    if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
+                                        txt <- paste("This R version does not support quartz graphic device.\n",
+                                                     "Install R.3.6.2 or a higher version.", collapse="")
+                                        tkmessageBox(message=txt, type="ERROR", icon="error")
+                                        return()
+                                    }
+                                    quartz(title= ' ')   #quartz() does allow setting the opening position
+                                  })
 
                txt <- paste("RxpsG MAIN", activeFName, collapse="")
                tkwm.title(RxpsGMainWindow,txt)
@@ -586,10 +593,12 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       })
 
       tkadd(AnalysisMenu, "command", label = "   FIT ModFit", command = function() {
-             if( is.na(match("FME", Pkgs)) == TRUE){   #check if the package 'FME' is installed
-                txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
-                tkmessageBox(message=txt, title="WARNING", icon="error")
-                return()
+             FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
+             rootSolve.PKG <- get("rootSolve.PKG", envir=.GlobalEnv)
+             if (FME.PKG == FALSE || rootSolve.PKG == FALSE){
+                 txt = "Package 'FME' is NOT Installed. \nCannot Execute 'Model Fitting' Option"
+                 tkmessageBox(message=txt, title="ERROR", icon="error")
+                 return()
              }
              activeFName <- get("activeFName", envir = .GlobalEnv)
              if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
@@ -678,8 +687,8 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       })
 
       tkadd(AnalysisMenu, "command", label = "   Element Identification", command = function() {
-             if( is.na(match("baseline", Pkgs)) == TRUE){   #check if the package 'baseline' is installed
-                txt <- "Package 'baseline' not installed. \nOption 'Element identification' not available"
+             if( baseline.PKG == FALSE){   #the package 'baseline' is not installed
+                txt <- "Package 'baseline' is NOT installed. \nCannot Execute 'Element identification' Option"
                 tkmessageBox(message=txt, title="WARNING", icon="error")
                 return()
              }
@@ -814,10 +823,20 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
                             tkmessageBox(message=txt, type="ERROR", icon="error")
                             return()
                         }
-                        import::from(grDevices,quartz)
                         quartz(title= ' ') #quartz does not allow setting initial positions
-                        Gdev <- "quartz(title=' ')" 
-                       })
+                        Gdev <- "quartz(title=' ')"
+                      },
+           "darwin"  =  {VerMajor <- as.numeric(version[6])
+                        VerMinor <- as.numeric(version[7])
+                        if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
+                            txt <- paste("This R version does not support quartz graphic device.\n",
+                                         "Install R.3.6.2 or a higher version.", collapse="")
+                            tkmessageBox(message=txt, type="ERROR", icon="error")
+                            return()
+                        }
+                        quartz(title= ' ') #quartz does not allow setting initial positions
+                        Gdev <- "quartz(title=' ')"
+                      })
 
    XPSSettings$General[6] <- Gdev
 
@@ -846,6 +865,7 @@ if( is.na(match("wavelets", Pkgs)) == FALSE ){   #check if the package 'wavelets
       assign("activeFName", activeFName, envir=.GlobalEnv)
       assign("activeSpectIndx", activeSpectIndx, envir=.GlobalEnv)
       assign("activeSpectName", activeSpectName, envir=.GlobalEnv)
+      assign("Gdev", Gdev, envir=.GlobalEnv)
       SpectList <- XPSSpectList(activeFName) #list of Corelines in selected XPSSample
       Items <- FNameList
       UpdateXS_Tbl()

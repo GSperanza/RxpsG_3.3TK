@@ -27,9 +27,10 @@ reset.boundaries <- function(h, ...) {
 
 
 #---- Variables ----
-   if( is.na(match("baseline", Pkgs)) == TRUE ){
-       tkmessageBox(message="Pakage 'baseline' NOT Installed. Cannot Make the Element Identification!",
-                   title = "ERROR", icon="error")
+   baseline.PKG <- get("baseline.PKG", envir=.GlobalEnv)
+   if( baseline.PKG == FALSE ){
+       txt <- "Pakage 'baseline' is NOT Installed. \nCannot Execute the 'Element Identification' option!"
+       tkmessageBox(message= txt, title = "ERROR", icon="error")
        return()
    }
    activeFName <- get("activeFName", envir = .GlobalEnv)
@@ -115,8 +116,8 @@ reset.boundaries <- function(h, ...) {
    DetectBtn <- tkbutton(Frame11, text=" DETECTION ", width=15, command=function(){
                     snmin <- as.numeric(tclvalue(NL))
                     Ewin <- as.numeric(tclvalue(EW))
-                    if( is.na(match("baseline", Pkgs)) == TRUE ){      #check if the package 'wavelets' is installed
-                        txt <- "Package 'baseline' not installed. \nOption 'Peak Detection' cannot be done"
+                    if( baseline.PKG == FALSE ){      #the package 'baseline' is NOT installed
+                        txt <- "Package 'baseline' is NOT Installed. \nCannot Execute 'Peak Detection' option"
                         tkmessageBox(message=txt, title="WARNING", icon="error")
                         return()
                     }

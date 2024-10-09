@@ -221,8 +221,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 
 #--- Here Y alignment
     if (PlotParameters$Align) {
-       LL<-length(Y)
-       if ( all(sapply(Y, function(z) !is.na(charmatch("BASE", names(z))))) ) {
+       LL <- length(Y)
+       if ( all( sapply(Y, function(z) !is.na(charmatch("BASE", names(z)))) )) {
 			       minybkg <- sapply(Y, function(z) min(z$BASE))
 			       for (idx in 1:LL) {
 			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
@@ -230,10 +230,11 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
        } else {
           minybkg <- sapply(Y, function(z){
                            LL1 <- length(z$MAIN)
+                           K <- 8
                            while(LL1-K < 0){
                                  K <- K/2
                            }
-                           min(mean(z$MAIN[1:10]), mean(z$MAIN[(LL1-10):LL1]))
+                           min(mean(z$MAIN[1:10]), mean(z$MAIN[(LL1-K):LL1]))
                        })
           for(idx in 1:LL) {
 			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
@@ -701,7 +702,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             WidgetState(Anframe2, "disabled")
                             WidgetState(Anframe3, "disabled")
                             WidgetState(BtnGroup, "disabled")
-                            pos <- grid.locator(unit = "points")
+                            pos <- grid::grid.locator(unit = "points")
                             TextPosition <<- ConvertCoords(pos)
                             if (is.null(TextPosition$x) && is.null(TextPosition$x))  {
                                return()
@@ -767,10 +768,10 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             WidgetState(Anframe3, "disabled")
                             WidgetState(BtnGroup, "disabled")
                             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
-                            pos <- grid.locator(unit = "points")
+                            pos <- grid::grid.locator(unit = "points")
                             ArrowPosition0 <<- ConvertCoords(pos)
                             panel.points(x = ArrowPosition0$x, y = ArrowPosition0$y, cex=1.1, pch=20, col=TextColor)
-                            pos <- grid.locator(unit = "points") #first mark the arrow start point
+                            pos <- grid::grid.locator(unit = "points") #first mark the arrow start point
                             ArrowPosition1 <<- ConvertCoords(pos)
                             WidgetState(Anframe1, "normal")
                             WidgetState(Anframe2, "normal")

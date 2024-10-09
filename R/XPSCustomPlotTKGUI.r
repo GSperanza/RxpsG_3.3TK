@@ -102,20 +102,28 @@ XPSCustomPlot <- function(){
                 RngY <- range(FName[[SpectIndx]]@RegionToFit$y)
                 yspan <- max(RngY)/20
                 color <- tclvalue(FCompCol)
+                LabPosX <- LabPosY <- CompLbl <- NULL
                 for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
-                    LabPosX <- FName[[SpectIndx]]@Components[[ii]]@param["mu", "start"]
-                    CompLbl <- as.character(ii)
+                    LabPosX <- c(LabPosX, FName[[SpectIndx]]@Components[[ii]]@param["mu", "start"])
+                    CompLbl <- c(CompLbl, as.character(ii))
                     BaseLevl <- findY(FName[[SpectIndx]]@Baseline, LabPosX)
                     if (is.na(LabPosX)==FALSE){   #in VBtop Lin Fit there is not a value for mu
                         if (LabPosX <= max(RngX) && LabPosX >= min(RngX)){   #Lab only if inside X-range
-                            LabPosY <- max(FName[[SpectIndx]]@Components[[ii]]@ycoor)
-                            if (LabPosY > BaseLevl) LabPosY <- LabPosY - yspan
-                            if (LabPosY < BaseLevl) LabPosY <- LabPosY + 1.5*yspan
-                  	         text(LabPosX,LabPosY , labels = CompLbl, col=color) #draws component labels
+                            if (FName[[SpectIndx]]@Components[[ii]]@param["h", "start"] > BaseLevl) {
+                                LabPosY <- c(LabPosY, FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+yspan)
+                            }
+                            if (max(FName[[SpectIndx]]@Components[[ii]]@ycoor) < BaseLevl) {
+                                LabPosY <- c(LabPosY, FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+1.5*yspan)
+                            }
                         }
                     }
                 }
+                graph <<- graph + update(graph, panel=function(...){
+                                               panel.text(x=LabPosX,y=LabPosY, labels=CompLbl, col="black") #draws component labels
+                                            })
+                plot(graph)
             }
+
             if ( ErrData == TRUE && length(SetErrBars) > 0 ) {  #Request to plot Error bars
                PlotErrorBar()
             }
@@ -210,7 +218,7 @@ XPSCustomPlot <- function(){
    CustomPltAnnotate <- function(){
 
        MakePlot <- function(){
-               x1 <- y1 <- x0 <- y0 <- cex <- col <- adj <- NULL 
+               x1 <- y1 <- x0 <- y0 <- cex <- col <- adj <- NULL
                graph <<- AcceptedGraph
                plot(graph)
                if (! is.null(TextPosition$x) && ! is.null(TextPosition$y)){
@@ -326,7 +334,7 @@ XPSCustomPlot <- function(){
                             WidgetState(Anframe2, "disabled")
                             WidgetState(Anframe3, "disabled")
                             WidgetState(BtnGroup, "disabled")
-                            pos <- grid.locator(unit = "points")
+                            pos <- grid::grid.locator(unit = "points")
                             TextPosition <<- ConvertCoords(pos)
                             if (is.null(TextPosition$x) && is.null(TextPosition$x))  {
                                return()
@@ -762,6 +770,8 @@ XPSCustomPlot <- function(){
                SpectName <<- SpName[2]
                assign("activeSpectName",SpectName,envir=.GlobalEnv)
                assign("activeSpectIndx",SpectIndx,envir=.GlobalEnv)
+               OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
+                                       y=FName[[SpectIndx]]@.Data[[2]])
                ResetPlot()
                NColS <<- ncol(SampData)
    }
@@ -784,7 +794,7 @@ XPSCustomPlot <- function(){
    SpectList <- XPSSpectList(activeFName)      #list of all the corelines of the activeXPSSample
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)
    SpectName <- get("activeSpectName", envir=.GlobalEnv)
-   if(is.na(activeSpectName) || is.null(activeSpectName) || length(activeSpectName)==0){
+   if(length(activeSpectName)==0 || is.null(activeSpectName) || is.na(activeSpectName)){
       activeSpectName <<- SpectList[1]
       activeSpectIndx <<- 1
    }

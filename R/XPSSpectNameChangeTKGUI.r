@@ -18,7 +18,7 @@ XPSSpectNameChange <- function(){
       while(stopLoop == FALSE){
             stopLoop <<- identical(OldSpectList, SpectList)
             if (stopLoop == FALSE){
-                cat("\n FOUND DIFFERENCE")
+                cat("\n Set New CoreLine Names")
                 idx <- which(SpectList != OldSpectList)
                 for(ii in idx){
                     FName[[ii]]@Symbol <<- SpectList$items[ii]
@@ -59,6 +59,8 @@ XPSSpectNameChange <- function(){
    tkbind(LabXS, "<<ComboboxSelected>>", function(){
                         stopLoop <<- TRUE
                         activeFName <<- tclvalue(XS)  #save the XPSSample name
+                        tclvalue(XSNM) <<- activeFName
+                        tkconfigure(XSName, textvariable=XSNM)
                         XPSSampName <<- activeFName
                         FName <<- get(activeFName, envir=.GlobalEnv)  #load in FName the XPSSample data
                         SpectList <<- list(items=names(FName))
@@ -67,9 +69,10 @@ XPSSpectNameChange <- function(){
                         plot(FName)
                         LL <- length(FName)
                         clear_widget(LabFrame2)
-                        SpectList <<- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
+                        DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
                                                Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,
                                                Row=1, Column=1, Border=c(10, 10, 10, 10))
+                        SpectList <<- get("SpectList", envir=environment())
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
                                  FName[[ii]]@Symbol <<- SpectList$items[ii]
@@ -78,7 +81,6 @@ XPSSpectNameChange <- function(){
                              }
                         }
                         FName@names <<- unname(unlist(SpectList))
-                        tclvalue(XSNM) <- activeFName
                         stopLoop <<- FALSE
                         SpectListCtrl()
                })
@@ -97,17 +99,17 @@ XPSSpectNameChange <- function(){
    XSNM <- tclVar(activeFName)  #sets the initial msg
    XSName <- ttkentry(LabFrame3, textvariable=XSNM, foreground="grey")
    tkbind(XSName, "<FocusIn>", function(K){
-                        tclvalue(XSNM) <- ""
+#                        tclvalue(XSNM) <<- ""
                         tkconfigure(XSName, foreground="red")
                })
    tkbind(XSName, "<Key-Return>", function(K){
                         tkconfigure(XSName, foreground="black")
                         XPSSampName <<- tclvalue(XSNM)
-                        if (length(strsplit(XPSSampName, "\\.")) < 2) {
+                        if (length(strsplit(XPSSampName, "\\.")[[1]]) < 2) {
                             answ <- tkmessageBox(message="Extension is lacking. Add .RData extension?", title="WARNING", type="yesno",  icon=c("warning"))
                             if (tclvalue(answ) == "yes"){
                                 XPSSampName <<- paste(XPSSampName, ".RData", sep="")
-                                tclvalue(XSNM) <- XPSSampName
+                                tclvalue(XSNM) <<- XPSSampName
                             } else {
                                 tkmessageBox(message="Please check your XPS-Sample name. \n Nothing was changed.", title="WARNING", icon="warning")
                                 return()
@@ -133,7 +135,7 @@ XPSSpectNameChange <- function(){
 #   tkgrid(SaveBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
 
    SaveExitBtn <- tkbutton(LabGroup, text=" SAVE CHANGES and EXIT ", width=30, command=function(){
-
+                        SpectList <<- get("SpectList", envir=environment())
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
                                  FName[[ii]]@Symbol <<- SpectList$items[ii]
@@ -145,14 +147,14 @@ XPSSpectNameChange <- function(){
                         stopLoop <<- FALSE
                         SpectListCtrl()
                         if( activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
-       	                assign(XPSSampName, FName, envir=.GlobalEnv)
        	                assign("activeFName", XPSSampName, envir=.GlobalEnv)
+       	                assign(XPSSampName, FName, envir=.GlobalEnv)
                         plot(FName)
       	                 tkdestroy(LabWin)
       	                 XPSSaveRetrieveBkp("save")
       	                 stopLoop <<- TRUE
+      	                 UpdateXS_Tbl()
                })
    tkgrid(SaveExitBtn, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
    SpectList <- OldSpectList
-#   SpectListCtrl()
 }
