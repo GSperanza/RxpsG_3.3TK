@@ -122,6 +122,8 @@ FindNearest <- function(){
 
 
 #----- Variabiles -----
+   XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+   WarnMsg <- XPSSettings$General[9]
    coord <- list()
    LocPos <- list()
    Corners <- list(x=NULL, y=NULL)
@@ -136,7 +138,7 @@ FindNearest <- function(){
    SpectList <- XPSSpectList(activeFName)
    SpectIndx <- get("activeSpectIndx",envir=.GlobalEnv)
    activeSpectName <- get("activeSpectName",envir=.GlobalEnv)
-   if (SpectIndx > length(FName)) { 
+   if (SpectIndx > length(FName)) {
        SpectIndx <- 1 
        activeSpectName <- names(FName)[1]
    }
@@ -171,7 +173,7 @@ FindNearest <- function(){
    XS <- tclVar(activeFName)
    XPS.Sample <- ttkcombobox(ZMframe0, width = 20, textvariable = XS, values = FNameList)
    tkbind(XPS.Sample, "<<ComboboxSelected>>", function(){
-                     activeFName <- tclvalue(XS)
+                     activeFName <<- tclvalue(XS)
                      FName <<- get(activeFName, envir=.GlobalEnv)
                      SpectList <<- XPSSpectList(activeFName)
                      tkconfigure(Core.Lines, values=SpectList)
@@ -289,7 +291,9 @@ FindNearest <- function(){
    ZMframe3 <- ttklabelframe(ZMgroup, text = "CURSOR POSITION", borderwidth=2)
    tkgrid(ZMframe3, row = 4, column = 1, padx = 5, pady = 5, sticky="we")
    CurPosBtn <- tkbutton(ZMframe3, text="  Cursor Position  ", width=22, command=function(){
-                          tkmessageBox(message="LEFT Mouse Button to Read Marker's Position; RIGHT Mouse Button to Exit" , title = "WARNING",  icon = "warning")
+                          if (WarnMsg == "ON") {
+                              tkmessageBox(message="LEFT Mouse Button to Read Marker's Position; RIGHT Mouse Button to Exit" , title = "WARNING",  icon = "warning")
+                          }
                           GetCurPos(SingClick=FALSE)
                           ReDraw()
                       })
@@ -298,8 +302,12 @@ FindNearest <- function(){
    ZMLbl3 <- ttklabel(ZMframe3, text = "Cursor position: ", font="Sans 12", borderwidth=2)
    tkgrid(ZMLbl3, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
-   ExitBtn <- tkbutton(ZMgroup, text="  EXIT  ", width=22, command=function(){
+   ExitBtn <- tkbutton(ZMgroup, text="  SAVE & EXIT  ", width=22, command=function(){
+                          assign("activeFName", activeFName, envir=.GlobalEnv)
+                          assign(activeFName, FName, envir=.GlobalEnv)
+                          assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
                           tkdestroy(ZMwin)
+                          UpdateXS_Tbl()
                       })
    tkgrid(ExitBtn, row = 12, column = 1, padx = c(15,5), pady = 5, sticky="w")
 

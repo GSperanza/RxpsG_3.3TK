@@ -272,7 +272,7 @@ XPSMoveComp <- function(){
                                 replot()   #plot spectrum without marker
                                 refresh <<- FALSE #now plot also the component marker
                                 replot()   #replot spectrum and marker
-                                if (ShowMsg == TRUE){
+                                if (ShowMsg == TRUE && WarnMsg == "ON"){
                                     tkmessageBox(message="Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
                                 }
                                 GetCurPos(SingClick=FALSE)
@@ -306,7 +306,7 @@ XPSMoveComp <- function(){
                                 replot()   #plot spectrum only
                                 refresh <<- FALSE #now plot spectrum + component marker
                                 replot()
-                                if (ShowMsg == TRUE){
+                                if (ShowMsg == TRUE && WarnMsg == "ON"){
                                     tkmessageBox(message="Left click New Fit_Component Position. Right click to Stop Selection", title="WARNING", icon="warning")
                                 }
                                 GetCurPos(SingClick=FALSE)
@@ -318,7 +318,7 @@ XPSMoveComp <- function(){
                     "\n=> Right click to stop position selection and cursor position reading when not required.",
                     "\n",
                     "=> Show the WARNING Messages Again? ", sep="")
-       if (ShowMsg == TRUE){
+       if (ShowMsg == TRUE && WarnMsg == "ON"){
            ShowMsg <<- tclvalue(tkmessageBox(message=txt, type="yesno", title="WARNING", icon="question")) #ShowMsg==FALSE if answer=YES
            if (ShowMsg == "no") {ShowMsg <<- FALSE}
            if (ShowMsg == "yes") {ShowMsg <<- TRUE}
@@ -433,6 +433,8 @@ XPSMoveComp <- function(){
 
 
 # --- Variable definitions ---
+     XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+     WarnMsg <- XPSSettings$General[9]
      activeFName <- get("activeFName", envir = .GlobalEnv)
      if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
          tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
@@ -583,7 +585,8 @@ XPSMoveComp <- function(){
      tkgrid(LMFitbutton, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      MFFitbutton <- tkbutton(MCFrame4, text=" FIT Modfit ", width=20, command=function(){
-                           FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
+                           Pkgs <- get("Pkgs", envir=.GlobalEnv)
+                           FME.PKG <- "FME" %in% Pkgs
                            if( FME.PKG == FALSE ){       #check if the package 'FME' is installed
                                txt <- "Package 'FME' is NOT Installed. \nCannot Execute the 'ModFit' Option"
                                tkmessageBox(message=txt, title="WARNING", icon="error")

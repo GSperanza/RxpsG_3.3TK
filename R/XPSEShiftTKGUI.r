@@ -111,6 +111,8 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
 }
 
 #--- Variables ---
+   XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+   WarnMsg <- XPSSettings$General[9]
    activeFName <- get("activeFName", envir = .GlobalEnv)
    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
@@ -128,7 +130,6 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
    LocPos <- list(x=NULL, y=NULL)
    Corners <- list(x=NULL, y=NULL)
    ZOOM <- FALSE
-
 
 
 #----- Widget ---
@@ -233,7 +234,9 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                          tkmessageBox(message="WARNING: no coreline selected", title = "WARNING",icon = "warning" )
                          return()
                       }
-                      tkmessageBox(message="LEFT Mouse Button to Read Marker's Position; RIGHT Mouse Button to Exit" , title = "WARNING",  icon = "warning")
+                      if (WarnMsg == "ON"){
+                          tkmessageBox(message="LEFT Mouse Button to Read Marker's Position; RIGHT Mouse Button to Exit" , title = "WARNING",  icon = "warning")
+                      }
                       GetCurPos(SingClick=FALSE)     #this to draw/modify the zooming area
                       EE <<- tclVar(as.character(position))
                       tkconfigure(Eobj5, textvariable=EE, foreground="black")  #update the Edit window with the componento position
@@ -313,6 +316,7 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
           }),row = 9, column = 1, padx=1, pady=5, sticky="w")
 
     tkgrid(tkbutton(Frame6, text="        SAVE        ", command=function(){
+    	                   assign("activeFName", activeFName, envir=.GlobalEnv)
     	                   assign(activeFName, FName, envir=.GlobalEnv)
     	                   XPSSaveRetrieveBkp("save")
           }),row = 9, column = 2, padx=8, pady=5, sticky="w")
@@ -320,8 +324,11 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
 
     tkgrid(tkbutton(Frame6, text="      SAVE & EXIT     ", command=function(){
     	                   tkdestroy(ESWin)
+    	                   assign("activeFName", activeFName, envir=.GlobalEnv)
     	                   assign(activeFName, FName, envir=.GlobalEnv)
+                        assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
     	                   XPSSaveRetrieveBkp("save")
     	                   plot(FName)
+                        UpdateXS_Tbl()
           }),row = 9, column=3, padx=1, pady=5, sticky="w")
 }

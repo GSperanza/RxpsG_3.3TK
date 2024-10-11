@@ -38,7 +38,7 @@ XPSOverlay <- function(){
                RowNames <- c(paste("Xmin (min=", axMin, "): ", sep=""),
                              paste("Xmax (max=", axMax, "): ", sep=""),
                              "N. ticks")
-               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, 
+               axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames,
                                       Width=15, Modify=TRUE, Env=environment())
                axParam <- as.numeric(unlist(axParam[[1]]))
                axMin <- axParam[1]     #X or Y scale min value
@@ -344,7 +344,7 @@ XPSOverlay <- function(){
 
             Plot_Args <<- list( x=formula("y ~ x"), data=NULL, PanelTitles=list(), groups=NULL,layout=NULL,
                                   xlim=NULL,ylim=NULL,
-                                  pch=STypeIndx,cex=1,lty=LType,lwd=1,type="l",
+                                  pch=STypeIndx,cex=1,lty="solid",lwd=1,type="l",
                                   background="transparent",  col=Colors,
                                   main=list(label=NULL,cex=1.5),
                                   xlab=list(label=NULL, rot=0, cex=1.2),
@@ -498,7 +498,7 @@ XPSOverlay <- function(){
 #--- commands for lattice -----
    Plot_Args <- list( x=formula("y ~ x"), data=NULL, PanelTitles=list(), groups=NULL,layout=NULL,
                     xlim=NULL, ylim=NULL,
-                    pch=STypeIndx,cex=1,lty=LType,lwd=1,type="l",
+                    pch=STypeIndx,cex=1,lty="solid",lwd=1,type="l",
                     background = "transparent", col=Colors,
                     main=list(label=NULL,cex=1.5),
                     xlab=list(label=NULL, rot=0, cex=1.2),
@@ -1297,7 +1297,7 @@ XPSOverlay <- function(){
                    })
 
      #If FitComp = Multicolor building the widget to change FitComp colors
-     if (XPSSettings$General[8] == "FC.PolyChrome"){
+     if (XPSSettings$General[8] == "PolyChromeFC"){
          for(ii in 1:20){
              FCcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=FitColors$CompColor[ii])
              tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
@@ -1496,7 +1496,7 @@ XPSOverlay <- function(){
 
      T3F_LineType <- ttklabelframe(T3group3, text="LINE TYPE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_LineType, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-     LINETYPE <- tclVar("patterns")
+     LINETYPE <- tclVar("solid")
      T3_LineType <- ttkcombobox(T3F_LineType, width = 15, textvariable = LINETYPE, values = c("solid", "patterns"))
      tkbind(T3_LineType, "<<ComboboxSelected>>", function(){
                            Plot_Args$type <<- "l"
@@ -2180,7 +2180,7 @@ XPSOverlay <- function(){
      T5_LegPosCK <- ttkcombobox(T5F_LegPosCK, width = 15, textvariable = LEGENDPOS, values = LegPos)
      tkbind(T5_LegPosCK, "<<ComboboxSelected>>", function(){
                            if (PlotParameters$OverlayMode=="Multi-Panel"||PlotParameters$OverlayMode=="TreD") {
-                               tkmessageBox(message="WARNING: Legend position option NOT available for MULTIPANEL or 3D-Plots", title = "Legend Position",  icon = "warning")
+                               tkmessageBox(message="WARNING: Legend position option NOT available for MULTIPANEL or 3D-Plot", title = "Legend Position",  icon = "warning")
                            } else {
 	                              switch(tclvalue(LEGENDPOS),
                                   "OutsideTop" = { Plot_Args$auto.key$space <<- "top" },
@@ -2240,7 +2240,7 @@ XPSOverlay <- function(){
      T5_LegDist <- ttkcombobox(T5F_LegDist, width = 15, textvariable = LEGENDDIST, values = LegDist)
      tkbind(T5_LegDist, "<<ComboboxSelected>>", function(){
                            if (PlotParameters$OverlayMode=="Multi-Panel" || PlotParameters$TreD==TRUE) {
-                               tkmessageBox(message="WARNING: legend position option not available for MULTIPANEL OR 3D-Plot", title = "Legend Position",  icon = "warning")
+                               tkmessageBox(message="WARNING: Legend position option Not available for MULTIPANEL or 3D-Plot", title = "Legend Position",  icon = "warning")
                                return()
                            } else {
                               Dist <- as.numeric(tclvalue(LEGENDDIST))

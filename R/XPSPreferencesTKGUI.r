@@ -1,27 +1,27 @@
 #function to set the dimensions of the analysis window (XPSGUI.r) and personal settings
 #XPSsettings structure
-#General	       Colors	     LType	     Symbols	   SymIndx	BaseColor Comp.Color	FitColor
+#General	       Colors	     LType	     Symbols	   SymIndx	BaseColor   Comp.Color	     FitColor
 #
-#Courier	       black	      solid	     VoidCircle	      1	 cadetblue	 grey45	 orangered
-#normal	        red3	       dashed	    VoidSquare	      0	 cadetblue	 grey45	 orangered
-#10	            limegreen	  dotted	    VoidTriangleUp	  2	 cadetblue	 grey45	 orangered
-#1.8	           blue	       dotdash	   VoidTriangleDwn  6	 cadetblue	 grey45	 orangered
-#1486.6	        magenta	    longdash 	 Diamond	         5	 cadetblue	 grey45	 orangered
-#windows        orange	     twodash	   SolidCircle	     16	cadetblue	 grey45	 orangered
-#personal WD    cadetblue	  F8	        SolidSquare	     15	cadetblue	 grey45	 orangered
-# NA            sienna	     431313	    SolidTriangleUp  17	cadetblue	 grey45	 orangered
-# NA	           darkgrey	   22848222	  SolidTriangleDwn 25	cadetblue	 grey45	 orangered
-# NA	           forestgreen	12126262	  SolidDiamond	    18	cadetblue	 grey45	 orangered
-# NA	           gold	       12121262	  X	               4	 cadetblue	 grey45	 orangered
-# NA	           darkviolet	 12626262	  Star	            8	 cadetblue	 grey45	 orangered
-# NA	           greenyellow	52721272   CrossSquare	     7	 cadetblue	 grey45	 orangered
-# NA	           cyan	       B454B222	  CrossCircle	     10	cadetblue	 grey45	 orangered
-# NA	           lightblue	  F313F313	  SolidDiamond	    18	cadetblue	 grey45	 orangered
-# NA	           dodgerblue 	71717313	  DavidStar	       11	cadetblue	 grey45	 orangered
-# NA	           deeppink3	  93213321	  SquareCross	     12	cadetblue	 grey45	 orangered
-# NA	           wheat	      66116611	  SquareTriang	    14	cadetblue	 grey45	 orangered
-# NA	           thistle	    23111111	  CircleCross	     13	cadetblue	 grey45	 orangered
-# NA	           grey40	     222222A2	  Cross	           3	 cadetblue	 grey45	 orangered
+#Courier	       black	      solid	     VoidCircle	      1	 cadetblue	 grey45  	       orangered
+#normal	        red3	       dashed	    VoidSquare	      0	 cadetblue	 blue            orangered
+#10	            limegreen	  dotted	    VoidTriangleUp	  2	 cadetblue	 magenta         orangered
+#1.8	           blue	       dotdash	   VoidTriangleDwn  6	 cadetblue	 limegreen	      orangered
+#1486.6	        magenta	    longdash 	 Diamond	         5	 cadetblue	 darkgoldenrod1	 orangered
+#windows        orange	     twodash	   SolidCircle	     16	cadetblue	 cadetblue     	 orangered
+#personal WD    cadetblue	  F8	        SolidSquare	     15	cadetblue	 indianred4    	 orangered
+# NA            sienna	     431313	    SolidTriangleUp  17	cadetblue	 forestgreen   	 orangered
+# NA	           darkgrey	   22848222	  SolidTriangleDwn 25	cadetblue	 gold          	 orangered
+# NA	           forestgreen	12126262	  SolidDiamond	    18	cadetblue	 dodgerblue    	 orangered
+# NA	           gold	       12121262	  X	               4	 cadetblue	 green         	 orangered
+# NA	           darkviolet	 12626262	  Star	            8	 cadetblue	 mediumpurple    orangered
+# NA	           greenyellow	52721272   CrossSquare	     7	 cadetblue	 darkorange4   	 orangered
+# NA	           cyan	       B454B222	  CrossCircle	     10	cadetblue	 darkturquoise 	 orangered
+# NA	           lightblue	  F313F313	  SolidDiamond	    18	cadetblue	 olivedrab2    	 orangered
+# NA	           dodgerblue 	71717313	  DavidStar	       11	cadetblue	 grey71        	 orangered
+# NA	           deeppink3	  93213321	  SquareCross	     12	cadetblue	 mediumorchid3 	 orangered
+# NA	           wheat	      66116611	  SquareTriang	    14	cadetblue	 lightskyblue  	 orangered
+# NA	           thistle	    23111111	  CircleCross	     13	cadetblue	 yellow2       	 orangered
+# NA	           grey40	     222222A2	  Cross	           3	 cadetblue	 indianred1    	 orangered
 
 #' @title XPSPreferences
 #' @description XPSPreferences function allows selection of preferences as
@@ -76,6 +76,7 @@ XPSPreferences <- function() {
 
 #---variables
    #--XPSSettings is a Global variable defined in RXPSG.r
+   XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    XraySource <- c("Al", "Mg")               #X-ray source (at moment not used)
    OSList <- c("Windows", "MacOS", "Linux")#Possible operating systems
    fontPreferences <- list(font=c("Courier", "LucidaConsole", "Consolas", "SimplifiedArabicFixed", "OCRA-Extended"),   #fonnt used in the quantification table
@@ -89,11 +90,20 @@ XPSPreferences <- function() {
    XSource <- XPSSettings$General[5]
    Gdev <- XPSSettings$General[6]
    WorkingDir <- XPSSettings$General[7]  #personal Working Dir
+   MonoPolyCol <- XPSSettings$General[8]  #Monochrome or PolyChrome Fit Components
+   WarnMsg <- XPSSettings$General[9]  #Mouse Warning Messages ON/OFF
    Colors <- XPSSettings$Colors
    LType <- XPSSettings$LType
    Symbols <- XPSSettings$Symbols
    BaseLineColor <- XPSSettings$BaseColor
+#-Original FitComponent Colors
+#   ComponentsColor <- c("grey45", "blue", "magenta", "limegreen", "darkgoldenrod1", "cadetblue",
+#                        "indianred4", "forestgreen", "gold", "dodgerblue", "green", "mediumpurple",
+#                        "darkorange4", "darkturquoise", "olivedrab2", "grey71", "mediumorchid3",
+#                        "lightskyblue", "yellow2", "indianred1")
+#   XPSSettings$ComponentColor <- ComponentsColor
    ComponentsColor <- XPSSettings$ComponentsColor
+
    FitColor <- XPSSettings$FitColor
    LType <- encodeString(as.character(LType), width=20, justify="left")
    Symbols <- encodeString(as.character(Symbols), width=20, justify="left")
@@ -104,8 +114,9 @@ XPSPreferences <- function() {
    FCcolor <- list()  #to store widget ID
    FTcolor <- list()  #to store widget ID
 
-   CHRM <- tclVar("MonoChromeFC")
-   if (XPSSettings$General[8] == "FC.PolyChrome") { CHRM <- tclVar("PolyChromeFC") }
+   CHRM <- tclVar(MonoPolyCol) #Fit Components Monochrome or PolyChrome
+
+#   if (MonoPolyCol == "FC.PolyChrome") { CHRM <- tclVar("PolyChromeFC") }
 
 
 #---GUI                       BaseLineColor ComponentsColor  FitColor
@@ -125,7 +136,7 @@ XPSPreferences <- function() {
    tkgrid(group1, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
    frameDim <- ttklabelframe(group1, text = " WINDOW DIMENSIONS ", borderwidth=2)
-   tkgrid(frameDim, row = 1, column = 1, padx = 5, pady = 3, sticky="we")
+   tkgrid(frameDim, row = 1, column = 1, padx = 5, pady = c(3, 10), sticky="we")
    txt <- paste("Graphic Window size : ", WinSize, sep="")
    WSizeLabel <- ttklabel(frameDim, text=txt)
    tkgrid(WSizeLabel, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
@@ -159,8 +170,8 @@ XPSPreferences <- function() {
 
                     })
 
-   frameDev <- ttklabelframe(group1, text = "SELECT THE OPERATING SYSTEM FOR GRAPHICS", borderwidth=2)
-   tkgrid(frameDev, row = 2, column = 1, padx = 5, pady = 3, sticky="we")
+   frameDev <- ttklabelframe(group1, text = "OPERATING SYSTEM FOR GRAPHICS", borderwidth=2)
+   tkgrid(frameDev, row = 2, column = 1, padx = 5, pady = 4, sticky="we")
    OS <- tclVar("Windows")
    LL <- length(OSList)
    for(ii in 1:LL){
@@ -170,7 +181,7 @@ XPSPreferences <- function() {
                          if (tclvalue(OS) == "Windows") {Gdev <- "x11(xpos=600, ypos=5, title=' ')"} #top right position
                          if (tclvalue(OS) == "MacOS") {Gdev <- "quartz(title=' ')"} #quartz() doesn't allow to set the opening position
                     })
-       tkgrid(SysRadio, row = ii, column = 1, padx = 5, pady = 2, sticky="w")
+       tkgrid(SysRadio, row = 1, column = ii, padx = 5, pady = 2, sticky="w")
    }
 
    group2 <- ttkframe(group1, borderwidth=0, padding=c(0,0,0,0) )
@@ -215,7 +226,6 @@ XPSPreferences <- function() {
    tkgrid(frameX, row = 4, column = 1, padx = 5, pady = 3, sticky="we")
    XRY <- tclVar("Al")
    if (XSource == 1254.6) {XRY <- tclVar("Mg")}
-   LL <- length(fontPreferences$size)
    for(ii in 1:2){
        Xobj <- ttkradiobutton(frameX, text=XraySource[ii], variable=XRY, value=XraySource[ii],
                          command=function(){
@@ -255,40 +265,19 @@ XPSPreferences <- function() {
    dispWD <- tklabel(frameWDir, text="W.Dir: ")
    tkgrid(dispWD, row = 2, column = 1, padx = 5, pady = 2, sticky="w")
 
-   SetBtn <- tkbutton(group1, text=" SAVE as DEFAULT and EXIT ", command=function(){
-   #--- get System info and apply correspondent XPS Settings ---
-                         Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
-                         if (file.exists(Ini.pthName)) {
-                             XPSSettings$General[1] <<- Font
-                             XPSSettings$General[2] <<- Style
-                             XPSSettings$General[3] <<- Size
-                             XPSSettings$General[4] <<- WinSize
-                             XPSSettings$General[5] <<- XSource
-                             XPSSettings$General[6] <<- Gdev
-                             XPSSettings$General[7] <<- WorkingDir     #personal Working Dir
-                             XPSSettings$General[8] <<- tclvalue(CHRM) #personal Working Dir
-                             for (jj in 9:20){ XPSSettings$General[jj] <<- NA }
-                             GStyleParam <<- get("GStyleParam", envir=environment()) #if Style has been modified, load the new one
-                             XPSSettings$Colors <<- gsub("\\s", "", Colors)   #removes all the blank spaces from  Color string vector
-                             XPSSettings$LType <<- gsub("\\s", "",GStyleParam$LType)     #removes all the blank spaces from  LType string vector
-                             XPSSettings$Symbols <<- gsub("\\s", "",GStyleParam$Symbols) #removes all the blank spaces from  Symbols string vector
-                             for(jj in 1:20){
-                                 XPSSettings$SymIndx <<- MatchSymbol(XPSSettings$Symbols[jj],XPSSettings$SymIndx,jj)
-                             }
-                             XPSSettings$BaseColor <<- gsub("\\s", "",BaseLineColor)   #removes all the blank spaces from  Color string vector
-                             XPSSettings$ComponentsColor<<- gsub("\\s", "",ComponentsColor)   #removes all the blank spaces from  Color string vector
-                             XPSSettings$FitColor <<- gsub("\\s", "",FitColor)   #removes all the blank spaces from  Color string vector
-                             ColNames <<- names(XPSSettings)
-                             write.table(XPSSettings, file = Ini.pthName, sep=" ", eol="\n", row.names=FALSE, col.names=ColNames)
-                             assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
-                             tkdestroy(PrefWindow)
-                         } else {
-                             tkmessageBox(message="ATTENTION: XPSSettings.ini file is lacking. Check the RxpsG package", title = "WARNING",icon = "warning" )
-                             tkdestroy(PrefWindow)
-                             return()
-                         }
-          })
-   tkgrid(SetBtn, row = 6, column = 1, padx = 5, pady = 12, sticky="w")
+   frameMSG <- ttklabelframe(group1, text = " WARNING-MSGs ", borderwidth=2)
+   tkgrid(frameMSG, row = 6, column = 1, padx = 5, pady = 3, sticky="we")
+   MSG <- tclVar(WarnMsg)
+   on_off <- c("ON", "OFF")
+   for(ii in 1:2){
+       MSGobj <- ttkradiobutton(frameMSG, text=on_off[ii], variable=MSG, value=on_off[ii],
+                         command=function(){
+                         WarnMsg <<- tclvalue(MSG)
+                    })
+       tkgrid(MSGobj, row = 1, column = ii, padx = 5, pady = 2, sticky="w")
+   }
+
+
 
 
 #--- widget right side
@@ -334,7 +323,7 @@ XPSPreferences <- function() {
                  })
 
    #If FitComp = Multicolor building the widget to change FitComp colors
-   if (tclvalue(CHRM) == "PolyChromeFC"){
+   if (MonoPolyCol == "PolyChromeFC"){
        for(ii in 1:20){
            FCcolor[[ii]] <- ttklabel(frameColors, text=as.character(ii), width=6, font="Serif 8", background=ComponentsColor[ii])
            tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
@@ -352,7 +341,7 @@ XPSPreferences <- function() {
        }
    }
    #If FitComp = Singlecolor building the widget to change the Baseline FitComp and Fit colors
-   if (tclvalue(CHRM) == "MonoChromeFC"){
+   if (MonoPolyCol == "MonoChromeFC"){
         FCcolor <- ttklabel(frameColors, text=as.character(1), width=6, font="Serif 8", background=ComponentsColor[1])
         tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
         tkbind(FCcolor, "<Double-1>", function(){
@@ -375,7 +364,7 @@ XPSPreferences <- function() {
    for(ii in 1:2){
        MonoPolyobj <- ttkradiobutton(frameColLinSym, text=MonoPoly[ii], variable=CHRM, value=MonoPoly[ii],
                     command=function(){
-                       MonoPolyCol <- tclvalue(CHRM)
+                       MonoPolyCol <<- tclvalue(CHRM)
                        if (MonoPolyCol == "MonoChromeFC") {
                            for(ii in 1:20){ tkdestroy(FCcolor[[ii]]) }
                            FCcolor <<- ttklabel(frameColors, text=as.character(1), width=6, font="Serif 8", background=ComponentsColor[1])
@@ -395,8 +384,8 @@ XPSPreferences <- function() {
                                       Y <- tkwinfo("pointery", PrefWindow)
                                       WW <- tkwinfo("containing", X, Y)
                                       BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                      colIdx <- grep(BKGcolor, ComponentsColor) #index of the selected color
+                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word corresponding to the BKGcolor
+                                      colIdx <- grep(BKGcolor, ComponentsColor) #to get the index of the selected BKGcolor
                                       BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                       ComponentsColor[colIdx] <<- BKGcolor
                                       tkconfigure(FCcolor[[colIdx]], background=ComponentsColor[colIdx])
@@ -414,6 +403,45 @@ XPSPreferences <- function() {
                                ColNames=c("LineType", "Symbols"), RowNames="",
                                Width=15, Modify=TRUE, Env=environment(),
                                parent=group5, Row=1, Column=1)
+
+   SetBtn <- tkbutton(group3, text=" SAVE as DEFAULT and EXIT ", command=function(){
+   #--- get System info and apply correspondent XPS Settings ---
+                         Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
+                         if (file.exists(Ini.pthName)) {
+                             XPSSettings$General[1] <<- Font
+                             XPSSettings$General[2] <<- Style
+                             XPSSettings$General[3] <<- Size
+                             XPSSettings$General[4] <<- WinSize
+                             XPSSettings$General[5] <<- XSource
+                             XPSSettings$General[6] <<- Gdev
+                             XPSSettings$General[7] <<- WorkingDir     #personal Working Dir
+                             XPSSettings$General[8] <<- MonoPolyCol
+                             XPSSettings$General[9] <<- WarnMsg
+                             for (jj in 10:20){ XPSSettings$General[jj] <<- NA }
+                             GStyleParam <<- get("GStyleParam", envir=environment()) #if Style has been modified, load the new one
+                             XPSSettings$Colors <<- gsub("\\s", "", Colors)   #removes all the blank spaces from  Color string vector
+                             XPSSettings$LType <<- gsub("\\s", "",GStyleParam$LType)     #removes all the blank spaces from  LType string vector
+                             XPSSettings$Symbols <<- gsub("\\s", "",GStyleParam$Symbols) #removes all the blank spaces from  Symbols string vector
+                             for(jj in 1:20){
+                                 XPSSettings$SymIndx <<- MatchSymbol(XPSSettings$Symbols[jj],XPSSettings$SymIndx,jj)
+                             }
+                             XPSSettings$BaseColor <<- gsub("\\s", "",BaseLineColor)   #removes all the blank spaces from  Color string vector
+                             XPSSettings$ComponentsColor <<- gsub("\\s", "",ComponentsColor)   #removes all the blank spaces from  Color string vector
+
+
+                             XPSSettings$FitColor <<- gsub("\\s", "",FitColor)   #removes all the blank spaces from  Color string vector
+                             ColNames <<- names(XPSSettings)
+                             write.table(XPSSettings, file = Ini.pthName, sep=" ", eol="\n", row.names=FALSE, col.names=ColNames)
+                             assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
+                             tkdestroy(PrefWindow)
+                         } else {
+                             tkmessageBox(message="ATTENTION: XPSSettings.ini file is lacking. Check the RxpsG package", title = "WARNING",icon = "warning" )
+                             tkdestroy(PrefWindow)
+                             return()
+                         }
+          })
+   tkgrid(SetBtn, row = 2, column = 1, padx = 5, pady = 12, sticky="w")
+
 
 
 }

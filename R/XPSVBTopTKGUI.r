@@ -323,6 +323,7 @@ XPSVBTop <- function() {
      point.coords <<- list(x=NULL, y=NULL)
      Object[[coreline]]@Components <<- list()
      Object[[coreline]]@Fit <<- list()
+     VBtEstim <<- FALSE
      replot()
   }
 
@@ -464,12 +465,16 @@ XPSVBTop <- function() {
 
   MakeFit <- function(h, ...) {
      ObjectBKP <<- Object[[coreline]]
+     LL <- length(Object)
+     Object[[LL+1]] <<- Object[[coreline]]
+     Object@names[LL+1] <<- "VBt"
+     coreline <<- LL+1
      FitRes <- NULL
      tab1 <- as.numeric(tclvalue(tcl(nbMain, "index", "current")))+1  #retrieve  nbMain page index
      tab2 <- as.numeric(tclvalue(tcl(nbVBfit, "index", "current")))+1 #retrieve nbVBfit page index
 
      if (coreline != 0 && tab2 == 1) {  #VB Linear Fit
-         if (length(point.coords$x)<4) {
+         if (length(point.coords$x) < 4) {
              tkmessageBox(message="4 points are needed for two Linear fits: please complete!", title = "WARNING: region limits lacking",  icon = "warning")
              return()
          }
@@ -573,6 +578,7 @@ XPSVBTop <- function() {
              Object[[coreline]] <<- XPSremove(Object[[coreline]],"fit")
              Object[[coreline]] <<- XPSremove(Object[[coreline]],"components")
              reset.fit <<- FALSE
+             VBtEstim <<- FALSE
              replot()
          }
      }
@@ -960,7 +966,6 @@ XPSVBTop <- function() {
   tkgrid(VBTop21_btn1, row = 5, column = 1, padx = 5, pady = 3, sticky="w")
 
   Reset21_Btn2 <- tkbutton(T21Frame1, text=" Reset Analysis ", width=40, command=function(){
-                      LL <- length(Object[[coreline]]@.Data[[1]])
                       Object[[coreline]] <<- ObjectBKP
                       point.coords <<- list(x=NULL, y=NULL)
                       VBTop <<- FALSE
@@ -1121,28 +1126,20 @@ XPSVBTop <- function() {
   tkgrid(VBTop23_btn1, row = 6, column = 1, padx = 5, pady = 3, sticky="w")
 
 
-#----- SAVE&CLOSE button -----
+#----- SAVE&CLOSE buttons -----
   BtnGroup <- ttkframe(VBGroup, borderwidth=0, padding=c(0,0,0,0) )
   tkgrid(BtnGroup, row = 3, column = 1, padx = 0, pady = 0, sticky="w")
 
   SaveBtn <- tkbutton(BtnGroup, text=" SAVE ", width=18,  command=function(){
-                      tkdestroy(VBwindow)
                       if (VBtEstim == FALSE && length(Object[[coreline]]@Fit) > 0){  #VB fit done but VBtop estimation not
                           answ <- tkmessageBox(msg="VBtop estimation not performed. Would you proceed?",
                                                type="yeno", title="WARNING", icon="warning")
                           if (tclvalue(answ) == "no") { return() }
                       }
-                      LL <- length(Object)
-                      Object[[LL+1]] <<- Object[[coreline]]
-                      Object@names[LL+1] <<- "VBt"
                       assign("activeFName", Object_name, envir = .GlobalEnv)
                       assign(Object_name, Object, envir = .GlobalEnv)
-                      assign("activeSpectIndx", (LL+1), envir = .GlobalEnv)
+                      assign("activeSpectIndx", coreline, envir = .GlobalEnv)
                       assign("activeSpectName", "VBt", envir = .GlobalEnv)
-                      idx <- which(XPSFNameList() == activeFName)      #index of the XPSSample_Name in tle FNameList
-                      idx <- paste("I00", idx, sep="")                 #build index compatible with the TCL
-                      XS_Tbl <- get("XS_Tbl", envir=.GlobalEnv)        #get the ttktreview ID
-                      tcl(XS_Tbl, "selection", "set", idx)             #set the actual XPSSample as selected in the MAIN-GUI
                       replot()
                       XPSSaveRetrieveBkp("save")
          })
@@ -1155,17 +1152,13 @@ XPSVBTop <- function() {
                                                type="yeno", title="WARNING", icon="warning")
                           if (tclvalue(answ) == "no") { return() }
                       }
-                      LL <- length(Object)
-                      Object[[LL+1]] <<- Object[[coreline]]
-                      Object@names[LL+1] <<- "VBt"
                       assign("activeFName", Object_name, envir = .GlobalEnv)
                       assign(Object_name, Object, envir = .GlobalEnv)
-                      assign("activeSpectIndx", (LL+1), envir = .GlobalEnv)
+                      assign("activeSpectIndx", coreline, envir = .GlobalEnv)
                       assign("activeSpectName", "VBt", envir = .GlobalEnv)
                       tkdestroy(VBwindow)
                       plot(Object)
                       XPSSaveRetrieveBkp("save")
-                      UpdateXS_Tbl()
          })
   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="we")
 

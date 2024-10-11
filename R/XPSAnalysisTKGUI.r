@@ -649,6 +649,8 @@ XPSAnalysis <- function() {
 
 
 #---  Variables  -----------------------------
+  XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+  WarnMsg <- XPSSettings$General[9]
   activeFName <- get("activeFName", envir = .GlobalEnv)
   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
@@ -701,6 +703,7 @@ XPSAnalysis <- function() {
   BLBtn <- tclVar("")
   T1Lab1 <- NULL
   T1Lab2 <- NULL
+
 
 #----- ANALYSIS GUI -----------------------------
   MainWindow <- tktoplevel()
@@ -998,7 +1001,9 @@ XPSAnalysis <- function() {
                                compIndx <- unlist(strsplit(compIndx, split="C"))   #index of the selected component (numeric)
                                compIndx <<- as.integer(compIndx)
                                replot()
-                               tkmessageBox(message="\nLeft Button Component Position. \nRight Button to Exit", title="WARNING", icon="warning")
+                               if (WarnMsg == "ON") {
+                                   tkmessageBox(message="\nLeft Button Component Position. \nRight Button to Exit", title="WARNING", icon="warning")
+                               }
                                tcl("update", "idletasks")
                                GetCurPos(SingClick=FALSE)
                            })
@@ -1061,6 +1066,7 @@ XPSAnalysis <- function() {
   saveBtn <- tkbutton(ButtFrame, text="         SAVE         ", command=function(){
                   coreline <<- tclvalue(CL)
                   coreline <<- unlist(strsplit(coreline, "\\."))
+                  assign("activeFName", activeFName, envir = .GlobalEnv)
                   assign(activeFName, Object, envir = .GlobalEnv)
                   assign("activeSpectIndx", as.integer(coreline[1]), envir=.GlobalEnv)
                   assign("activeSpectName", coreline[2], envir = .GlobalEnv)
@@ -1074,6 +1080,7 @@ XPSAnalysis <- function() {
                   EXIT <<- TRUE
                   coreline <<- tclvalue(CL)
                   coreline <<- unlist(strsplit(coreline, "\\."))
+                  assign("activeFName", activeFName, envir = .GlobalEnv)
                   assign(activeFName, Object, envir = .GlobalEnv)
                   assign("activeSpectIndx", as.integer(coreline[1]), envir=.GlobalEnv)
                   assign("activeSpectName", coreline[2], envir = .GlobalEnv)
@@ -1083,6 +1090,7 @@ XPSAnalysis <- function() {
                   tkdestroy(MainWindow)
                   coreline <<- as.integer(coreline[1])
                   plot(Object[[activeSpectIndx]])
+                  UpdateXS_Tbl()
               })
   tkgrid(savexitBtn, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
@@ -1116,7 +1124,7 @@ XPSAnalysis <- function() {
   tcl(nbComponents,"select", 0)  #Set NB page=1, Select works on base 0
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0
   tcl("update", "idletasks") #Complete the idle tasks
-#  tkwait.window(MainWindow)
+  tkwait.window(MainWindow)
 
 
 }

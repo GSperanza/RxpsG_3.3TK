@@ -36,6 +36,8 @@ ShowLines <- function(){
 
 
 #---- Var-Initialization
+   XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
+   WarnMsg <- XPSSettings$General[9]
    plot.new()
    activeFName <- get("activeFName", envir = .GlobalEnv)
    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
@@ -216,7 +218,9 @@ ShowLines <- function(){
    tkgrid(CurGroup, row = 7, column = 1, padx = 5, pady = 5, sticky="w")
 
    CurBtn <- tkbutton(CurGroup, text="CURSOR", width=10, command=function(){
-                    tkmessageBox(message="LEFT click to move marker's position; RIGHT to exit" , title = "WARNING",  icon = "warning", parent=mainWin)
+                    if (WarnMsg == "ON") {
+                        tkmessageBox(message="LEFT click to move marker's position; RIGHT to exit" , title = "WARNING",  icon = "warning", parent=mainWin)
+                    }
                     RecPlot <<- recordPlot()   #save the graph for UNDO option
                     pos <- c(1,1) # only to enter in  the loop
                     while (length(pos) > 0) {  #pos != NULL => mouse right button not pressed
