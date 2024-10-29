@@ -79,7 +79,7 @@ XPSSampleInfo <- function() {
 
 #--- GUI ---
       InfoWindow <- tktoplevel()
-      tkwm.title(InfoWindow,"XPS SPECRUM INFO")
+      tkwm.title(InfoWindow,"XPS SPECTRUM INFO")
       tkwm.geometry(InfoWindow, "+100+50")   #position respect topleft screen corner
       InfoGroup <- ttkframe(InfoWindow, borderwidth=0, padding=c(0,0,0,0) )
       tkgrid(InfoGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
@@ -132,7 +132,7 @@ XPSSampleInfo <- function() {
       tkgrid(XPS.Sample, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
       XSgroup <- ttkframe(XSFrame, borderwidth=0, padding=c(0,0,0,0) )  #Needed to contain the DFrameTable
       tkgrid(XSgroup, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
-      Data <- DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 50),
+      Data <- DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 70),
                    Modify=TRUE, Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
 
       CLFrame <- ttklabelframe(InfoGroup, text = " Core line Selection ", borderwidth=2)

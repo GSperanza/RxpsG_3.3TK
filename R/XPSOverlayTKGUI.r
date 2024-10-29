@@ -2263,7 +2263,7 @@ XPSOverlay <- function(){
 			                           "OutsideBottom"  = { Plot_Args$auto.key$space <<- NULL
                                                    Plot_Args$auto.key$corner <<- c(0,0)
                                                    Plot_Args$auto.key$x <<- 1.1 - 1/(Ncol+1)
-                                                   Plot_Args$auto.key$y <<- -Dist },
+                                                   Plot_Args$auto.key$y <<- -1 - Dist },
 				                          "InsideTopRight" = { Plot_Args$auto.key$space <<- NULL
                                                    Plot_Args$auto.key$corner <<- c(1,1)
                                                    Plot_Args$auto.key$x <<- 1-Dist

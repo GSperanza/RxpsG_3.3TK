@@ -116,7 +116,7 @@ XPSSprucing <- function() {
          if (point.index <= 2) {
              plot(Object[[coreline]], xlim=Xlimits)
              points(point.coords, col="blue", cex=1.5, lwd=2, pch=3)
-         } else if (point.index>2){
+         } else if (point.index > 2){
              plot(Object[[coreline]], xlim=Xlimits, ylim=Ylimits)
              points(Corners, type="p", col="blue", cex=1.5, lwd=2, pch=3)
              rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
@@ -160,7 +160,7 @@ XPSSprucing <- function() {
   }
 
 
-#====== VARIABLES DEFINITION=======
+#--- Variables
   activeFName <- get("activeFName", envir = .GlobalEnv)
   if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
       tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
@@ -187,7 +187,8 @@ XPSSprucing <- function() {
   Corners <- point.coords
   xx <- NULL
   yy <- NULL
-#Coreline boundaries
+  SetChanges <- FALSE
+
   SelReg <- 0
 
   LL <- length(Object)
@@ -201,19 +202,19 @@ XPSSprucing <- function() {
       Ylimits <-c(min(Object[[coreline]]@.Data[[2]]), max(Object[[coreline]]@.Data[[2]]))
       OldCoords <- point.coords #for undo
       Corners <- point.coords
-      Object[[coreline]]@Boundaries$x <- c(point.coords$x)
-      Object[[coreline]]@Boundaries$y <- c(point.coords$y)
+      Object[[coreline]]@Boundaries$x <- point.coords$x
+      Object[[coreline]]@Boundaries$y <- point.coords$y
   }
 
 
-#====== Widget Definition =======
+#--- Widget
   SPwin <- tktoplevel()
   tkwm.title(SPwin,"XPS SPRUCING GUI")
   tkwm.geometry(SPwin, "+100+50")   #position respect topleft screen corner
   MainGroup <- ttkframe(SPwin, borderwidth=0, padding=c(0,0,0,0) )
   tkgrid(MainGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-#----- OPTIONS SECTION
+#--- Options
   XS.CLFrame <- ttklabelframe(MainGroup, text = " SELECT XPS SAMPLE and CORELINE ", borderwidth=2)
   tkgrid(XS.CLFrame, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
   XS <- tclVar(activeFName)
@@ -232,20 +233,36 @@ XPSSprucing <- function() {
   tkbind(CLCombo, "<<ComboboxSelected>>", function(){
               XPSCL <- tclvalue(CL)
               coreline <<- grep(XPSCL, SpectList)
-              #Coreline boundaries
-              point.coords$x[1] <<- Object[[coreline]]@.Data[[1]][1] #ascissa primo estremo 1 del survey
-              point.coords$y[1] <<- Object[[coreline]]@.Data[[2]][1] #ordinata primo estremo 1 del survey
-              point.coords$x[2] <<- Object[[coreline]]@.Data[[1]][LL] #ascissa  secondo estremo del survey
-              point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][LL] #ordinata secondo estremo del survey
+              if (length(Object[[coreline]]@Boundaries) == 0){
+                  LL <- length(Object[[coreline]]@.Data[[1]])
+                  point.coords$x[1] <<- Object[[coreline]]@.Data[[1]][1]  #ascissa primo estremo 1 del survey
+                  point.coords$y[1] <<- Object[[coreline]]@.Data[[2]][1]  #ordinata primo estremo 1 del survey
+                  point.coords$x[2] <<- Object[[coreline]]@.Data[[1]][LL] #ascissa  secondo estremo del survey
+                  point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][LL] #ordinata secondo estremo del survey
+                  Object[[coreline]]@Boundaries$x <<- sort(point.coords$x, decreasing=FALSE)
+                  Object[[coreline]]@Boundaries$y <<- sort(point.coords$y, decreasing=FALSE)
+              } else if (length(Object[[coreline]]@RegionToFit) > 0){
+                  LL <- length(Object[[coreline]]@RegionToFit$y)
+                  point.coords$x <<- Object[[coreline]]@Boundaries$x
+                  point.coords$y <<- c(Object[[coreline]]@RegionToFit$y[1], Object[[coreline]]@RegionToFit$y[LL])
+                  if (Object[[coreline]]@Flags[1] == TRUE) { point.coords$y <<- rev(point.coords$y) }
+              } else if (length(Object[[coreline]]@Boundaries) > 0){
+                  point.coords$x <<- sort(Object[[coreline]]@Boundaries$x, decreasing=FALSE)
+                  if (Object[[coreline]]@Flags[1] == TRUE) { point.coords$x <<- rev(point.coords$x) }
+                  idx <- findXIndex(Object[[coreline]]@.Data[[1]], point.coords$x[1])
+                  point.coords$y[1] <<- Object[[coreline]]@.Data[[2]][idx]
+                  idx <- findXIndex(Object[[coreline]]@.Data[[1]], point.coords$x[2])
+                  point.coords$y[2] <<- Object[[coreline]]@.Data[[2]][idx]
+              }
               Ylimits <<- c(min(Object[[coreline]]@.Data[[2]]), max(Object[[coreline]]@.Data[[2]]))
               OldCoords <<- point.coords #for undo
               Corners <<- point.coords
               SelReg <<- 0
-              Object[[coreline]]@Boundaries$x <<- c(point.coords$x)
-              Object[[coreline]]@Boundaries$y <<- c(point.coords$y)
               cat("\n Please select the portion of the spectrum to control")
               replot()
               WidgetState(OptFrame, "normal")
+              SetChanges <<- FALSE
+
          })
   tkgrid(CLCombo, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
@@ -343,6 +360,7 @@ XPSSprucing <- function() {
               tkinsert(TxtTbl, "0.0", "Data to correct: \n \n \n")
               reset.boundaries()
               replot(Object[[coreline]])
+              SetChanges <<- TRUE
          })
   tkgrid(SetBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -364,17 +382,24 @@ XPSSprucing <- function() {
   tkgrid(ExitFrame, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
 
   SaveBtn <- tkbutton(ExitFrame, text=" SAVE ", width=16, command=function(){
+              if (SetChanges == FALSE){
+                  tkmessageBox(message=" No Changes to Data Detected. Please Control!", title="ERROR", icon="error")
+                  return()
+              }
+              assign("activeFName", activeFName, envir = .GlobalEnv)
               assign(activeFName, Object, envir = .GlobalEnv)
-              reset.boundaries()
               XPSSaveRetrieveBkp("save")
          })
   tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
   SaveExitBtn <- tkbutton(ExitFrame, text=" SAVE & EXIT ", width=16, command=function(){
               tkdestroy(SPwin)
+              assign("activeFName", activeFName, envir = .GlobalEnv)
               assign(activeFName, Object, envir = .GlobalEnv)
+              tkdestroy(SPwin)
               reset.boundaries()
               XPSSaveRetrieveBkp("save")
+              UpdateXS_Tbl()
          })
   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
