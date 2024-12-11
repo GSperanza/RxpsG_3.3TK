@@ -1,8 +1,7 @@
 # RxpsG
 Processing tool for X-ray Photoelectron Spectroscopy Data
-see folder /Manual-and-tar.gz/  containing RxpsG_2.3-2.tar.gz  or RxpsG_3.2TK.tar.gz.
 
-The new RxpsG_3.2TK version differs from the previous version because the graphic user interfaces (GUIs) are generated directly using the tclTK commands. This has the advantage of avoiding the need of the two libaries 'gWidgets2' and 'gWidgets2tcltk' rendering the software lighter, and faster in generating the GUIs.
+The new RxpsG_3.2 version differs from the previous RxpsG package because the graphic user interfaces (GUIs) are generated directly using the tclTK commands. This has the advantage of avoiding the two libaries 'gWidgets2' and 'gWidgets2tcltk' rendering the software lighter, and faster in generating the GUIs.
 
 RxpsG installation
 
@@ -38,11 +37,11 @@ RxpsG installation:
 
     Control that installation proceeds correctly without errors;
 
-    To INSTALL RxpsG_3.2TK copy and paste the following command:
+    To INSTALL RxpsG_3.2 copy and paste the following command:
 
-    install.packages("C:/Path-To-Tar.Gz/RxpsG_3.2TK.tar.gz", type = "source", dependencies=TRUE)
+    install.packages("C:/Path-To-Tar.Gz/RxpsG_3.2.tar.gz", type = "source", dependencies=TRUE)
 
-    where Path-To-Tar.Gz is the path to the dowloaded RxpsG_3.2TK.tar.gz file.
+    where Path-To-Tar.Gz is the path to the dowloaded RxpsG_3.2.tar.gz file.
 
     N.B. if installation blocks at level:
          '** testing if installed package can be loaded from temporary location '
