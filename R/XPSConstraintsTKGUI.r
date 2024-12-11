@@ -310,13 +310,16 @@ XPSConstraints <- function(){
    ParamList <- ""
    ParamLbl <- ""
    LinkFrame2 <- NULL
-   RefLinkComp <- NULL
+   LinkFrame3 <- NULL
    Linklayout <- list()
    T3LinkParam <- list()  #list containing the IP of the Param checkboxes
+   RefLinkComp <- list()  #list containing the IP of the Reference corelines checkboxes
+   LinkExpr <- list()  #list containing the IP of the Link_Expression Entry
    LinkGroup3 <- list()   #list containing the address of the group containing the Param checkboxes
    chckd <- NULL          #tclVar containing the selected checkboxes
    SelFitComp2 <- NULL    #tclVar containing the component2 selected as reference
    LinkIndx <- list(P=NULL, C=NULL)    #list containing the indexes identifying the selected param P and FitComp C
+   EXPR <- NULL
 
    operation <- ""
    parameter <- ""
@@ -600,10 +603,10 @@ XPSConstraints <- function(){
                    tcl("grid", "remove", x)
              })
           }
-          RefLinkComp <- list()
+          RefLinkComp <<- list()
           tclvalue(SelFitComp2) <<- NULL
           for(jj in 1:length(FitComp2)){  #this checkbutton behaves as a radiob. Only 1 element can be checked
-              RefLinkComp[[jj]] <- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2, onvalue=FitComp2[jj], offvalue = 0)
+              RefLinkComp[[jj]] <<- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2, onvalue=FitComp2[jj], offvalue = 0)
               tkgrid(RefLinkComp[[jj]], row = 1, column = jj, padx=5, pady=5, sticky="w")
               tclvalue(SelFitComp2) <<- FALSE
           }
@@ -728,10 +731,10 @@ XPSConstraints <- function(){
           }
 
           #Update FitComp2 reference checkbuttons
-          RefLinkComp <- list()
+          RefLinkComp <<- list()
           SelFitComp2 <<- tclVar()
           for(jj in 1:length(FitComp2)){  #this checkbutton behaves as a radiobutt. Only 1 element can be checked
-              RefLinkComp[[jj]] <- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2,
+              RefLinkComp[[jj]] <<- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2,
                                                  onvalue=FitComp2[jj], offvalue = 0, command=function(){
                                                      selFC2 <- tclvalue(SelFitComp2)
                                                      if (FitFunct1 != FitFunct2){
@@ -760,7 +763,7 @@ XPSConstraints <- function(){
       HndlrSetLinks <- function(){
                          FitComp2 <<- FitComp1
                          ParamLbl <<- ""
-                         RefLinkComp <- list()
+                         RefLinkComp <<- list()
 
                          LinkFCwin <- tktoplevel()
                          tkwm.title(LinkFCwin,"FIT PARAMETER TABLE")
@@ -832,20 +835,20 @@ XPSConstraints <- function(){
 
                          LinkGroup3 <<- ttkframe(LinkFrame2, borderwidth=0, padding=c(0,0,0,0))
                          tkgrid(LinkGroup3, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
-                         RefLinkComp <- list()
+                         RefLinkComp <<- list()
                          SelFitComp2 <<- tclVar()
                          for(jj in 1:length(FitComp2)){  #this checkbutton behaves as a radiobutt. Only 1 element can be checked
-                             RefLinkComp[[jj]] <- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2,
+                             RefLinkComp[[jj]] <<- tkcheckbutton(LinkGroup3, text=FitComp2[jj], variable=SelFitComp2,
                                                                 onvalue=FitComp2[jj], offvalue = 0)
                              tkgrid(RefLinkComp[[jj]], row = 1, column = jj, padx=5, pady=5, sticky="w")
                              tclvalue(SelFitComp2) <<- FALSE
                          }
 
-                         LinkFrame3 <- ttklabelframe(LinkGroup1, text = "LINK OPERATIONS", borderwidth=2)
+                         LinkFrame3 <<- ttklabelframe(LinkGroup1, text = "LINK OPERATIONS", borderwidth=2)
                          tkgrid(LinkFrame3, row = 3, column=1, padx = 5, pady = 5, sticky="we")
                          linkExpression <<- ""
                          EXPR <- tclVar("Link Expression?")  #sets the initial msg
-                         LinkExpr <- ttkentry(LinkFrame3, textvariable=EXPR, width=40, foreground="grey")
+                         LinkExpr <<- ttkentry(LinkFrame3, textvariable=EXPR, width=40, foreground="grey")
                          tkbind(LinkExpr, "<FocusIn>", function(K){
                                            tkconfigure(LinkExpr, foreground="red")
                                            tclvalue(EXPR) <- ""
@@ -870,8 +873,20 @@ XPSConstraints <- function(){
                          tkgrid(LinkGroup4, row = 9, column = 1, padx = 0, pady = 0, sticky="w")
 
                          SetBtn <- tkbutton(LinkGroup4, text="  SET LINKS  ", width=20, command=function(){
-                                           tkconfigure(LinkExpr, foreground="grey")
+                                           #regenerate tkEntry to make it working properly
+                                           tkdestroy(LinkExpr)
                                            tclvalue(EXPR) <- "Link Expression?"
+                                           LinkExpr <<- ttkentry(LinkFrame3, textvariable=EXPR, width=40, foreground="grey")
+                                           tkbind(LinkExpr, "<FocusIn>", function(K){
+                                                     tkconfigure(LinkExpr, foreground="red")
+                                                     tclvalue(EXPR) <- ""
+                                                 })
+                                           tkbind(LinkExpr, "<Key-Return>", function(K){
+                                                     tkconfigure(LinkExpr, foreground="black")
+                                                     linkExpression <<- tclvalue(EXPR)
+                                                 })
+                                           tkgrid(LinkExpr, row = 1, column=1, padx=5, pady=5, sticky="w")
+
                                            component2 <<- tclvalue(SelFitComp2)
 #-------------------------------------------------------------------------------------------------------------------------------
 #                                          #control on the linked sigma parameter:
@@ -900,6 +915,7 @@ XPSConstraints <- function(){
                                            operation <<- "link"
                                            setCommand()
                                            ResetLinks()  #after link selection, resets checks and prepare for further link setting
+
                          })
                          tkgrid(SetBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 

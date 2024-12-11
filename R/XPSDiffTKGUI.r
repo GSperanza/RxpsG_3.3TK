@@ -83,10 +83,10 @@ XPSDiff <- function(){
    }
 
    MeasureMaxMinD <- function(){   # \U0394. = greek Delta used to indicate difference in Max-Min posiitions
-
+                                   # \U0934. creates some problems and has been changed in "d."
       RefreshPlot <- function(){
-           XXX <- cbind(unlist(XPSDiffted[[1]]@.Data[[1]]))  #transform the vector in a column of data
-           YYY <- cbind(unlist(XPSDiffted[[1]]@.Data[[2]]))
+           XXX <- cbind(XPSDiffted[[1]]@.Data[[1]])  #transform the vector in a column of data
+           YYY <- cbind(AA*XPSDiffted[[1]]@.Data[[2]])
            Xlim <- range(XXX)
            if (XPSSample[[SpectIndx]]@Flags[1]==TRUE) {
               Xlim <- rev(Xlim)  ## reverse x-axis
@@ -109,15 +109,15 @@ XPSDiff <- function(){
       RefreshPlot()
       txt <- "LEFT button to set the MAX/MIN positions; RIGHT to exit \n Click near markers to modify the positions"
       tkmessageBox(message=txt , title = "WARNING",  icon = "warning")
-      pos <- locator(n=2, type="p", pch=3, col="red", lwd=1.5) #first the two corners are drawn
+      pos <- locator(n=2, type="p", pch=3, cex=1.5, col="blue", lwd=2) #first the two corners are drawn
       rect(pos$x[1], min(pos$y), pos$x[2], max(pos$y))  #marker-Corners are ordered with ymin on Left and ymax on Right
       Corners$x <<- c(pos$x[1],pos$x[1],pos$x[2],pos$x[2])
       Corners$y <<- c(pos$y[1],pos$y[2],pos$y[1],pos$y[2])
-      points(Corners, type="p", pch=3, col="red", lwd=1.5)
+      points(Corners, type="p", pch=3, cex=1.5, col="blue", lwd=2)
 
       LocPos <<- list(x=0, y=0)
       while (length(LocPos) > 0) {  #if pos1 not NULL a mouse butto was pressed
-         LocPos <<- locator(n=1, type="p", pch=3, col="red", lwd=2) #to modify the zoom limits
+         LocPos <<- locator(n=1, type="p", pch=3, cex=1.5, col="blue", lwd=2) #to modify the zoom limits
          if (length(LocPos$x) > 0) { #if the right mouse button NOT pressed
              FindNearest()
              if (XPSDiffted[[1]]@Flags[1]) { #Binding energy set
@@ -129,14 +129,15 @@ XPSDiff <- function(){
              RefreshPlot()  #refresh graph
 
              rect(pos$x[1], pos$y[1], pos$x[2], pos$y[2])
-             points(Corners, type="p", pch=3, col="red", lwd=1.5)
+             points(Corners, type="p", pch=3, cex=1.5, col="blue", lwd=2)
          }
       }
 
       MaxMinD <<- round(abs(pos$x[1]-pos$x[2]), 2)
       Info <- XPSDiffted[[1]]@Info
       S3 <<- "\U0394."  #delta symbol
-      charPos <- FindPattern(XPSDiffted[[1]]@Info, "   ::: Max.Min.\U0394. = ")[1]  #charPos[1] = row index of Info where "::: Max.Min.D = " is found
+#      S3 <<- "d."  #delta symbol
+      charPos <- FindPattern(XPSDiffted[[1]]@Info, "   ::: Max.Min. = ")[1]  #charPos[1] = row index of Info where "::: Max.Min.D = " is found
       if(length(charPos) > 0){ #save the Max/Min difference in XPSSample Info
          XPSDiffted[[1]]@Info[charPos] <<- paste("   ::: Max.Min.", S3, " = ", MaxMinD, sep="") #overwrite previous MAx\Min Dist value
       } else {
@@ -148,23 +149,24 @@ XPSDiff <- function(){
          txt <- paste("   ::: Max.Min.", S3, " = ", MaxMinD, sep="")
          XPSDiffted[[1]]@Info[nI] <<- txt
       }
-      Symbol <- paste(S3, S2, DiffDeg, S1, sep="", collapse="") #compose the CoreLine Symbol  "\U0394." "D."  CLname
+      Symbol <- paste(S3, S2, DiffDeg, S1, sep="", collapse="") #Symbol= "\U0394." "D."  CLname
       #add a component to store derivative Max Min positions
       XPSDiffted[[1]] <<- XPSaddComponent(XPSDiffted[[1]], type = "Derivative")
-
       #Set the measured MaxMinD for the differeniated CoreLine
-      XPSDiffted[[1]]@Symbol <<- Symbol # '\U0394' = Delta: the MaxMin diff was measured
+      XPSDiffted[[1]]@Symbol <<- Symbol # delta = the MaxMin diff was measured
 
-      XPSDiffted[[1]]@Components[[1]]@param["mu", "start"] <<- (pos$x[1] +pos$x[2])/2
-      XPSDiffted[[1]]@Components[[1]]@param["mu", "min"] <<- pos$x[1] #abscissa of Max/min position
-      XPSDiffted[[1]]@Components[[1]]@param["mu", "max"] <<- pos$x[2]
       idx <- findXIndex(XPSDiffted[[1]]@.Data[[1]], pos$x[1])         #finds index corresponding to Max/min positions
-      h1 <- XPSDiffted[[1]]@.Data[[2]][idx]
+      pos$y[1] <- XPSDiffted[[1]]@.Data[[2]][idx]
       idx <- findXIndex(XPSDiffted[[1]]@.Data[[1]], pos$x[2])         #finds index corresponding to Max/min positions
-      h2 <- XPSDiffted[[1]]@.Data[[2]][idx]
-      XPSDiffted[[1]]@Components[[1]]@param["h", "start"] <<- (h1+h2)/2
-      XPSDiffted[[1]]@Components[[1]]@param["h", "min"] <<- h1 #ordinate of Max/min position
-      XPSDiffted[[1]]@Components[[1]]@param["h", "max"] <<- h2
+      pos$y[2] <- XPSDiffted[[1]]@.Data[[2]][idx]
+      idx <- which(pos$y < max(pos$y))
+      XPSDiffted[[1]]@Components[[1]]@param["mu", "start"] <<- (pos$x[1] + pos$x[2])/2
+      XPSDiffted[[1]]@Components[[1]]@param["mu", "min"] <<- pos$x[idx] #abscissa of min XPSDiffted
+      XPSDiffted[[1]]@Components[[1]]@param["mu", "max"] <<- pos$x[-idx]
+      XPSDiffted[[1]]@Components[[1]]@param["h", "start"] <<- (pos$y[1] + pos$y[2])/2
+      XPSDiffted[[1]]@Components[[1]]@param["h", "min"] <<- pos$y[idx]  #ordinate of min XPSDiffted
+      XPSDiffted[[1]]@Components[[1]]@param["h", "max"] <<- pos$y[-idx]
+      XPSDiffted[[1]]@Fit <<- MaxMinD
 #      assign(activeFName, XPSSample, envir=.GlobalEnv)
 #      assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
 #      cat("\n ==> Data saved")
@@ -177,9 +179,10 @@ XPSDiff <- function(){
 
    plotData <- function() {
       SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv) #set the activeSpectIndex to the actual CoreLine
-      XXX <- cbind(unlist(XPSDiffted[[1]]@.Data[1]))
+      XXX <- cbind(XPSDiffted[[1]]@.Data[[1]])  #column vector
       LL <- length(XXX)
-      YYY <- cbind(unlist(XPSSample[[SpectIndx]]@.Data[2]), unlist(XPSDiffted[[1]]@.Data[2]), rep(0, LL))
+      tmp <- AA*XPSDiffted[[1]]@.Data[[2]]
+      YYY <- cbind(XPSSample[[SpectIndx]]@.Data[[2]], tmp, rep(0, LL))
       Xlim <- range(XXX)
       if (XPSSample[[SpectIndx]]@Flags[1]==TRUE) {
          Xlim <- rev(Xlim)  ## reverse x-axis
@@ -208,6 +211,7 @@ XPSDiff <- function(){
           Idx <- Idx+1
           XPSSample[[Idx]] <<- new("XPSCoreLine") #Add the new Coreline using the starting core-line
 
+
           if (length(tclvalue(DDeg)) > 0){         #working on previously differentiated data
               XPSSample[[Idx]] <<- XPSDiffted[[1]] #update New Coreline with dufferentiated data
 #--- Cntrl if we are differentiating an already differentiated spectrum
@@ -219,6 +223,7 @@ XPSDiff <- function(){
                   #now set the correct S1, S2, S3 and DiffDeg values
                   S1S2S3 <- unlist(strsplit(CLname, ".", fixed=TRUE))
                   if("\U0394." %in% S1S2S3) { S3 <<- "\U0394." }
+#                  if("d." %in% S1S2S3) { S3 <<- "d." }
                   jj <- which(S1S2S3 == "D") # which search if "D" is present in S1S2S3. but gives FALSE when compares "D" with "DD", "DyMNN", "Cd3d"
                   if(length(jj) > 0){
                      S2 <<- "D."
@@ -248,6 +253,7 @@ XPSDiff <- function(){
               #now set the correct S1, S2, S3 and DiffDeg values
               S1S2S3 <- unlist(strsplit(CLname, ".", fixed=TRUE))
               if("\U0394." %in% S1S2S3) { S3 <<- "\U0394." }
+#              if("d." %in% S1S2S3) { S3 <<- "d." }
               jj <- which(S1S2S3 == "D") # which search if "D" is present in S1S2S3. which gives FALSE when compares "D" with "DD", "DyMNN", "CdMNN"
               if(length(jj) > 0){
                  S2 <<- "D."    # %in% search if "D" is present in S1S2S3. %in% gives FALSE when compares "D" with "DD", "DyMNN", "CdMNN"
@@ -278,6 +284,7 @@ XPSDiff <- function(){
               #now set the correct S1, S2, S3 and DiffDeg values
               S1S2S3 <- unlist(strsplit(CLname, ".", fixed=TRUE))
               if("\U0394." %in% S1S2S3) { S3 <<- "\U0394." }
+#              if("d." %in% S1S2S3) { S3 <<- "d." }
               jj <- which(S1S2S3 == "D") # which search if "D" is present in S1S2S3. which gives FALSE when compares "D" with "DD", "DyMNN", "CdMNN"
               if(length(jj) > 0){
                  S2 <<- "D."    # %in% search if "D" is present in S1S2S3. %in% gives FALSE when compares "D" with "DD", "DyMNN", "CdMNN"
@@ -288,7 +295,7 @@ XPSDiff <- function(){
                  tkmessageBox(message="ERROR: Wrong Data Information", title="ERROR", icon="error")
                  return()
               }
-              Symbol <- paste(S3, S2, DiffDeg, S1, sep="") # '\U0394.' = Delta representing the MaxMin diff
+              Symbol <- paste(S3, S2, DiffDeg, S1, sep="") # 'd.' = Delta representing the MaxMin diff
               XPSSample[[SpectIndx]]@Symbol <<- Symbol
               XPSSample@names[SpectIndx] <<- Symbol
               Idx <- SpectIndx
@@ -323,6 +330,7 @@ XPSDiff <- function(){
       DiffBkp <<- NULL
       Corners <<- list(x=NULL, y=NULL)
       LocPos <<- list()
+      AA <<- 1
       MaxMinD <<- NULL
       DiffDeg <<- 0
       S1 <<- ""   #to store the 'XPSSample@Symbol'
@@ -361,6 +369,7 @@ XPSDiff <- function(){
     BackGnd <- NULL
     Corners <- list(x=NULL, y=NULL)
     LocPos <- list()
+    AA <- 1    #Amplification degree
     MaxMinD <- NULL
     DiffDeg <- 0
     S1 <- ""   #to store the 'XPSSample@Symbol'
@@ -411,11 +420,12 @@ XPSDiff <- function(){
                         SpectIndx <<- as.integer(tmp[1])
                         if (length(XPSSample[[SpectIndx]]@Components) > 0){
                             txt <- paste("Found Fit in Core-Line ", XPSCLname, "\n",
-                                         "Analysis will be overwritten! Do you want to Proceed? \n",
+                                         "Analysis will be overwritten! \n",
                                          "Otherwise: \n",
                                          "Please Make a Copy of ", XPSCLname, "Using Processing Core-Line Option \n",
                                          "Eliminate the Analysis using the Reset Analysis Option \n",
-                                         "Restart the Differentiation on the cleaned ", XPSCLname, " Core-Line", sep="")
+                                         "Restart the Differentiation on the cleaned ", XPSCLname, " Core-Line \n",
+                                         "Do you want to Proceed?", sep="")
                             answ <- tkmessageBox(message=txt, type="yesno", title="WARNING", icon="warning")
                             if (tclvalue(answ) == "no") { return() }
                         }
@@ -430,6 +440,7 @@ XPSDiff <- function(){
                             Differentiated <<- XPSSample[[SpectIndx]]@.Data
                             S1S2S3 <- unlist(strsplit(S1, ".", fixed=TRUE))
                             if("\U0394." %in% S1S2S3) { S3 <<- "\U0394." }
+#                            if("d." %in% S1S2S3) { S3 <<- "d." }
                             jj <- which(S1S2S3 == "D") # which search if "D" is present in S1S2S3. which gives FALSE when compares "D" with "DD", "DyMNN", "CdMNN"
                             if(length(jj) > 0){
                                S2 <<- "D."
@@ -437,7 +448,18 @@ XPSDiff <- function(){
                                S1 <<- paste(".", S1S2S3[(jj+2):LL], sep="", collapse="")
 #                               DiffDeg <<- DiffDeg + as.integer(S1S2S3[(jj+1)]) #DiffDeg set in 'Differentiation'
                                DiffDeg <<- as.integer(S1S2S3[(jj+1)]) #DiffDeg set in 'Differentiation'
+
+                               WidgetState(DiffButt, "normal")
+                               WidgetState(MaxMinBtn, "normal")
+                               WidgetState(ResButt, "normal")
+                               WidgetState(SaveNewButt, "normal")
+                               WidgetState(OverWButt, "normal")
                             }
+                        } else {
+                            XPSSample[[SpectIndx]]@RegionToFit <<- list()
+                            XPSSample[[SpectIndx]]@Baseline <<- list()
+                            XPSSample[[SpectIndx]]@Components <<- list()
+                            XPSSample[[SpectIndx]]@Fit <<- list()
                         }
                         XPSDiffted[[1]] <<- XPSSample[[SpectIndx]]
                         assign("activeSpectName", S1, envir=.GlobalEnv)
@@ -562,8 +584,7 @@ XPSDiff <- function(){
                  })
     tkbind(AmpliDiff, "<Key-Return>", function(K){
                            tkconfigure(AmpliDiff, foreground="black")
-                        AA <- as.numeric(tclvalue(AmpliDeg))
-                        XPSDiffted[[1]]@.Data[[2]] <<- Differentiated[[2]] <<- AA*DiffBkp[[2]]
+                        AA <<- as.numeric(tclvalue(AmpliDeg))
                         plotData()
                  })
     tkgrid(AmpliDiff, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -573,23 +594,25 @@ XPSDiff <- function(){
                  })
     tkgrid(MaxMinBtn, row = 1, column = 2, padx = 10, pady = 5, sticky="w")
 
-    DistLab <- ttklabel(D3frame1, text="Max Min Dist:                 ")
+    DistLab <- ttklabel(D3frame1, text="Max Min Dist:                 ", font="Helvetica 10 bold")
     tkgrid(DistLab, row = 1, column = 3, padx = 10, pady = 5, sticky="w")
 
 #--- Common buttons
     D4Group1 <- ttkframe(mainFrame, borderwidth=0, padding=c(0,0,0,0) )
     tkgrid(D4Group1, row = 4, column = 1, padx = 0, pady = 0, sticky="w")
 
-    RestartButt <- tkbutton(D4Group1, text=" RESTART WITH A NEW ANALYSIS ", command=function(){
-                        ResetVars()
+    OverWButt <- tkbutton(D4Group1, text=" OVERWRITE ORIGINAL SPECTRUM ", command=function(){
+                        SaveFName("Overwrite")
+                        BackGnd <<- NULL
                         tclvalue(XS) <- ""
                         tclvalue(CL) <- ""
+                        tclvalue(DDeg) <- ""
                         XPSSaveRetrieveBkp("save")
+                        WidgetState(RestartButt, "disabled")
+                        WidgetState(SaveNewButt, "disabled")
+                        WidgetState(OverWButt, "disabled")
                  })
-    tkgrid(RestartButt, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-
-
-
+    tkgrid(OverWButt, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
     SaveNewButt <- tkbutton(D4Group1, text=" SAVE AS A NEW CORE LINE ", command=function(){
                         SaveFName("NewCL")
@@ -605,23 +628,15 @@ XPSDiff <- function(){
                  })
     tkgrid(SaveNewButt, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
-    OverWButt <- tkbutton(D4Group1, text=" OVERWRITE PREVIOUS DIFFERENTIATION ", command=function(){
-                        SaveFName("Overwrite")
-                        BackGnd <<- NULL
+    RestartButt <- tkbutton(D4Group1, text=" RESTART WITH A NEW ANALYSIS ", command=function(){
+                        ResetVars()
                         tclvalue(XS) <- ""
                         tclvalue(CL) <- ""
-                        tclvalue(DDeg) <- ""
                         XPSSaveRetrieveBkp("save")
-                        WidgetState(RestartButt, "disabled")
-                        WidgetState(SaveNewButt, "disabled")
-                        WidgetState(OverWButt, "disabled")
                  })
-    tkgrid(OverWButt, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+    tkgrid(RestartButt, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
-    exitBtn <- tkbutton(D4Group1, text=" SAVE & EXIT ", width=15, command=function(){
-                        assign("activeFName", activeFName, envir=.GlobalEnv)
-                        assign(activeFName, XPSSample, envir=.GlobalEnv)
-                        assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
+    exitBtn <- tkbutton(D4Group1, text=" EXIT ", width=15, command=function(){
                         tkdestroy(DiffWindow)
                         XPSSaveRetrieveBkp("save")
                         UpdateXS_Tbl()

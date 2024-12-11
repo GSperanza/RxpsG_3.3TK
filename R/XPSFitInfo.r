@@ -18,11 +18,13 @@
 XPSFitInfo <- function(){
 
    info <- function(CoreLine){
-
       CompNames <- names(CoreLine@Components)
       maxNchar <- 0   
       sumCoreLine <- 0
-      N_comp=length(CoreLine@Components) #number of fit components
+      N_comp <- length(CoreLine@Components) #number of fit components
+cat("\n FitInfo NComp", N_comp)
+
+
       sumComp <- array(0,dim=N_comp)       #define a dummy vector of zeros
       RSF  <-  FName[[Indx]]@RSF 
       E_stp  <-  abs(FName[[Indx]]@.Data[[1]][2]-FName[[Indx]]@.Data[[1]][1]) #energy step
@@ -87,6 +89,23 @@ XPSFitInfo <- function(){
                cell <- printCell("tableRow",txt,CellBord,lgth, "center") #stampo nella modalita' TABLEROW
                cat("\n",cell)
             }
+         } else if ("   ARXPS_Profile" %in% fnName) {
+            cat("\n", FName@Filename)
+            CellBord <- "|"
+            txt <- paste("   File Name:", FName@Filename)  #Filename
+            totLgth <- nchar(txt)
+            cell <- printCell("label",txt,CellBord, totLgth,"left")
+            cat("\n",cell)
+            txt <- "-"   #separator
+            cell <- printCell("separator",txt,CellBord,totLgth,"left")
+            cat("\n",cell)
+            txt <- "ARXPS Profile: "    #Table name
+            cell <- printCell("label",txt,CellBord,totLgth,"left")
+            cat("\n",cell)
+            Thickness <- round(FName[[Indx]]@Components[[1]]@param[[4]][1], 3)
+            txt <- paste("Film Thickness:", Thickness)  #param[["Fit"]] = film thickness
+            cell <- printCell("label",txt,CellBord,totLgth,"left")
+            cat("\n",cell)
          } else {
 #--- Fit Quantification ---
             sumCoreLine <- sum(FName[[Indx]]@Fit$y)*E_stp  #Fit Contribution not corrected fro the sensitivity factor
@@ -173,9 +192,9 @@ XPSFitInfo <- function(){
        return()
    }
    activeFName <- get("activeFName", envir = .GlobalEnv)
+   FName <- get(activeFName, envir = .GlobalEnv)
    Indx <- get("activeSpectIndx", envir = .GlobalEnv)
    activeSpectName <- get("activeSpectName", envir = .GlobalEnv)
-   FName <- get(activeFName, envir = .GlobalEnv)
    txt <- paste(activeSpectName, "Coreline Fit Info: ", sep=" ")
    cat("\n", txt)
    info(FName[[Indx]])

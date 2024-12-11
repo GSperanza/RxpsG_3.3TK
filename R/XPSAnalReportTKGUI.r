@@ -256,7 +256,7 @@ XPSAnalReport <- function(){
 #             idx <- which(idx > 0) #index of the component having 'VBtop' name
 #             TabTxt <<- c(TabTxt, paste("VBFermi:", XPSSample[[ii]]@Components[[idx]]@param["mu", "start"], sep=""), "\n")
 #          }
-#          if("\U0394." %in% XPSSample[[ii]]@Symbol){ #MaxMinDistance
+#          if("d.D." %in% XPSSample[[ii]]@Symbol || "\U0394." %in% XPSSample[[ii]]@Symbol){ #MaxMinDistance
 #             idx <- sapply(XPSSample[[ii]]@Components, function(x) which(x@funcName == "Derivative"))
 #             idx <- which(idx > 0) #index of the component having 'VBtop' name
 #             MaxMinD <- abs(XPSSample[[ii]]@Components[[idx]]@param["mu", "min"] -
@@ -264,6 +264,34 @@ XPSAnalReport <- function(){
 #             TabTxt <<- c(TabTxt, paste("MaxMin Dist.:", MaxMinD, sep=""), "\n")
 #          }
           TabTxt <<- c(TabTxt, "\n")
+          if (hasComponents(XPSSample[[ii]])){
+              fnName <- sapply(XPSSample[[ii]]@Components, function(x)  x@funcName) #was VBtop analysis performed on coreline?
+              if ("Derivative" %in% fnName){
+                 TabTxt <<- c(TabTxt, paste("***  ", XPSSample[[ii]]@Symbol, " Core-Line Deriavtive Info: ", sep=""), "\n")
+                 PE <- RetrivePE(XPSSample[[ii]])
+                 TabTxt <<- c(TabTxt, " \n")
+                 TabTxt <<- c(TabTxt, paste("     BaseLine applied: ",XPSSample[[ii]]@Baseline$type[1], sep=""), "\n")
+                 DiffDeg <- unlist(strsplit(XPSSample[[ii]]@Symbol, ".", fixed=TRUE))
+                 jj <- which(DiffDeg == "D")
+                 DiffDeg <- as.integer(DiffDeg[(jj+1)])
+                 TabTxt <<- c(TabTxt, paste("     Differentiation Degree: ",DiffDeg, sep=""), "\n")
+                 jj <- which(fnName %in% "Derivative")  #Component having funcName=="Derivative"
+                 if (XPSSample[[ii]]@Flags[[1]]) { #BE scale set
+                     MidPos <- round(XPSSample[[ii]]@Components[[jj]]@param[1,1], 2) #Component Intensity componente
+                     PosMin <- round(XPSSample[[ii]]@Components[[jj]]@param[1,2], 2) #Component Intensity componente
+                     PosMax <- round(XPSSample[[ii]]@Components[[jj]]@param[1,3], 2) #Component Intensity componente
+                 } else {
+                     MidPos <- round(XPSSample[[ii]]@Components[[jj]]@param[1,1], 2) #Component Intensity componente
+                     PosMax <- round(XPSSample[[ii]]@Components[[jj]]@param[1,2], 2) #Component Intensity componente
+                     PosMin <- round(XPSSample[[ii]]@Components[[jj]]@param[1,3], 2) #Component Intensity componente
+                 }
+                 TabTxt <<- c(TabTxt, paste("     Max Derivative Position : ",PosMax, sep=""), "\n")
+                 TabTxt <<- c(TabTxt, paste("     MidPoint Derivative Position : ",MidPos, sep=""), "\n")
+                 TabTxt <<- c(TabTxt, paste("     Min Derivative Position : ",PosMin, sep=""), "\n")
+                 TabTxt <<- c(TabTxt, paste("     Max : Min Distance : ",round(abs(PosMax-PosMin), 2), sep=""), "\n")
+                 TabTxt <<- c(TabTxt, " \n")
+              }
+          }
       }
    }
 
@@ -342,8 +370,6 @@ XPSAnalReport <- function(){
       tclvalue(StdRprt) <- FALSE
       tclvalue(FRprt) <- FALSE
       tclvalue(QRprt) <- FALSE
-      SelectedCL1 <<- NULL
-      SelectedCL2 <<- NULL
       TabTxt <<- NULL
       tcl(ReprtWin, "delete", "0.0", "end")
 
@@ -363,8 +389,6 @@ XPSAnalReport <- function(){
    XPSSample <- get(activeFName, envir = .GlobalEnv)
    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    NCorelines <- length(XPSSample)
-   ChkCL1 <- list()
-   ChkCL2 <- list()
    SelectedCL1 <- NULL
    SelectedCL2 <- NULL
    FittedIdx <- FindFittedCL()
@@ -551,10 +575,6 @@ XPSAnalReport <- function(){
    xx <- xx + as.integer(tkwinfo("reqwidth", MakeRprtB1))+30
 
    ResetB1 <- tkbutton(RFrame2, text="     RESET     ", command=function(){
-                         tclvalue(FRprt) <- 0
-                         tclvalue(QRprt) <- 0
-                         tkdestroy(XScroll)
-                         tkdestroy(YScroll)
                          ResetVars()
                      })
    tkgrid(ResetB1, row = 7, column = 1, padx = c(xx,10), pady=3, sticky="w")
@@ -608,12 +628,6 @@ XPSAnalReport <- function(){
    xx <- xx + as.integer(tkwinfo("reqwidth", MakeRprtB2))+30
 
    ResetB2 <- tkbutton(RFrame2, text="     RESET     ", command=function(){
-                         tclvalue(ChkCL2) <- 0
-                         tclvalue(SelectedCL1) <- FALSE
-                         tclvalue(SelectedCL2) <- FALSE
-                         tclvalue(StdRprt) <- 0
-                         tkdestroy(XScroll)
-                         tkdestroy(YScroll)
                          ResetVars()
                      })
    tkgrid(ResetB2, row = 12, column = 1, padx=c(xx, 0), pady = 5, sticky="w")

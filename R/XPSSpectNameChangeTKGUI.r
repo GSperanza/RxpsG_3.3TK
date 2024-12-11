@@ -40,9 +40,18 @@ XPSSpectNameChange <- function(){
    XPSSampName <- activeFName
    FName <- get(activeFName, envir=.GlobalEnv)  #load in FName the XPSSample data
    OldSpectList <- list(items=names(FName))
+   SpectList <- unname(sapply(FName, function(z) z@Symbol))
+   if(identical(OldSpectList$items,SpectList) == FALSE) {
+       cat("\n CL_Names:  ",OldSpectList$items, sep="  ")
+       cat("\n Stored:    ",SpectList, sep="  ")
+       txt <- " Check Core Line Names Please. \n Inconsistency with the Stored Name-List"
+       tkmessageBox(message=txt, title="WARNING", icon="warning")
+   }
    OldSpectList <- data.frame(OldSpectList, stringsAsFactors=FALSE)
    SpectList <- OldSpectList
    stopLoop <- FALSE
+
+
 
 #--- Widget
    LabWin <- tktoplevel()
@@ -67,7 +76,6 @@ XPSSpectNameChange <- function(){
                         SpectList <<- data.frame(SpectList, stringsAsFactors=FALSE)
                         OldSpectList <<- SpectList
                         plot(FName)
-                        LL <- length(FName)
                         clear_widget(LabFrame2)
                         DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
                                                Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,

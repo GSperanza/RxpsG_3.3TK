@@ -1,14 +1,13 @@
 #UpdateXS_Tbl function to refresh the loist of loaded XPSSamples
 #UpdateXS_Tbl also set the actual XPSSample as highlighted
 #
-  UpdateXS_Tbl <- function(){
+   UpdateXS_Tbl <- function(){
       #update XPS_Table
       XS_Tbl_Ptr <- get("Tbl_Ptr", envir=.GlobalEnv)
       FNameList <- XPSFNameList(warn=FALSE)
       updateTable(widget=XS_Tbl_Ptr[[2]], items=FNameList)
-      if (tclvalue(tkyview(XS_Tbl_Ptr[[2]])) != "0.0 1.0"
-          && length(YScroll) == 0) {
-          YScroll <- addScrollbars(XS_Tbl_Ptr[[1]], XS_Tbl_Ptr[[2]], type = "y", Row = 1, Col = 1, Px = 0, Py = 0)
+      if (tclvalue(tkyview(XS_Tbl_Ptr[[2]])) != "0.0 1.0") {
+           addScrollbars(XS_Tbl_Ptr[[1]], XS_Tbl_Ptr[[2]], type = "y", Row = 1, Col = 1, Px = 0, Py = 0)
       }
       #now set the actual element in the XS_Tbl
       activeFName <<- get("activeFName", envir=.GlobalEnv)
@@ -19,7 +18,9 @@
           idx <- IdxList[idx]  #select the actual element index
           tcl(XS_Tbl_Ptr[[2]], "selection", "set", idx)  #set the actual XPSSample as selected in the MAIN-GUI
       }
-  }
+      assign("XS_Tbl", XS_Tbl, envir=.GlobalEnv)
+   }
+
 
 
 # xps() opens the main GUI of the RxpsG package to call the various
@@ -45,7 +46,6 @@ xps <- function(){
 options(warn = -1) #switch off warnings
 options(guiToolkit = "tcltk")
 
-
 #====Check correct Package installation========================================
 Pkgs <- utils::installed.packages(lib.loc=.libPaths())  #matrix of installed packages: names and additional  information
 Pkgs <- unname(Pkgs[, 1])                  #retain only the pakage names
@@ -64,32 +64,23 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                     })
 
 
-##====Now check installation of optional packages and import optional functions==
 # cannot use import:: since it requires the library to be listed in the DESCRIPTION imports
 # see also: https://import.rticulate.org
 # the Macros where function of the following libraries are used contain the command
 # library::function as direct call of the needed command. For example in XPSModFit.r
+# Pkgs <- get("Pkgs", envir=.GlobalEnv)     
+# FME.PKG <- "FME" %in% Pkgs
 # if FME.PKG == TRUE  FME::modfit() command is used.
-
-   baseline.PKG <- "baseline" %in% Pkgs
-   assign("baseline.PKG",baseline.PKG, envir=.GlobalEnv)
-
-   FME.PKG <- "FME" %in% Pkgs
-   assign("FME.PKG",FME.PKG, envir=.GlobalEnv)
-
-   rootSolve.PKG <- "rootSolve" %in% Pkgs
-   assign("rootSolve.PKG",rootSolve.PKG, envir=.GlobalEnv)
-
-   wavelets.PKG <- "wavelets" %in% Pkgs
-   assign("wavelets.PKG",wavelets.PKG, envir=.GlobalEnv)
-
 
 #===== Default variable settings =====
    activeFName <- activeSpectIndx <- activeSpectName <- XPSSettings <- Pkgs <- NULL
    FNameList <- ""
    XPSSample <- NULL
    SpectList <- NULL
+   activeFName <- NULL
    YScroll <- list()
+   Gdev <- NULL
+   quartz <- NULL
 
    CtrlSurname <- function(XPSSample){
       SpectList <- names(XPSSample)
@@ -118,14 +109,11 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
   }
 
 #===== XPS main Panel ======
-  activeFName <- NULL
   RxpsGMainWindow <- tktoplevel()
   tkwm.title(RxpsGMainWindow,"RxpsG MAIN")
   tkwm.geometry(RxpsGMainWindow, "+50+50")
   MainGroup <- ttkframe(RxpsGMainWindow, borderwidth=5, padding=c(5,5,5,5))
   tkgrid(MainGroup, row=1, column=1)
-  Gdev <- NULL
-  quartz <- NULL
 
 #===== Menu FILE: options definition =====
   menuBar <- tkmenu(RxpsGMainWindow)
@@ -179,13 +167,13 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                           columns = c("XPS Samples"),
                           displaycolumns=0,
                           show = "headings",
-                          height = 3,
+                          height = 12,
                           selectmode = "browse"
   )
 
   tcl(XS_Tbl, "heading", 0, text="XPS Samples")
   tcl(XS_Tbl, "column", 0, width=180)
-  tkgrid(XS_Tbl, row = 1, column=1, padx = 0, pady = c(0, 10), sticky="news")
+  tkgrid(XS_Tbl, row = 1, column=1, padx = 0, pady = c(0, 10), sticky="w")
   tkgrid.columnconfigure(MainGroup, 1, weight=4)
 
   assign("Tbl_Ptr", list(MainGroup, XS_Tbl), envir=.GlobalEnv)
@@ -207,13 +195,10 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       XPSSample <- get(activeFName, envir=.GlobalEnv)
       SpectList <- XPSSpectList(activeFName)    #retrieve the list of CoreLines from the selected XPSSample
       CLmenu <- tkmenu(XS_Tbl, tearoff=FALSE) #generates a menu container         
-      sapply(SpectList, function(x) tcl(CLmenu, "add", "command", label=x, command=function(){  #populate the menu container  
+      sapply(SpectList, function(x) tcl(CLmenu, "add", "command", label=x, command=function(){  #populate the menu container
                             CL <- unlist(strsplit(x, "\\."))
                             activeSpectIndx <<- as.integer(CL[1])
                             activeSpectName <<- CL[2]
-                            if (hasComponents(XPSSample[[activeSpectIndx]])) {
-                                XPSSample[[activeSpectIndx]] <- sortComponents(XPSSample[[activeSpectIndx]])
-                            }
                             plot(XPSSample[[activeSpectIndx]])
                             assign("activeSpectName", activeSpectName, envir=.GlobalEnv)
                             assign("activeSpectIndx", activeSpectIndx, envir=.GlobalEnv)
@@ -228,7 +213,7 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
 
 #===== Menu File =====
       tkadd(FileMenu, "command", label = "Load VMS, PXT Data", command = function() {
-            Filters <- matrix(c("Vamas Files", ".vms", "Pxt Files", ".pxt"), ncol=2, nrow=2, byrow=TRUE)
+            Filters <- matrix(c("Files", ".vms", "Files", ".pxt "), ncol=2, nrow=2, byrow=TRUE)
             PathFile <- tk_choose.files(default = "", caption = "Select files",
                             multi = FALSE, filters = Filters)
 				        if (length(PathFile)==0) {return()}  #when load-file-action aborted
@@ -593,8 +578,9 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       })
 
       tkadd(AnalysisMenu, "command", label = "   FIT ModFit", command = function() {
-             FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
-             rootSolve.PKG <- get("rootSolve.PKG", envir=.GlobalEnv)
+             Pkgs <- get("Pkgs", envir=.GlobalEnv)
+             FME.PKG <- "FME" %in% Pkgs
+             rootSolve.PKG <- "rootSolve" %in% Pkgs
              if (FME.PKG == FALSE || rootSolve.PKG == FALSE){
                  txt = "Package 'FME' is NOT Installed. \nCannot Execute 'Model Fitting' Option"
                  tkmessageBox(message=txt, title="ERROR", icon="error")
@@ -687,6 +673,8 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       })
 
       tkadd(AnalysisMenu, "command", label = "   Element Identification", command = function() {
+             Pkgs <- get("Pkgs", envir=.GlobalEnv)
+             baseline.PKG <- "baseline" %in% Pkgs
              if( baseline.PKG == FALSE){   #the package 'baseline' is not installed
                 txt <- "Package 'baseline' is NOT installed. \nCannot Execute 'Element identification' Option"
                 tkmessageBox(message=txt, title="WARNING", icon="error")

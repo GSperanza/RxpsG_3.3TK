@@ -64,8 +64,7 @@ XPSSetGraphDev <- function() {
    tkgrid(WSvalue, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    WS <- tclVar(7)
-   WS_Slider <- ttkscale(frame0, from=5, to=15, tickinterval=1, variable=WS,
-                         orient="horizontal", showvalue=FALSE, length=280)
+   WS_Slider <- tkscale(frame0, from=5, to=15, tickinterval=1, variable=WS, orient="horizontal", showvalue=FALSE, length=280)
    tkbind(WS_Slider, "<ButtonRelease>", function(K){
                         WinSize <<- as.numeric(tclvalue(WS))
                         txt <- paste("Graphical Window size: ", WinSize, sep="")
@@ -219,6 +218,8 @@ XPSSetGraphDev <- function() {
 
    SaveExitBtn <- tkbutton(frame2, text=" SAVE SETTINGS & EXIT ", width=25, command=function(){
    #--- get System info and apply correspondent XPS Settings ---
+                        graphics.off()
+                        plot.new()
                         Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
                         if (file.exists(Ini.pthName)) {
                             ColNames <- names(XPSSettings)
@@ -237,6 +238,8 @@ XPSSetGraphDev <- function() {
    ww <- as.numeric(tkwinfo("reqwidth", SaveExitBtn))
 
    ExitBtn <- tkbutton(frame2, text=" EXIT ", width=10, command=function(){
+                        graphics.off()
+                        plot.new()
                         tkdestroy(GDwin)
           })
    tkgrid(ExitBtn, row = 4, column = 1, padx = c(ww+15, 5), pady = 5, sticky="w")

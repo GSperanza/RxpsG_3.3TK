@@ -95,7 +95,7 @@ XPSSampleInfo <- function() {
                     GetInfo(idx=1)
                     clear_widget(XSgroup)
                     #generate a new DFrameTable with updated info
-                    DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 50),
+                    DFrameTable("Data", Title="", ColNames=ColNames, RowNames="", Width=c(20, 70),
                                  Modify=TRUE, Env=environment(), parent=XSgroup, Row=1, Column=1, Border=c(3,3,3,3))
                     Data <- get("Data", envir=environment())
 

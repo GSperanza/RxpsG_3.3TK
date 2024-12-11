@@ -846,7 +846,8 @@ XPSFilter <- function() {
    F5group3 <- ttkframe(F5group1,  borderwidth=0, padding=c(0,0,0,0) )
    tkgrid(F5group3, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
    F5filter <- tkbutton(F5group3, text="FILTER", width=15, command=function(){
-                        wavelets.PKG <- get("wavelets.PKG", envir=.GlobalEnv)
+                        Pkgs <- get("Pkgs", envir=.GlobalEnv)
+                        wavelets.PKG <- "wavelets" %in% Pkgs
                         if( wavelets.PKG == FALSE ){      #check if the package 'wavelets' is installed
                             txt <- "Package 'wavelets' is NOT Installed. \nCannot Execute the 'Wavelets filtering' Option"
                             tkmessageBox(message=txt, title="WARNING", icon="error")
@@ -1141,8 +1142,8 @@ XPSFilter <- function() {
                               FName[[TestIdx]]@Info <<- Info
                            }
                         }
-                        FName[[TestIdx]]@.Data[[2]] <<- Filtered         #change the original data with the filtered data
-                        if (length(FName[[SpectIndx]]@RegionToFit$y>0)){ #RegionToFit defined
+                        FName[[TestIdx]]@.Data[[2]] <<- Filtered           #change the original data with the filtered data
+                        if (length(FName[[SpectIndx]]@RegionToFit$y > 0)){ #RegionToFit defined
                            rng <- range(FName[[SpectIndx]]@RegionToFit$x)
                            if (Object@Flags[1]==TRUE) {rng <- rev(rng)}    #Binding energy set
                            idx1 <- which(FName[[TestIdx]]@.Data[[1]] == rng[1])

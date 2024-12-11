@@ -6,7 +6,6 @@
 #     set by XPSOverlayGUI and stored in PlotParameters and Plot_Args.
 #' @param PlotParameters the plot parameters asociated to the XPSOverlayGUI options;
 #' @param Plot_Args list of plot options;
-#' @param AutoKey_Args list of options for annotation;
 #' @param SelectedNames list containing the XPSSample names and the Corelines to be plotted;
 #' @param Xlim Xrange of the data to be plotted;
 #' @param Ylim Yrange of the data to be plotted;
@@ -14,7 +13,7 @@
 #' @export
 #'
 
-XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim) {
+XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 
 #---  SetPltArgs sets the Plot_Arg list following selections in OverlayGUI
    SetPltArgs <- function(LType,SType , palette, FitStyle) {
@@ -101,15 +100,18 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
     if (length(SelectedNames$XPSSample) == 0) { return() } #no selected XPSSamples to plot
     overlayXPSSample <- new("XPSSample")
-    LL<-length(SelectedNames$XPSSample)
+    LL <- length(SelectedNames$XPSSample)
 
     SpectLengths <- NULL
     idx <- 1
     select <- list()
+    CLnames <- NULL
     for(ii in 1:LL){
         if (length(SelectedNames$XPSSample[ii]) > 0 && SelectedNames$XPSSample[ii] != "-----") { #Set XPSSample==FName only if SelectedNames$XPSSample != -----
             FName <- SelectedNames$XPSSample[ii]  #this is a string
             FName <- get(FName, envir=.GlobalEnv) #this is an XPSSample datafile
+            CLnames <- c(CLnames, names(FName))   #names of all the CoreLines of selected XPSSamples
+            CLnames <- unique(CLnames)            #remove duplicates
         }
         SpectName <- SelectedNames$CoreLines[ii]  #Load all the selected  indicated in SelectedNames$XPSSample
         SpectName <- unlist(strsplit(SpectName, "\\."))   #skip the initial number at beginning of the CoreLine name
@@ -162,15 +164,23 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
     FName <- get(activeFName, envir=.GlobalEnv)               #load the active XPSSample
     SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)     #load the active spectrum index
     SpectName <- get("activeSpectName", envir=.GlobalEnv)     #load the active spectrum name
-    if (length(Plot_Args$xlab$label) == 0) Plot_Args$xlab$label <- FName[[SpectName]]@units[1] #set the axis labels if not defined
-    if (length(Plot_Args$ylab$label) == 0) Plot_Args$ylab$label <- FName[[SpectName]]@units[2]
-
-#--- Now transform XPSSample into a list
-#--- The asList function allows including/skipping fit components, baseline etc. following the select options
-#--- NOTE USE of sapply instead of lapply!!!
     XPSSampLen <- length(overlayXPSSample)
     XPSSampNames <- names(overlayXPSSample)
     Nspettri <- length(XPSSampNames)
+    if (length(grep("\U0394", XPSSampNames)) > 0){  #Control id greek Char is present in CoreLine names
+        idx <- grep("\U0394", CLnames)[1]
+        if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
+        if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- FName[[idx]]@units[2] }
+        if (length(Plot_Args$main$label) > 0){
+            Plot_Args$main$label <- expression(paste(Plot_Args$main$label))  #renders Title containing Grrek symbol compatible to XYplot()
+        }
+    } else {
+        if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[SpectName]]@units[1] } #set the axis labels if not defined
+        if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- FName[[SpectName]]@units[2] }
+    }
+#--- Now transform XPSSample into a list
+#--- The asList function allows including/skipping fit components, baseline etc. following the select options
+#--- NOTE USE of sapply instead of lapply!!!
     X <- NULL
     Y <- NULL
     for (ii in 1:NXPSSamp){
@@ -301,8 +311,6 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
         PlotParameters$FitCol$FitColor <- rep(PlotParameters$FitCol$FitColor[1], 20)
     }
     if ( Plot_Args$type=="l") { #lines are selected for plot
-         AutoKey_Args$lines <- TRUE
-         AutoKey_Args$points <- FALSE
          if (length(PlotParameters$Colors)==1) {   # B/W LINES
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- rep(NA, 20)
@@ -327,10 +335,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
              SetPltArgs(LType, SType, palette, FitStyle)
          }
     } else if (Plot_Args$type=="p") { #symbols are selected for plot
-         AutoKey_Args$lines<-FALSE
-         AutoKey_Args$points<-TRUE
          if (length(PlotParameters$Colors)==1) {   # B/W  SYMBOLS
-             LType <- rep(NA, 20)
+             LType <- rep("solid", 20)
              SType <- Plot_Args$pch                # VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <-  rep(PlotParameters$Colors[1], 20)          # "black","black","black",....
              FitStyle$Lty <- PlotParameters$CompLty
@@ -339,8 +345,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
              FitStyle$FitColor <- rep("black", 20)
              SetPltArgs(LType, SType, palette, FitStyle)
          } else if (length(PlotParameters$Colors) > 1) {   # RainBow SYMBOLS
-             LType <- rep(NA, 20)
-             SType <- rep(Plot_Args$pch[1], 20)    # "VoidCircle", "VoidCircle", "VoidCircle", ....
+             LType <- rep("solid", 20)
+             SType <- Plot_Args$pch   # VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <- PlotParameters$Colors      # "black", "red", "green"....
              FitStyle$Lty <- PlotParameters$CompLty
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
@@ -349,8 +355,6 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
              SetPltArgs(LType, SType, palette, FitStyle)
          }
     } else if (Plot_Args$type=="b") { #Lines + symbols are selected for plot
-         AutoKey_Args$lines<-TRUE
-         AutoKey_Args$points<-TRUE
          if (length(PlotParameters$Colors)==1) {   # B/W LINES & SYMBOLS
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- Plot_Args$pch                # "VoidCircle", "VoidSquare", "VoidTriangleUp" ....
@@ -359,8 +363,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
              FitStyle$Col <- c("black", "grey45", "black")
              SetPltArgs(LType, SType, palette, FitStyle)
          } else if (length(PlotParameters$Colors) > 1) {   # RainBow LINES & SYMBOLS
-             LType <- rep(Plot_Args$lty[1], 20)    #"solid", "solid", "solid", ....
-             SType <- rep(Plot_Args$pch[1], 20)    # "VoidCircle", "VoidCircle", "VoidCircle", ....
+             LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
+             SType <- Plot_Args$pch                # "VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <- PlotParameters$Colors      #"black", "red", "green"....
              FitStyle$Lty <- PlotParameters$CompLty
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
@@ -372,7 +376,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
 
 ##--- SINGLE PANEL---
     if (PlotParameters$OverlayMode == "Single-Panel") {
-       if (length(Plot_Args$main$label) == 0) Plot_Args$main$label<-SpectName
+       if (length(Plot_Args$main$label) == 0) Plot_Args$main$label <- bquote(.(SpectName))
    	   df <- data.frame(x = unname(unlist(X)), y = unname(unlist(Y)) )
 	      Plot_Args$x	<- formula("y ~ x")
        Plot_Args$data	<- df
@@ -542,9 +546,19 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
        }
 #---axis options---
        if (length(Plot_Args$main$label) == 0) { Plot_Args$main$label <- SpectName }
-       if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[SpectName]]@units[1] }
-       if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- "Sample" }
-       if (length(Plot_Args$zlab$label) == 0) { Plot_Args$zlab$label <- FName[[SpectName]]@units[2] }
+       idx <- grep("\U0394", XPSSampNames)[1] #Control id greek Char is present in CoreLine names
+
+       if (length(grep("\U0394", XPSSampNames)[1]) > 0){  #Control id greek Char is present in CoreLine names
+           idx <- grep("\U0394", CLnames)[1]
+           if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
+           if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- "Sample" }
+           if (length(Plot_Args$zlab$label) == 0) { Plot_Args$zlab$label <- FName[[idx]]@units[2] }
+           Plot_Args$main$label <- expression(Plot_Args$main$label)  #renders Title containing Grrek symbol compatible to XYplot()
+       } else {
+           if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[SpectName]]@units[1] }#set the axis labels if not defined
+           if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- "Sample" }
+           if (length(Plot_Args$zlab$label) == 0) { Plot_Args$zlab$label <- FName[[SpectName]]@units[2] }
+       }
        if (PlotParameters$Normalize == TRUE ) { Plot_Args$zlab$label <- "Intensity [a.u.]" }
        if (PlotParameters$Reverse) { #If reverse==TRUE compute limits and reverse
           Xmax <- max(sapply(Xlimits, max))
@@ -702,7 +716,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             WidgetState(Anframe2, "disabled")
                             WidgetState(Anframe3, "disabled")
                             WidgetState(BtnGroup, "disabled")
-                            pos <- grid::grid.locator(unit = "points")
+                            pos <- grid.locator(unit = "points")
                             TextPosition <<- ConvertCoords(pos)
                             if (is.null(TextPosition$x) && is.null(TextPosition$x))  {
                                return()
@@ -768,10 +782,10 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames,
                             WidgetState(Anframe3, "disabled")
                             WidgetState(BtnGroup, "disabled")
                             trellis.focus("panel", 1, 1, clip.off=TRUE, highlight=FALSE)
-                            pos <- grid::grid.locator(unit = "points")
+                            pos <- grid.locator(unit = "points")
                             ArrowPosition0 <<- ConvertCoords(pos)
                             panel.points(x = ArrowPosition0$x, y = ArrowPosition0$y, cex=1.1, pch=20, col=TextColor)
-                            pos <- grid::grid.locator(unit = "points") #first mark the arrow start point
+                            pos <- grid.locator(unit = "points") #first mark the arrow start point
                             ArrowPosition1 <<- ConvertCoords(pos)
                             WidgetState(Anframe1, "normal")
                             WidgetState(Anframe2, "normal")

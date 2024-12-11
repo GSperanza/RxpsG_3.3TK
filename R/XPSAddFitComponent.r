@@ -224,7 +224,6 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	     num <- length(names(Object@Components)) + 1
      	slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
      	# add the y values for this component: in this case a series of NA (see XPSFitAlgorithms.r)
-	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=Object@RegionToFit$x, y=Object@Baseline$y)
 	     # Now just set the component identifier
 	     # label (used in the plot)
 	     slot(Object@Components[[num]],"label") <-"D1"   #Label indicating the Derivate in the plot

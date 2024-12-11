@@ -172,8 +172,6 @@ XPSExtract <- function() {
                              if (tclvalue(yesno) =="No"){
                                  return()
                              }
-                         } else {
-                             Element <<- IniElement(Element)
                          }
                      })
 
@@ -198,7 +196,7 @@ XPSExtract <- function() {
                              if (tclvalue(yesno) =="No"){
                                  return()
                              }
-                         }
+                         } else {
 #Example: Au  Element$Orbital is:
 #    Element Orbital  BE     KE RSF_K RSF_S
 #57       Au   5p3/2  57 1429.6    NA  0.00
@@ -211,40 +209,42 @@ XPSExtract <- function() {
 #412      Au   4p3/2 546  940.6 3.166  2.14
 #443      Au   4p1/2 643  843.6 0.000  0.00
 #475      Au      4s 759  727.6 0.409  1.92
-                         if (Object@Flags[3] == FALSE) {   #eliminate rows corresponding to
-                             idx <- which(is.na(Element$RSF_K))# NAs present in RSF_K column Kratod
-                             if (length(idx) > 0) {
-                                 Element <- Element[-idx, ]
-                             }
-                             Object@RSF <<- Element$RSF_K
-                         } else {
-                             idx <- which(is.na(Element$RSF_S))#  NAs present in RSF_S column Scienta
-                             if (length(idx) > 0) {
-                                 Element <- Element[-idx, ]
-                             }
-                             Object@RSF <<- Element$RSF_S
-                         }
-                         #now identify rows corresponding to the selected orbital
-                         idx <- grep(Orbital, Element$Orbital) #for Orbital="4f" idx == c(3, 4) corresponding to "4f7/2", 4f5/2"
-                         if (length(idx) > 1){
-                             JJ <- sapply(strsplit(Element$Orbital, Orbital), function(x) x[2])  #extract "7/2", "5/2" strings
-                             JJ <- na.omit(JJ)  #omits NA from JJ
-                             JJ <- as.numeric(substr(JJ, start=1, stop=1)) #extract '7' and '5' which now can be converted in numbers
-                             ii <- which(JJ == max(JJ))
-                             idx <- idx[ii]  #select the index corresponding to the max LS value "7/2"
-                             if (Object@Flags[3] == FALSE) {
-                                 Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
+                             Element <<- IniElement(Element)
+                             if (Object@Flags[3] == FALSE) {   #eliminate rows corresponding to
+                                 idx <- which(is.na(Element$RSF_K))# NAs present in RSF_K column Kratos
+                                 if (length(idx) > 0) {
+                                     Element <- Element[-idx, ]
+                                 }
+                                 Object@RSF <<- Element$RSF_K
                              } else {
-                                 Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                                 idx <- which(is.na(Element$RSF_S))# NAs present in RSF_S column Scienta
+                                 if (length(idx) > 0) {
+                                     Element <- Element[-idx, ]
+                                 }
+                                 Object@RSF <<- Element$RSF_S
                              }
-                         } else {  #orbital is like 1s, 2p, 3d... LS not indicated
+                             #now identify rows corresponding to the selected orbital
+                             idx <- grep(Orbital, Element$Orbital) #for Orbital="4f" idx == c(3, 4) corresponding to "4f7/2", 4f5/2"
+                             if (length(idx) > 1){
+                                 JJ <- sapply(strsplit(Element$Orbital, Orbital), function(x) x[2])  #extract "7/2", "5/2" strings
+                                 JJ <- na.omit(JJ)  #omits NA from JJ
+                                 JJ <- as.numeric(substr(JJ, start=1, stop=1)) #extract '7' and '5' which now can be converted in numbers
+                                 ii <- which(JJ == max(JJ))
+                                 idx <- idx[ii]  #select the index corresponding to the max LS value "7/2"
+                                 if (Object@Flags[3] == FALSE) {
+                                     Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
+                                 } else {
+                                     Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                                 }
+                             } else {  #orbital is like 1s, 2p, 3d... LS not indicated
 #    Element Orbital  BE     KE    RSF_K   RSF_S
 #333       N     1s   397  1089.6  0.477   1.8
 #just one element identified by idx
-                             if (Object@Flags[3] == FALSE) {
-                                 Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
-                             } else {
-                                 Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                                 if (Object@Flags[3] == FALSE) {
+                                     Object@RSF <<- Element$RSF_K[idx]  #Kratos spectra
+                                 } else {
+                                     Object@RSF <<- Element$RSF_S[idx]  #Scienta spectra
+                                 }
                              }
                          }
                      })

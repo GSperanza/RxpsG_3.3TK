@@ -21,7 +21,8 @@ XPSOverlay <- function(){
                 tkmessageBox(message="Please Save Selection" , title = "WARNING: SELECTION NOT SAVED",  icon = "error")
                 return()
             }
-            Limits <- XPSovEngine(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim)
+            if (tclvalue(LEGENDCK) == 1) { Plot_Args$auto.key <<- AutoKey_Args } #legends enabled
+            Limits <- XPSovEngine(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
             Xlim <<- Limits[1:2]
             Ylim <<- Limits[3:4]
    }
@@ -90,70 +91,98 @@ XPSOverlay <- function(){
 
          if ( tclvalue(SETLINES) == "ON" && tclvalue(SETSYMBOLS) == "OFF") {
             Plot_Args$type <<- "l"  # lines only
+            AutoKey_Args$type <<- "l"
             AutoKey_Args$lines <<- TRUE
             AutoKey_Args$points <<- FALSE
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
-            Plot_Args$lty <<- LType
+            Plot_Args$lty <<- rep(LType[1], 20)
+            Plot_Args$pch <<- rep(STypeIndx[1], 20)
             Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
             Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
-            if (tclvalue(SETLINES) == "pattern") {
+            if (tclvalue(LINETYPE) == "Patterns") {
+                Plot_Args$lty <<- LType
                 Plot_Args$par.settings$superpose.line$lty <<- LType
             }
-            if (tclvalue(BWCOL)=="MonoChrome") {
-               AutoKey_Args$col <<- rep(Colors[1], 20)
+            if (tclvalue(BWCOL)=="Black/White") {
                PlotParameters$Colors <<- Colors[1]
-               Plot_Args$par.settings$superpose.line$col <<- rep(Colors[1], 20) #MonoChrome plot
+               Plot_Args$lty <<- LType
                Plot_Args$par.settings$superpose.line$lty <<- LType
+               Plot_Args$par.settings$superpose.line$col <<- rep(Colors[1], 20) #MonoChrome plot
+               Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+               Plot_Args$par.settings$superpose.symbol$col <<- rep(Colors[1], 20)
+               AutoKey_Args$col <<- rep(Colors[1], 20)
             }
          }
 
          if ( tclvalue(SETLINES) == "OFF" && tclvalue(SETSYMBOLS) == "ON") {
             Plot_Args$type <<- "p"  # symbols only
+            AutoKey_Args$type <<- "p"
             AutoKey_Args$lines <<- FALSE
             AutoKey_Args$points <<- TRUE
+            AutoKey_Args$pch <<- STypeIndx
             AutoKey_Args$col <<- Colors
             PlotParameters$Colors <<- Colors
+            Plot_Args$lty <<- rep(LType[1], 20)
             Plot_Args$pch <<- rep(STypeIndx[1], 20)
+            Plot_Args$par.settings$superpose.line$lty <<- rep(LType[1], 20)
             Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
             Plot_Args$par.settings$superpose.symbol$col <<- Colors
-            if (tclvalue(SETSYMBOLS) == "multi-symbols") {
+            if (tclvalue(SYMTYPE) == "Multi-Symbols") {
                 Plot_Args$pch <<- STypeIndx
                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
             }
-            if (tclvalue(BWCOL) == "MonoChrome") {
+            if (tclvalue(BWCOL) == "Black/White") {
                PlotParameters$Colors <<- Colors[1]
                Plot_Args$pch <<- STypeIndx
-               Plot_Args$par.settings$superpose.symbol$col <<- rep(Colors[1], 20)
                Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+               if (tclvalue(SYMTYPE) == "Single-Symbols") {
+                   Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                   Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+               }
+               Plot_Args$par.settings$superpose.symbol$col <<- rep(Colors[1], 20)
                AutoKey_Args$col <<- rep(Colors[1], 20)
             }
          }
 
          if ( tclvalue(SETLINES) == "ON" && tclvalue(SETSYMBOLS) == "ON") {
             Plot_Args$type <<- "b"  #both: line and symbols
+            AutoKey_Args$type <<- "b"
             AutoKey_Args$lines <<- TRUE
             AutoKey_Args$points <<- TRUE
-            Plot_Args$lty <<- LType
-            Plot_Args$pch <<- STypeIndx
-            if (tclvalue(BWCOL)=="MonoChrome") {
-               AutoKey_Args$col <<- rep(Colors[1], 20)
+            Plot_Args$lty <<- rep(LType[1], 20)
+            Plot_Args$pch <<- rep(STypeIndx[1], 20)
+            if (tclvalue(BWCOL)=="Black/White") {
                PlotParameters$Colors <<- Colors[1]
+               Plot_Args$lty <<- LType
                Plot_Args$par.settings$superpose.line$lty <<- LType
                Plot_Args$par.settings$superpose.line$col <<- rep(Colors[1], 20) #MonoChrome plot
-               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+               Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
                Plot_Args$par.settings$superpose.symbol$col <<- rep(Colors[1], 20)
-            } else {
-               AutoKey_Args$col <<- Colors
+               AutoKey_Args$col <<- rep(Colors[1], 20)
+               if (tclvalue(LINETYPE) == "Solid") {
+                   Plot_Args$lty <<- rep(LType[1], 20)
+                   Plot_Args$par.settings$superpose.line$lty <<- rep(LType[1], 20)
+               }
+               if (tclvalue(SYMTYPE) == "Multi-Symbols") {
+                   Plot_Args$pch <<- STypeIndx
+                   Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+               }
+            } else if (tclvalue(BWCOL)=="RainBow") {
+               Plot_Args$lty <<- rep(LType[1], 20)
+               Plot_Args$pch <<- rep(STypeIndx[1], 20)
                PlotParameters$Colors <<- Colors
+               Plot_Args$par.settings$superpose.line$lty <<- rep(LType[1], 20)
                Plot_Args$par.settings$superpose.line$col <<- Colors #Rainbow plot
-               Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
-               if (tclvalue(SETLINES) == "pattern") {
+               Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[1], 20)
+               Plot_Args$par.settings$superpose.symbol$col <<- Colors
+               AutoKey_Args$col <<- Colors
+               if (tclvalue(LINETYPE) == "Patterns") {
+                   Plot_Args$lty <<- LType
                    Plot_Args$par.settings$superpose.line$lty <<- LType
                }
-               Plot_Args$par.settings$superpose.symbol$col <<- Colors
-               Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
-               if (tclvalue(SETSYMBOLS) == "multi-symbols") {
+               if (tclvalue(SYMTYPE) == "Multi-Symbols") {
+                   Plot_Args$pch <<- STypeIndx
                    Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
                }
             }
@@ -166,6 +195,7 @@ XPSOverlay <- function(){
          if (FNameList == "0"){       #if the last FName is de-selected
              LL <- length(SelectedNames$XPSSample)  #remove the last FName from the list of selected files
              SelectedNames$XPSSample <<- SelectedNames$XPSSample[-LL]
+cat("\n 111", SelectedNames$CoreLines)
              LL <- length(SelectedNames$CoreLines)
              if (SelectedNames$CoreLines[LL] == "-----") {
                  SelectedNames$CoreLines <<- SelectedNames$CoreLines[-LL] #Remove the last Coreline from the list of selected Corelines
@@ -210,7 +240,7 @@ XPSOverlay <- function(){
                  NN <- (ii-1)*7    #jj runs on the number of column_rows
                  for (jj in 1:7) {
                       if((jj+NN) > LL) {break}
-                          T1CoreLineCK <<- tkcheckbutton(T1frameCoreLines, text=CoreLineList[(jj+NN)], variable=CL1, onvalue = CoreLineList[(jj+NN)], offvalue = 0,
+                          T1CoreLineCK <<- tkcheckbutton(T1frameCoreLines, text=CoreLineList[(jj+NN)], variable=CL1, onvalue = (jj+NN), offvalue = 0,
                                command=function(){
                                   NCoreLines <<- NCoreLines+1
                                   FName <- tclvalue(XS1)
@@ -220,8 +250,9 @@ XPSOverlay <- function(){
                                       return()
                                   }
                                   NamesList <<- SelectedNames   #a temporary variable used to allow changes in the checkbox
-                                  SpectList <- tclvalue(CL1)
-                                  if (SpectList == "0"){ 
+                                  SpectList <- as.integer(tclvalue(CL1))
+                                  SpectList <- CoreLineList[SpectList]
+                                  if (SpectList == "0"){
                                       SpectList <- NULL
                                   }
                                   LL <- length(SpectList)
@@ -265,7 +296,73 @@ XPSOverlay <- function(){
 
          }
    }
-   
+
+   SetBWCol <- function(){
+            CLPalette <<- data.frame(Colors=rep(Colors[1], 20), stringsAsFactors=FALSE)
+            FitColors <<- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=rep(XPSSettings$ComponentsColor[1],20),
+                                                      FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
+            CLPalette$Colors <<- "black"
+            PlotParameters$Colors <<- "black"
+            Plot_Args$par.settings$superpose.symbol$col <<- "black"
+            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+            Plot_Args$par.settings$superpose.line$col <<- "black"
+            Plot_Args$par.settings$superpose.line$lty <<- LType
+
+            AutoKey_Args$col <<- "black"
+#            Plot_Args$par.settings$superpose.symbol$col <<- "gray45"
+#            Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+#            Plot_Args$par.settings$superpose.line$col <<- "gray45"
+#            Plot_Args$par.settings$superpose.line$lty <<- LType
+#            AutoKey_Args$col <<- "gray45"
+
+            #Fit Color
+            FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
+            tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
+            tkconfigure(FTColor, background="black")
+            FitColors$FitColor <<- "black"
+            PlotParameters$FitCol <<- "black"
+            Plot_Args$lty <<- LType
+            Plot_Args$pch <<- STypeIndx
+            tclvalue(LEGTXTCOLOR) <- "MonoChrome"
+            if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "Multi-Symbols"
+            if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "Patterns"
+   }
+
+   SetRainbowCol <- function(){
+#            CLPalette <<- data.frame(Colors=Colors, stringsAsFactors=FALSE)
+            PlotParameters$Colors <<- Colors
+            PlotParameters$FitCol$BaseColor <<- FitColors$BaseColor
+            PlotParameters$FitCol$FitColor <<- FitColors$FitColor
+
+            T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
+            tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
+
+            PlotParameters$Colors <<- Colors
+            PlotParameters$FitCol$BaseColor <<- 
+            Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
+            AutoKey_Args$col <<- Colors
+            tclvalue(LINETYPE) <- "solid"
+            tclvalue(SYMTYPE) <- "Single-Symbol"
+            tclvalue(LEGTXTCOLOR) <- "PolyChrome"
+
+            if (tclvalue(SETLINES) == "ON") {
+                LineType <- LType[1]
+                if (tclvalue(LINETYPE) == "Patterns") LineType <- LType
+                Plot_Args$lty <<- LineType
+                Plot_Args$par.settings$superpose.line$lty <<- LineType
+                Plot_Args$par.settings$superpose.line$col <<- Colors
+            }
+            if (tclvalue(SETSYMBOLS) == "ON"){
+                Symtype <- STypeIndx[1]
+                if ( tclvalue(SYMTYPE) == "multi-symbol") Symtype <- STypeIndx
+                Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                Plot_Args$pch <<- Symtype
+                Plot_Args$par.settings$superpose.symbol$pch <<- Symtype
+                Plot_Args$par.settings$superpose.symbol$fill <<- Colors
+            }
+            tclvalue(LEGTXTCOLOR) <- "RainBow"
+   }
+
 
 #----- reset parameters to the initial values -----
    ResetPlot <- function(){
@@ -300,11 +397,11 @@ XPSOverlay <- function(){
             tclvalue(GRID) <- "Grid OFF"
             tclvalue(SETLINES) <- "ON"
             tclvalue(SETSYMBOLS) <- "OFF"
-            tclvalue(LINETYPE) <- "patterns"
+            tclvalue(LINETYPE) <- "Patterns"
             tclvalue(LINEWIDTH) <- "1"
-            tclvalue(SYMTYPE) <- "single-symbol"
+            tclvalue(SYMTYPE) <- "Single-Symbol"
             tclvalue(SYMSIZE) <- "0.8"
-            tclvalue(FCSTYLE) <- "dotted"
+            tclvalue(FCSTYLE) <- "Dotted"
             tclvalue(STRIPCOLOR) <- "grey"
             tclvalue(TICKPOS) <- "LeftBottom"
             tclvalue(XSCALETYPE) <- "Regular"
@@ -336,8 +433,13 @@ XPSOverlay <- function(){
             LType <<- XPSSettings$LType
             SType <<- XPSSettings$Symbols
             STypeIndx <<- XPSSettings$SymIndx
-            FitColors <<- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=XPSSettings$ComponentsColor,
-                           FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
+            if (XPSSettings$General[8] == "PolyChromeFC"){
+                FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=XPSSettings$ComponentsColor,
+                                  FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
+            } else if (XPSSettings$General[8] == "MonoChromeFC"){
+                FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=rep(XPSSettings$ComponentsColor[1],20),
+                                  FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
+            }
             CLPalette <<- data.frame(Colors=Colors, stringsAsFactors=FALSE)
 
             PlotParameters <<- DefaultPlotParameters
@@ -404,8 +506,8 @@ XPSOverlay <- function(){
 
    T1CoreLineCK <- NULL
 
-   plot.new()                                 #reset graphical window
-   
+   plot.new()  #reset graphical window
+
    # list of graphical variables
    PatternList <- NULL
    FontSize <- c(0.6,0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,2.6,2.8,3)
@@ -413,13 +515,19 @@ XPSOverlay <- function(){
    XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
    Colors <- XPSSettings$Colors
    LType <- XPSSettings$LType
-#LType <- c("dashed", "solid", "dotted", "dotdash")
+#LType <- c("dashed", "Solid", "dotted", "dotdash")
    SType <- XPSSettings$Symbols
    STypeIndx <- XPSSettings$SymIndx
    CLPalette <- data.frame(Colors=Colors, stringsAsFactors=FALSE)
-   FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=XPSSettings$ComponentsColor,
+   if (XPSSettings$General[8] == "PolyChromeFC"){
+       CLPalette <- data.frame(Colors=Colors, stringsAsFactors=FALSE)
+       FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=XPSSettings$ComponentsColor,
                            FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
-
+   } else if (XPSSettings$General[8] == "MonoChromeFC"){
+       CLPalette <- data.frame(Colors=rep(Colors[1], 20), stringsAsFactors=FALSE)
+       FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=rep(XPSSettings$ComponentsColor[1], 20),
+                           FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
+   }
 #-------------------------------------------------------------------------------------------------
 #   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash",     #definisco 20 tipi divesi di line pattern
 #            "twodash", "F8", "431313", "22848222", "12126262",
@@ -491,8 +599,6 @@ XPSOverlay <- function(){
    PlotParameters$ZenithRot <- 15
 
    PlotParameters$Annotate <- FALSE
-
-
    DefaultPlotParameters <- PlotParameters
 
 #--- commands for lattice -----
@@ -517,10 +623,12 @@ XPSOverlay <- function(){
                     grid = FALSE
                   )
 
-   AutoKey_Args <- list( space="top",
-                         text=get("activeSpectName", envir=.GlobalEnv),
+   AutoKey_Args <- list( auto.key = FALSE,
+                         space="top",
+                         text= "",
                          cex = 1,
                          type= "l",
+                         pch = 1,
                          lines=TRUE,
                          points=FALSE,
                          col="black",
@@ -583,6 +691,104 @@ XPSOverlay <- function(){
                            if (tclvalue(TRED) == 1 && tclvalue(PLOTTYPE) != "Spectrum" ){  #3D plot active
                               tkmessageBox(message="3d plot active: only SPECTRUM mode allowed", title = "Warning 3D active", icon = "warning")
                            } else {
+                              if(tclvalue(BWCOL) == "Black/White") {
+                                 CLPalette$Colors <<- rep("black", 20)
+                                 Plot_Args$par.settings$superpose.symbol$col <<- "black"
+                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                 Plot_Args$par.settings$superpose.line$col <<- "black"
+                                 Plot_Args$par.settings$superpose.line$lty <<- LType
+                                 PlotParameters$Colors <<- rep("black", 20)
+                                 FitColors$CompColor <<- rep("gray45", 20)
+                                 Plot_Args$par.settings$superpose.symbol$col <<- "gray45"
+                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                 Plot_Args$par.settings$superpose.line$col <<- "gray45"
+                                 Plot_Args$par.settings$superpose.line$lty <<- LType
+                                 AutoKey_Args$col <<- "gray45"
+                                 PlotParameters$FitCol <<- FitColors
+                                 Plot_Args$lty <<- LType
+                                 Plot_Args$pch <<- STypeIndx
+                                 if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "Multi-Symbols"
+                                 if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "Patterns"
+                                 Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
+                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                 Plot_Args$par.settings$superpose.line$col <<- rep("black", 20)
+                                 Plot_Args$par.settings$superpose.line$lty <<- LType
+                                 Plot_Args$par.settings$strip.background$col <<- "grey90"
+                                 AutoKey_Args$col <<- "black"
+                              } else if (tclvalue(BWCOL) == "RainBow"){
+                                 CLPalette$Colors <<- Colors
+                                 Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                 Plot_Args$par.settings$superpose.symbol$pch <<- rep(STypeIndx[[1]], 20)
+                                 Plot_Args$par.settings$superpose.line$col <<- Colors
+                                 Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                 PlotParameters$Colors <<- Colors
+                                 if (XPSSettings$General[8] == "MonoChromeFC"){
+                                     FitColors$CompColor <<- rep("gray45", 20)
+                                     Plot_Args$par.settings$superpose.symbol$col <<- "gray45"
+                                     Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                     Plot_Args$par.settings$superpose.line$col <<- "gray45"
+                                     Plot_Args$par.settings$superpose.line$lty <<- LType
+                                     AutoKey_Args$col <<- "gray45"
+                                     PlotParameters$FitCol <<- FitColors
+                                     Plot_Args$lty <<- LType
+                                     Plot_Args$pch <<- STypeIndx
+                                     if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "Multi-Symbols"
+                                     if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "Patterns"
+                                     Plot_Args$par.settings$superpose.symbol$col <<- rep("black", 20)
+                                     Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                     Plot_Args$par.settings$superpose.line$col <<- rep("black", 20)
+                                     Plot_Args$par.settings$superpose.line$lty <<- LType
+                                     Plot_Args$par.settings$strip.background$col <<- "grey90"
+                                     AutoKey_Args$col <<- rep("black", 20)
+                                 } else if (XPSSettings$General[8] == "PolyChromeFC"){
+                                     FitColors$CompColor <<- rep("gray45", 20)
+                                     Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                     Plot_Args$par.settings$superpose.symbol$pch <<- rep(1, 20)
+                                     Plot_Args$par.settings$superpose.line$col <<- Colors
+                                     Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                     AutoKey_Args$col <<- Colors
+                                     PlotParameters$FitCol <<- FitColors
+                                     Plot_Args$lty <<- rep("solid", 20)
+                                     Plot_Args$pch <<- rep(1, 20)
+                                     if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "Multi-Symbols"
+                                     if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "Patterns"
+                                     Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                     Plot_Args$par.settings$superpose.symbol$pch <<- rep(1, 20)
+                                     Plot_Args$par.settings$superpose.line$col <<- Colors
+                                     Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                     Plot_Args$par.settings$strip.background$col <<- "grey90"
+                                     AutoKey_Args$col <<- Colors
+                                 }
+                                 FitColors$FitColor <<- XPSSettings$FitColor
+                                 PlotParameters$Colors <<- Colors
+                                 lty <- tclvalue(LINETYPE)
+                                 if (tclvalue(SETLINES) == "ON") {
+                                     if (lty == "Solid") {
+                                         Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                     } else if (lty == "Patterns") {
+                                         Plot_Args$par.settings$superpose.line$lty <<- LType
+                                     }
+                                     Plot_Args$par.settings$superpose.line$col <<- Colors
+                                 }
+                                 if (tclvalue(SETSYMBOLS) == "ON"){
+                                     symty <- tclvalue(SYMTYPE)
+                                     if (symty == "Single-Symbol") {
+                                         Plot_Args$par.settings$superpose.symbol$pch <<- rep(1, 20)
+                                     } else if (symty == "multi-symbol") {
+                                         Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                     }
+                                     Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                     Plot_Args$par.settings$superpose.symbol$fill <<- Colors
+                                 }
+                                 PlotParameters$Colors <<- Colors
+                                 Plot_Args$lty <<- rep("solid", 20)
+                                 Plot_Args$pch <<- rep(STypeIndx[1], 20)
+                                 Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
+                                 AutoKey_Args$col <<- Colors
+                                 tclvalue(LINETYPE) <- "Solid"
+                                 tclvalue(SYMTYPE) <- "Single-Symbol"
+                                 tclvalue(LEGTXTCOLOR) <- "PolyChrome"
+                              }
                               PlotParameters$OverlayType <<- tclvalue(PLOTTYPE)
                               CtrlPlot()
                            }
@@ -951,7 +1157,7 @@ XPSOverlay <- function(){
      TRED <- tclVar(FALSE)
      objFunctTreD <- tkcheckbutton(T2frame33, text="3D Rendering", variable=TRED, onvalue = 1, offvalue = 0,
                          command=function(){
-                           PlotParameters$TreD <<- as.logical(as.numeric(tclvalue(TRED))) 
+                           PlotParameters$TreD <<- as.logical(as.numeric(tclvalue(TRED)))
                            OvType <- tclvalue(PLOTTYPE)
                            if (OvType != "Spectrum") {
                               tkmessageBox(message="3D plot allowed only for plot mode SPECTRUM" , title = "WARNING: WRONG MODE PLOT",  icon = "warning")
@@ -1262,10 +1468,10 @@ XPSOverlay <- function(){
      tkgrid( ttklabel(T3group2, text="Double click to change colors"),
              row = 1, column = 1, padx = 5, pady = 5)
 
-     T3F_Palette <- ttklabelframe(T3group2, text="SET COLOR PALETTE", borderwidth=2, padding=c(5,5,5,5))
-     tkgrid(T3F_Palette, row = 2, column = 1, padx = 5, pady = 0, sticky="w")
+     T3F_Palette <- ttkframe(T3group2, borderwidth=0, padding=c(0,0,0,0) )
+     tkgrid(T3F_Palette, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-     T3F_Colors <- ttklabelframe(T3F_Palette, text="CoreLines Baseline FitComp  Fit", borderwidth=2, padding=c(5,5,5,5))
+     T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
      #building the widget to change CL colors
      for(ii in 1:20){ #column1 colors 1 - 20
@@ -1273,7 +1479,7 @@ XPSOverlay <- function(){
          tkgrid(CLcolor[[ii]], row = ii, column = 1, padx = c(5,0), pady = 1, sticky="w")
          tkbind(CLcolor[[ii]], "<Double-1>", function( ){
                          X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
-                         Y <- tkwinfo("pointery", OverlayWindow)
+                         Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                          WW <- tkwinfo("containing", X, Y)
                          BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
                          BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
@@ -1303,27 +1509,27 @@ XPSOverlay <- function(){
              tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
              tkbind(FCcolor[[ii]], "<Double-1>", function( ){
                           X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
-                          Y <- tkwinfo("pointery", OverlayWindow)
+                          Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                           WW <- tkwinfo("containing", X, Y)
                           BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
                           BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
                           colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
                           BKGcolor <- as.character(.Tcl('tk_chooseColor'))
+                          tkconfigure(FCcolor[[colIdx]], background=BKGcolor)
                           FitColors$CompColor[colIdx] <<- BKGcolor
-                          tkconfigure(FCcolor[[colIdx]], background=FitColors$CompColor[colIdx])
                           PlotParameters$FitCol <<- FitColors
                           CtrlPlot()
                        })
          }
      }
      #If FitComp = Singlecolor building the widget to change the Baseline FitComp and Fit colors
-     if (XPSSettings$General[8] == "FC.MonoChrome"){
+     if (XPSSettings$General[8] == "MonoChromeFC"){
           FCcolor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$CompColor[1])
           tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
           tkbind(FCcolor, "<Double-1>", function( ){
                            FitColors$CompColor[1] <<- as.character(.Tcl('tk_chooseColor'))
-                           FitColors$CompColor <<- rep(FitColors$CompColor[1], 20)
                            tkconfigure(FCcolor, background=FitColors$CompColor[1])
+                           FitColors$CompColor <<- rep(FitColors$CompColor[1], 20)
                            PlotParameters$FitCol <<- FitColors
                            CtrlPlot()
                        })
@@ -1333,8 +1539,8 @@ XPSOverlay <- function(){
      tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
      tkbind(FTColor, "<Double-1>", function( ){
                       FitColors$FitColor[1] <<- as.character(.Tcl('tk_chooseColor'))
-                      FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
                       tkconfigure(FTColor, background=FitColors$FitColor[1])
+                      FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
                       PlotParameters$FitCol <<- FitColors
                       CtrlPlot()
                    })
@@ -1343,113 +1549,115 @@ XPSOverlay <- function(){
      tkgrid(T3F_BW_Col, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      BWCOL <- tclVar("RainBow")
-     T3_BW_Col <- ttkcombobox(T3F_BW_Col, width = 15, textvariable = BWCOL, values = c("MonoChrome", "RainBow"))
+     T3_BW_Col <- ttkcombobox(T3F_BW_Col, width = 15, textvariable = BWCOL, values = c("Black/White", "RainBow"))
      tkbind(T3_BW_Col, "<<ComboboxSelected>>", function(){
-                           if(tclvalue(BWCOL) == "MonoChrome") {
+                           if(tclvalue(BWCOL) == "Black/White") {
+                              tclvalue(LINETYPE) <<- "Patterns"
+                              ClearWidget(T3F_Palette)
                               #now generate MonoChrome palette
-                              tkdestroy(CLcolor[[1]])  #erase CL color cells
-                              CLcolor[[1]] <<- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=Colors[1])
-                              tkgrid(CLcolor[[1]], row = 1, column = 1, padx = c(5,0), pady = 1, sticky="w")
-                              tkbind(CLcolor[[1]], "<Double-1>", function(){
-                                        Colors[1] <<- as.character(.Tcl('tk_chooseColor'))
-                                        tkconfigure(CLcolor[[1]], background=Colors[1])
-                                        PlotParameters$Colors <<- Colors[1]
+                              T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
+                              tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
 
-                                        tclvalue(LINETYPE) <- "patterns"
-                                        tclvalue(SYMTYPE) <- "multi-symbols"
-                                        tclvalue(LEGTXTCOLOR) <- "MonoChrome"
-                                        PlotParameters$Colors <<- Colors[1]
-                                        Plot_Args$lty <<- LType
-                                        Plot_Args$pch <<- STypeIndx
-                                        if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "multi-symbols"
-                                        if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "patterns"
-                                        Plot_Args$par.settings$superpose.symbol$col <<- Colors[1]
-                                        Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                                        Plot_Args$par.settings$superpose.line$col <<- "black"
-                                        Plot_Args$par.settings$superpose.line$lty <<- LType
-                                        Plot_Args$par.settings$strip.background$col <<- "grey90"
-                                        AutoKey_Args$col <<- Colors[1]
-                                        CtrlPlot()
-                                   })
-                              for(ii in 2:20){
-                                  tkdestroy(CLcolor[[ii]])  #erase CL color cells
-                                  CLcolor[[ii]] <<- ttklabel(T3F_Colors, text=" ", width=6, font="Serif 8") #Column of empty cells
-                                  tkgrid(CLcolor[[ii]], row = ii, column = 1, padx = c(5,0), pady = 1, sticky="w")
-                              }
-                              PlotParameters$Colors <<- Colors[1]
-                              tclvalue(LINETYPE) <- "patterns"
-                              tclvalue(SYMTYPE) <- "multi-symbols"
-                              tclvalue(LEGTXTCOLOR) <- "MonoChrome"
-                              PlotParameters$Colors <<- Colors[1]
-                              Plot_Args$lty <<- LType
-                              Plot_Args$pch <<- STypeIndx
-                              if (tclvalue(LINETYPE) == "OFF") tclvalue(SYMTYPE) <- "multi-symbols"
-                              if (tclvalue(SYMTYPE) == "OFF") tclvalue(LINETYPE) <- "patterns"
-                              Plot_Args$par.settings$superpose.symbol$col <<- Colors[1]
-                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                              Plot_Args$par.settings$superpose.line$col <<- "black"
-                              Plot_Args$par.settings$superpose.line$lty <<- LType
-                              Plot_Args$par.settings$strip.background$col <<- "grey90"
-                              AutoKey_Args$col <<- Colors[1]
-                         } else {
-                              #now generate PolyChrome palette
+                              CLcolor[[1]] <<- ttklabel(T3F_Colors, text=" ", width=6, font="Serif 8") #Column of empty cells
+                              tkgrid(CLcolor[[1]], row = 1, column = 1, padx = 5, pady = 1, sticky="w")
+                              tkconfigure(CLcolor[[1]], background="black")
+
+                              BLColor <<- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background="black")
+                              tkgrid(BLColor, row = 1, column = 2, padx = c(12, 0), pady = 1, sticky="w")
+                              tkconfigure(BLColor, background="black")
+                              FitColors$BaseColor <<- rep("black", 20)
+
+                              FCcolor[[1]] <<- ttklabel(T3F_Colors, text=" ", width=6, font="Serif 8", background="black")
+                              tkgrid(FCcolor[[1]], row = 1, column = 3, padx = c(12, 0), pady = 1, sticky="w")
+                              tkconfigure(FCcolor[[1]], background="gray45")
+                              FitColors$CompColor <<- rep("gray45", 20)
+                              SetBWCol()
+                           } else if (tclvalue(BWCOL) == "RainBow"){
+                              ClearWidget(T3F_Palette)
+                              #now generate MonoChrome palette
+                              T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
+                              tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
                               for(ii in 1:20){ #column1 colors 1 - 20
-                                  tkdestroy(CLcolor[[ii]])  #erase CL color cells
                                   CLcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=Colors[ii])
                                   tkgrid(CLcolor[[ii]], row = ii, column = 1, padx = c(5,0), pady = 1, sticky="w")
                                   tkbind(CLcolor[[ii]], "<Double-1>", function( ){
-                                             X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
-                                             Y <- tkwinfo("pointery", OverlayWindow)
-                                             WW <- tkwinfo("containing", X, Y)
-                                             BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                             BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                             colIdx <- grep(BKGcolor, Colors) #
-                                             BKGcolor <- as.character(.Tcl('tk_chooseColor'))
-                                             Colors[colIdx] <<- BKGcolor
-                                             tkconfigure(CLcolor[[colIdx]], background=Colors[colIdx])
-                                             PlotParameters$Colors <<- Colors
+                                                      X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
+                                                      Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
+                                                      WW <- tkwinfo("containing", X, Y)
+                                                      BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+                                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+                                                      colIdx <- grep(BKGcolor, Colors) #
+                                                      BKGcolor <- as.character(.Tcl('tk_chooseColor'))
+                                                      tkconfigure(CLcolor[[colIdx]], background=BKGcolor)
+                                                      Colors[colIdx] <<- BKGcolor
+                                                      PlotParameters$Colors <<- Colors
 
-                                             if (tclvalue(SETLINES) == "ON") {
-                                                 lty <- tclvalue(LINETYPE)
-                                                 if (lty == "patterns") lty <- LType
-                                                 Plot_Args$par.settings$superpose.line$lty <<- lty
-                                                 Plot_Args$par.settings$superpose.line$col <<- Colors
-                                             }
-                                             if (tclvalue(SETSYMBOLS) == "ON"){
-                                                 symty <- tclvalue(SYMTYPE)
-                                                 if (symty == "single-symbol") symty <- STypeIndx[1]
-                                                 if (symty == "multi-symbol") symty <- STypeIndx
-                                                 Plot_Args$par.settings$superpose.symbol$col <<- Colors
-                                                 Plot_Args$par.settings$superpose.symbol$pch <<- symty
-                                                 Plot_Args$par.settings$superpose.symbol$fill <<- Colors
-                                             }
-                                             LType <- tclvalue(LINETYPE)
-                                             Plot_Args$pch <<- STypeIndx[1]
-                                             Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
-                                             AutoKey_Args$col <<- Colors
-                                             CtrlPlot()
-                                        })
+                                                      if (tclvalue(SETLINES) == "ON") {
+                                                          lty <- tclvalue(LINETYPE)
+                                                          if (lty == "Solid") {
+                                                              Plot_Args$par.settings$superpose.line$lty <<- rep("solid", 20)
+                                                          } else if (lty == "Patterns") {
+                                                              Plot_Args$par.settings$superpose.line$lty <<- LType
+                                                          }
+                                                          Plot_Args$par.settings$superpose.line$col <<- Colors
+                                                      }
+                                                      if (tclvalue(SETSYMBOLS) == "ON"){
+                                                          symty <- tclvalue(SYMTYPE)
+                                                          if (symty == "Single-Symbol") {
+                                                              Plot_Args$par.settings$superpose.symbol$pch <<- rep(1, 20)
+                                                          } else if (symty == "multi-symbol") {
+                                                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+                                                          }
+                                                          Plot_Args$par.settings$superpose.symbol$col <<- Colors
+                                                          Plot_Args$par.settings$superpose.symbol$fill <<- Colors
+                                                      }
+                                                      CtrlPlot()
+                                         })
                               }
-                              tclvalue(LEGTXTCOLOR) <- "RainBow"
-                              if (tclvalue(SETLINES) == "ON") {
-                                  lty <- tclvalue(LINETYPE)
-                                  if (lty == "patterns") lty <- LType
-                                  Plot_Args$par.settings$superpose.line$lty <<- lty
-                                  Plot_Args$par.settings$superpose.line$col <<- Colors
+                              BLColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$BaseColor[1])
+                              tkgrid(BLColor, row = 1, column = 2, padx = c(12,0), pady = 1, sticky="w")
+                              tkbind(BLColor, "<Double-1>", function( ){
+                                              BaseLinColors <- as.character(.Tcl('tk_chooseColor'))
+                                              tkconfigure(BLColor, background=BaseLinColors)
+                                              FitColors$BaseColor <<- rep(BaseLinColors, 20)
+                                         })
+
+                              if (XPSSettings$General[8] == "MonoChromeFC"){
+                                  FCcolor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$CompColor[1])
+                                  tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
+                                  tkbind(FCcolor, "<Double-1>", function( ){
+                                             FitColors$CompColor[1] <<- as.character(.Tcl('tk_chooseColor'))
+                                             tkconfigure(FCcolor, background=FitColors$CompColor[1])
+                                             FitColors$CompColor <<- rep(FitColors$CompColor[1], 20)
+                                             PlotParameters$FitCol <<- FitColors
+                                         })
+                              } else if (XPSSettings$General[8] == "PolyChromeFC")
+                                 for(ii in 1:20){
+                                     FCcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=FitColors$CompColor[ii])
+                                     tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
+                                     tkbind(FCcolor[[ii]], "<Double-1>", function( ){
+                                                         X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
+                                                         Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
+                                                         WW <- tkwinfo("containing", X, Y)
+                                                         BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+                                                         BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+                                                         colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
+                                                         BKGcolor <- as.character(.Tcl('tk_chooseColor'))
+                                                         tkconfigure(FCcolor[[colIdx]], background=BKGcolor)
+                                                         FitColors$CompColor[colIdx] <<- BKGcolor
+                                                         PlotParameters$FitCol <<- FitColors
+                                         })
                               }
-                              if (tclvalue(SETSYMBOLS) == "ON"){
-                                  symty <- tclvalue(SYMTYPE)
-                                  if (symty == "single-symbol") symty <- STypeIndx[1]
-                                  if (symty == "multi-symbol") symty <- STypeIndx
-                                  Plot_Args$par.settings$superpose.symbol$col <<- Colors
-                                  Plot_Args$par.settings$superpose.symbol$pch <<- symty
-                                  Plot_Args$par.settings$superpose.symbol$fill <<- Colors
-                              }
-                              LType <- tclvalue(LINETYPE)
-                              PlotParameters$Colors <<- Colors
-                              Plot_Args$pch <<- STypeIndx[1]
-                              Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
-                              AutoKey_Args$col <<- Colors
+
+                              FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
+                              tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
+                              tkbind(FTColor, "<Double-1>", function( ){
+                                                FitColors$FitColor[1] <<- as.character(.Tcl('tk_chooseColor'))
+                                                FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
+                                                tkconfigure(FTColor, background=FitColors$FitColor[1])
+                                                PlotParameters$FitCol <<- FitColors
+                                         })
+                              SetRainbowCol()
                            }
                            CtrlPlot()
                     })
@@ -1488,7 +1696,7 @@ XPSOverlay <- function(){
      for(ii in 1:2){
          T3_SetSymbols <- ttkradiobutton(T3F_SetSymbols, text=Items[ii], variable=SETSYMBOLS, value=Items[ii],
                           command=function(){
-                            tclvalue(LINETYPE) <- "solid"
+                            tclvalue(LINETYPE) <- "Solid"
                             SetLinesPoints()
                     })
          tkgrid(T3_SetSymbols, row = 1, column = ii, padx = 5, pady = 5, sticky="w")
@@ -1496,34 +1704,36 @@ XPSOverlay <- function(){
 
      T3F_LineType <- ttklabelframe(T3group3, text="LINE TYPE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_LineType, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-     LINETYPE <- tclVar("solid")
-     T3_LineType <- ttkcombobox(T3F_LineType, width = 15, textvariable = LINETYPE, values = c("solid", "patterns"))
+     LINETYPE <- tclVar("Solid")
+     T3_LineType <- ttkcombobox(T3F_LineType, width = 15, textvariable = LINETYPE, values = c("Solid", "Patterns"))
      tkbind(T3_LineType, "<<ComboboxSelected>>", function(){
                            Plot_Args$type <<- "l"
                            palette <- tclvalue(BWCOL)
-                           if (tclvalue(LINETYPE) == "solid") {
-                              Plot_Args$lty <<- "solid"
-                              tclvalue(BWCOL) <- "RainBow"
-                              tclvalue(LEGTXTCOLOR) <- "RainBow"
-                              Plot_Args$pch <<- STypeIndx[1]
-                              PlotParameters$Colors <<- Colors
-                              Plot_Args$par.settings$superpose.symbol$fill <<- Colors
-                              Plot_Args$par.settings$superpose.line$col <<- Colors
-                              Plot_Args$par.settings$superpose.line$lty <<- "solid"
-                              Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
-                              AutoKey_Args$col <<- Colors
-                           }
-                           if (tclvalue(LINETYPE) == "patterns") {
-                              Plot_Args$lty <<- LType
-                              Plot_Args$pch <<- STypeIndx
-                              Plot_Args$par.settings$superpose.symbol$col <<- "black"
-                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                              Plot_Args$par.settings$superpose.line$col <<- "black"
-                              Plot_Args$par.settings$superpose.line$lty <<- LType
-                              Plot_Args$par.settings$strip.background$col <<- "gray90"
-                              AutoKey_Args$col <<- "black"
-                           }
-                           CtrlPlot()
+#                           if (tclvalue(LINETYPE) == "Solid") {
+#                              Plot_Args$lty <<- "solid"
+#                              Plot_Args$pch <<- STypeIndx[1]
+#                              tclvalue(BWCOL) <- "RainBow"
+#                              tclvalue(LEGTXTCOLOR) <- "RainBow"
+#                              PlotParameters$Colors <<- Colors
+#                              Plot_Args$par.settings$superpose.symbol$fill <<- Colors
+#                              Plot_Args$par.settings$superpose.line$col <<- Colors
+#                              Plot_Args$par.settings$superpose.line$lty <<- "solid"
+#                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+#                              Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
+#                              AutoKey_Args$col <<- Colors
+#                           }
+#                           if (tclvalue(LINETYPE) == "Patterns") {
+#                              Plot_Args$lty <<- LType
+#                              Plot_Args$pch <<- STypeIndx
+#                              Plot_Args$par.settings$superpose.symbol$col <<- "black"
+#                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+#                              Plot_Args$par.settings$superpose.line$col <<- "black"
+#                              Plot_Args$par.settings$superpose.line$lty <<- LType
+#                              Plot_Args$par.settings$strip.background$col <<- "gray90"
+#                              AutoKey_Args$col <<- "black"
+#                           }
+                           SetLinesPoints()
+#                           CtrlPlot()
                     })
      tkgrid(T3_LineType, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -1539,33 +1749,38 @@ XPSOverlay <- function(){
 
      T3F_SymbolType <- ttklabelframe(T3group3, text="SYMBOLS", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_SymbolType, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-     SYMTYPE <- tclVar("multi-symbols")
-     T3_SymType <- ttkcombobox(T3F_SymbolType, width = 15, textvariable = SYMTYPE, values = c("single-symbol", "multi-symbols"))
+     SYMTYPE <- tclVar("Single-Symbol")
+     T3_SymType <- ttkcombobox(T3F_SymbolType, width = 15, textvariable = SYMTYPE, values = c("Single-Symbol", "Multi-Symbols"))
      tkbind(T3_SymType, "<<ComboboxSelected>>", function(){
-                              if (tclvalue(SYMTYPE)=="single-symbol") {
-                                 tclvalue(BWCOL) <- "RainBow"
-                                 tclvalue(LINETYPE) <- "patterns"
-                                 Plot_Args$lty <<- LType
-                                 Plot_Args$pch <<- STypeIndx[1]
-                                 PlotParameters$Colors <<- Colors
-                                 Plot_Args$par.settings$superpose.symbol$fill <<- Colors
-                                 Plot_Args$par.settings$superpose.line$col <<- Colors
-                                 Plot_Args$par.settings$superpose.line$lty <<- "patterns"
-                                 Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
-                                 AutoKey_Args$col <<- Colors
-                              }
-                              if (tclvalue(SYMTYPE)=="multi-symbols") {
-                                 PlotParameters$Colors <<- "black"
-                                 Plot_Args$lty <<- LType
-                                 Plot_Args$pch <<- STypeIndx
-                                 Plot_Args$par.settings$superpose.symbol$col <<- "black"
-                                 Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
-                                 Plot_Args$par.settings$superpose.line$col <<- "black"
-                                 Plot_Args$par.settings$superpose.line$lty <<- LType
-                                 Plot_Args$par.settings$strip.background$col <<- "gray90"
-                                 AutoKey_Args$col <<- "black"
-                              }
-                              CtrlPlot()
+                           Plot_Args$type <<- "p"
+                           palette <- tclvalue(BWCOL)
+#                           if (tclvalue(SYMTYPE)=="Single-Symbol") {
+#                              tclvalue(BWCOL) <- "RainBow"
+#                              tclvalue(LINETYPE) <- "Patterns"
+#                              Plot_Args$lty <<- LType
+#                              Plot_Args$pch <<- STypeIndx[1]
+#                              PlotParameters$Colors <<- Colors
+#                              Plot_Args$par.settings$superpose.symbol$fill <<- Colors
+#                              Plot_Args$par.settings$superpose.line$col <<- Colors
+#                              Plot_Args$par.settings$superpose.line$lty <<- LType
+#                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx[1]
+#                              Plot_Args$par.settings$strip.background$col <<- "lightskyblue"
+#                              AutoKey_Args$col <<- Colors
+#                           }
+#                           if (tclvalue(SYMTYPE)=="Multi-Symbols") {
+#                              PlotParameters$Colors <<- "black"
+#                              Plot_Args$lty <<- LType
+#                              Plot_Args$pch <<- STypeIndx
+#                              Plot_Args$par.settings$superpose.symbol$col <<- "black"
+#                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+#                              Plot_Args$par.settings$superpose.line$col <<- "black"
+#                              Plot_Args$par.settings$superpose.line$lty <<- LType
+#                              Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
+#                              Plot_Args$par.settings$strip.background$col <<- "gray90"
+#                              AutoKey_Args$col <<- "black"
+#                           }
+                           SetLinesPoints()
+#                           CtrlPlot()
                     })
      tkgrid(T3_SymType, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -1581,8 +1796,8 @@ XPSOverlay <- function(){
 
      T3F_FitCompStyle <- ttklabelframe(T3group3, text="FIT COMPONENT LINESTYLE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_FitCompStyle, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
-     FCSTYLE <- tclVar("dotted")
-     T3_FitCompStyle <- ttkcombobox(T3F_FitCompStyle, width = 15, textvariable = FCSTYLE, values = c("dotted", "solid", "dashed"))
+     FCSTYLE <- tclVar("Dotted")
+     T3_FitCompStyle <- ttkcombobox(T3F_FitCompStyle, width = 15, textvariable = FCSTYLE, values = c("Dotted", "Solid", "dashed"))
      tkbind(T3_FitCompStyle, "<<ComboboxSelected>>", function(){
                            PlotParameters$CompLty <<- tclvalue(FCSTYLE)
                            CtrlPlot()
@@ -2140,7 +2355,7 @@ XPSOverlay <- function(){
                            } else {
 		           	                 Plot_Args$auto.key <<- FALSE
 	           	              }
-                           CtrlPlot()
+                           SetLinesPoints()
                     })
      tkgrid(T5_legendCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -2170,7 +2385,7 @@ XPSOverlay <- function(){
                                   Plot_Args$auto.key$text <<- as.vector(Legends)
                               }
                            }
-                           CtrlPlot()
+                           SetLinesPoints()
                     })
      tkgrid(T5_LegFNameCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -2183,26 +2398,26 @@ XPSOverlay <- function(){
                                tkmessageBox(message="WARNING: Legend position option NOT available for MULTIPANEL or 3D-Plot", title = "Legend Position",  icon = "warning")
                            } else {
 	                              switch(tclvalue(LEGENDPOS),
-                                  "OutsideTop" = { Plot_Args$auto.key$space <<- "top" },
-				                              "OutsideRight" = { Plot_Args$auto.key$space <<- "right" },
-				                              "OutsideLeft"  = { Plot_Args$auto.key$space <<- "left" },
-			                               "OutsideBottom" = { Plot_Args$auto.key$space <<- "bottom" },
-				                              "InsideTopRight" = { Plot_Args$auto.key$space <<- NULL
-                                                       Plot_Args$auto.key$corner<<-c(1,1)
-                                                       Plot_Args$auto.key$x <<- 0.95
-                                                       Plot_Args$auto.key$y <<- 0.95 },
-				                              "InsideTopLeft" =  { Plot_Args$auto.key$space <<- NULL
-                                                       Plot_Args$auto.key$corner <<-c(0,1)
-                                                       Plot_Args$auto.key$x <<- 0.05
-                                                       Plot_Args$auto.key$y <<- 0.95 },
-                                  "InsideBottomRight" = { Plot_Args$auto.key$space <<- NULL
-                                                       Plot_Args$auto.key$corner <<-c(1,0)
-                                                       Plot_Args$auto.key$x <<- 0.95
-                                                       Plot_Args$auto.key$y <<- 0.05 },
-				                              "InsideBottomLeft"  = {	Plot_Args$auto.key$space <<- NULL
-                                                       Plot_Args$auto.key$corner <<-c(0,0)
-                                                       Plot_Args$auto.key$x <<- 0.05
-                                                       Plot_Args$auto.key$y <<- 0.05 },
+                                  "OutsideTop" = { AutoKey_Args$space <<- "top" },
+				                              "OutsideRight" = { AutoKey_Args$space <<- "right" },
+				                              "OutsideLeft"  = { AutoKey_Args$space <<- "left" },
+			                               "OutsideBottom" = { AutoKey_Args$space <<- "bottom" },
+				                              "InsideTopRight" = { AutoKey_Args$space <<- NULL
+                                                       AutoKey_Args$corner <<-c(1,1)
+                                                       AutoKey_Args$x <<- 0.95
+                                                       AutoKey_Args$y <<- 0.95 },
+				                              "InsideTopLeft" =  { AutoKey_Args$space <<- NULL
+                                                       AutoKey_Args$corner <<-c(0,1)
+                                                       AutoKey_Args$x <<- 0.05
+                                                       AutoKey_Args$y <<- 0.95 },
+                                  "InsideBottomRight" = { AutoKey_Args$space <<- NULL
+                                                       AutoKey_Args$corner <<-c(1,0)
+                                                       AutoKey_Args$x <<- 0.95
+                                                       AutoKey_Args$y <<- 0.05 },
+				                              "InsideBottomLeft"  = {	AutoKey_Args$space <<- NULL
+                                                       AutoKey_Args$corner <<-c(0,0)
+                                                       AutoKey_Args$x <<- 0.05
+                                                       AutoKey_Args$y <<- 0.05 },
                                 )
                            }
                            CtrlPlot()
@@ -2250,36 +2465,36 @@ XPSOverlay <- function(){
                                   Ncol <- as.numeric(tclvalue(LEGENCOLUMNS))
                               }
 			                           switch(tclvalue(LEGENDPOS),
-                              "OutsideTop"     = { Plot_Args$auto.key$space <<- NULL
-                                                   Plot_Args$auto.key$corner <<- c(1,0)
-                                                   Plot_Args$auto.key$x <<- 1.1 - 1/(Ncol+1)
-                                                   Plot_Args$auto.key$y <<- 1+Dist },
-				                          "OutsideRight"   = { Plot_Args$auto.key$space <<- "right"
+                              "OutsideTop"     = { AutoKey_Args$space <<- NULL
+                                                   AutoKey_Args$corner <<- c(1,0)
+                                                   AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
+                                                   AutoKey_Args$y <<- 1+Dist },
+				                          "OutsideRight"   = { AutoKey_Args$space <<- "right"
 #                                                   Plot_Args$par.settings$layout.widths$right.padding <<- 8-Dist*40},
                                                    Plot_Args$par.settings$layout.widths$key.right <<- 1-10*Dist },
-				                          "OutsideLeft"    = { Plot_Args$auto.key$space <<- "left"
+				                          "OutsideLeft"    = { AutoKey_Args$space <<- "left"
 #                                                   Plot_Args$par.settings$layout.widths$left.padding <<- 8-Dist*40
                                                    Plot_Args$par.settings$layout.widths$key.left <<- Dist*10 },
-			                           "OutsideBottom"  = { Plot_Args$auto.key$space <<- NULL
-                                                   Plot_Args$auto.key$corner <<- c(0,0)
-                                                   Plot_Args$auto.key$x <<- 1.1 - 1/(Ncol+1)
-                                                   Plot_Args$auto.key$y <<- -1 - Dist },
-				                          "InsideTopRight" = { Plot_Args$auto.key$space <<- NULL
-                                                   Plot_Args$auto.key$corner <<- c(1,1)
-                                                   Plot_Args$auto.key$x <<- 1-Dist
-                                                   Plot_Args$auto.key$y <<- 1-Dist },
-				                          "InsideTopLeft"  = { Plot_Args$auto.key$space <<- NULL
-                                                   Plot_Args$auto.key$corner <<- c(0,1)
-                                                   Plot_Args$auto.key$x <<- Dist
-                                                   Plot_Args$auto.key$y <<- 1-Dist },
-                              "InsideBottomRight" = { Plot_Args$auto.key$space <<- NULL
-                                                      Plot_Args$auto.key$corner <<- c(1,0)
-                                                      Plot_Args$auto.key$x <<- 1-Dist
-                                                      Plot_Args$auto.key$y <<- Dist },
-				                          "InsideBottomLeft"  = {	Plot_Args$auto.key$space <<- NULL
-                                                      Plot_Args$auto.key$corner <<- c(0,0)
-                                                      Plot_Args$auto.key$x <<- 1.1 - 1/(Ncol+1)
-                                                      Plot_Args$auto.key$y <<- 1-Dist }                              )
+			                           "OutsideBottom"  = { AutoKey_Args$space <<- NULL
+                                                   AutoKey_Args$corner <<- c(0,0)
+                                                   AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
+                                                   AutoKey_Args$y <<- -1 - Dist },
+				                          "InsideTopRight" = { AutoKey_Args$space <<- NULL
+                                                   AutoKey_Args$corner <<- c(1,1)
+                                                   AutoKey_Args$x <<- 1-Dist
+                                                   AutoKey_Args$y <<- 1-Dist },
+				                          "InsideTopLeft"  = { AutoKey_Args$space <<- NULL
+                                                   AutoKey_Args$corner <<- c(0,1)
+                                                   AutoKey_Args$x <<- Dist
+                                                   AutoKey_Args$y <<- 1-Dist },
+                              "InsideBottomRight" = { AutoKey_Args$space <<- NULL
+                                                      AutoKey_Args$corner <<- c(1,0)
+                                                      AutoKey_Args$x <<- 1-Dist
+                                                      AutoKey_Args$y <<- Dist },
+				                          "InsideBottomLeft"  = {	AutoKey_Args$space <<- NULL
+                                                      AutoKey_Args$corner <<- c(0,0)
+                                                      AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
+                                                      AutoKey_Args$y <<- 1-Dist }                              )
                            }
                            CtrlPlot()
                     })
@@ -2307,9 +2522,9 @@ XPSOverlay <- function(){
      T5_LegendCol <- ttkcombobox(T5F_LegendCol, width = 15, textvariable = LEGTXTCOLOR, values = c("MonoChrome", "RainBow"))
      tkbind(T5_LegendCol, "<<ComboboxSelected>>", function(){
                            if (tclvalue(LEGTXTCOLOR) == "MonoChrome"){
-                               Plot_Args$auto.key$col <<- Colors[1]
+                               AutoKey_Args$col <<- Colors[1]
                            } else {
-                               Plot_Args$auto.key$col <<- Colors
+                               AutoKey_Args$col <<- Colors
                            }
                            CtrlPlot()
                     })
@@ -2329,7 +2544,8 @@ XPSOverlay <- function(){
                            Legends <- DFrameTable(Legends, Title=Title,
                                                             ColNames=ColNames, RowNames=RowNames,
                                                             Width=15, Modify=TRUE, Env=environment())
-                           Plot_Args$auto.key$text <<- unname(unlist(Legends))
+                           AutoKey_Args$text <<- unname(unlist(Legends))
+cat("\n xxx", AutoKey_Args$text)
                            CtrlPlot()
                     })
      tkgrid(T5_ChngLegBtn, row = 5, column = 1, padx = 5, pady = 5, sticky="w")

@@ -122,7 +122,7 @@ XPSQuant <- function(){
 # This proportion coeff. is used to normalize Corelines acquired at different PE.
 
 #variables
-
+                                   
       GetArea <- function(Object, Idx){
          BaseLine <- NULL
          Idx <- sort(Idx, decreasing=FALSE)
@@ -197,6 +197,8 @@ XPSQuant <- function(){
       idx1 <- 1
       idx2 <- length(XPSSample[[RefIdx]]@RegionToFit$x)
       Area1 <- GetArea(XPSSample[[RefIdx]]@RegionToFit, c(idx1, idx2))
+
+
       #Now find the same Reference CL in survey and compute the Area2
       Xlim <- range(XPSSample[[RefIdx]]@RegionToFit$x)  #X range of the selected CL
       Xlim <- sort(Xlim, decreasing=FALSE)
@@ -206,6 +208,7 @@ XPSQuant <- function(){
       idx1 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[1])
       idx2 <- findXIndex(XPSSample[[SurIdx]]@.Data[[1]], Xlim[2])
       Area2 <- GetArea(XPSSample[[SurIdx]]@.Data, c(idx1, idx2))
+
       #Compute the NormCoeff to normalize areas of CL from the survey (High PE) to
       #those acquired a\t high energy resolution (Low PE)
       NormCoeff <<- Area2/Area1
@@ -251,8 +254,9 @@ XPSQuant <- function(){
           #Now normalize areas of CL extracted from survey
           SurPE <- RetrivePE(XPSSample[[SurIdx]]) # Retrieve PE used for the survey
           idx <- which(CK.PassE == SurPE)
+
           for(ii in idx){
-              jj <- CheckedCL[idx] #retrieve the index of the selected corelines having PE=SurPE.
+              jj <- CheckedCL[ii] #retrieve the index of the selected corelines having PE=SurPE.
               XPSSample[[jj]]@.Data[[2]] <<- XPSSample[[jj]]@.Data[[2]]/NormCoeff
               XPSSample[[jj]]@RegionToFit$y <<- XPSSample[[jj]]@RegionToFit$y/NormCoeff
               XPSSample[[jj]]@Baseline$y <<- XPSSample[[jj]]@Baseline$y/NormCoeff
@@ -485,6 +489,8 @@ XPSQuant <- function(){
 
       tcl(QTable, "delete", "0.0", "end") #clears the quant_window
       tkinsert(QTable, "0.0", QTabTxt) #quantification report in QTable window
+
+#      tkconfigure(QTable, font=MyFont)
       cat("\n", TabTxt)
    }
 
@@ -533,7 +539,6 @@ XPSQuant <- function(){
 #   }
 
    CKHandlers <- function(){
-cat("\n ==> NcoreLines",NCoreLines)
          for(ii in 1:NCoreLines){
 #----HANDLER on Widget-ComponentCK
             indx <- CoreLineIndx[ii]
@@ -556,6 +561,7 @@ cat("\n ==> NcoreLines",NCoreLines)
             if(is.null(CoreLineComp[[ii]]) == TRUE) {
                CoreLineComp[[ii]] <<- ""
             }  # the correspondent coreline does NOT possess fitting components but only the BaseLine
+#cat("\n---------------------------------------------------- ")
          }
 cat("\n ")
    }
@@ -608,6 +614,7 @@ cat("\n ")
                                                       if(CMPCK[[ii]][ll] == "0"){
                                                          CMPCK[[ii]] <<- CMPCK[[ii]][-ll] #remove unchecked fit component
                                                       } else {
+#                                                         CMPCK[[ii]][ll] <<- CoreLineComp[[ii]][ll] #set checked fit components
                                                          CMPCK[[ii]][ll] <<- names(XPSSample[[indx]]@Components)[ll] #set checked fit components
                                                       }
                                                   }
@@ -676,13 +683,14 @@ cat("\n ")
       QuantBtn <- tkbutton( QuantGroup, text=" QUANTIFY ", command=function(){
                            SetRSF()
                            #extract indexes of CoreLines selected for quantification
+
                            CheckedCL <- names(CoreLineComp)
                            CheckedCL <- CheckedCL[which(CheckedCL !="")]
                            CheckedCL <- sapply(CheckedCL, function(x) { x <- unlist(strsplit(x, "\\."))
-                                                  x <- unname(x)
+                                                  x <- unname(x)[1]
                                                   return(x)
                                                })
-                           CheckedCL <- as.integer(CheckedCL[1,])
+                           CheckedCL <- as.integer(CheckedCL)
 
                            #Control on the Pass Energies
                            CK.PassE <- PassE[CheckedCL] #extracts PE valued corresponding to the elements selected for quantification
@@ -775,6 +783,7 @@ cat("\n ")
                            cat("\n Table copied to clipboard")
                  })
       tkgrid(ClipBrdBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+#      ww <- ww + as.numeric(tkwinfo("reqwidth", ClipBrdBtn)) + 15
 
       WriteBtn <- tkbutton(QuantGroup, text=" WRITE TO FILE ", command=function(){
                                           Filename <- unlist(strsplit(QTabTxt[2], ":"))[2]

@@ -343,7 +343,7 @@ FitCompLbl <- function(position.list, label, color="blue", ...) {
 #'
 
     printCell <- function(Type,txt,CellB, CellLength, align){
-         cell<-""
+         cell <- ""
          LL=length(txt)   #txt may be a single string or a vector
 
          if(Type=="label"){                       #if txt is a vector select the max of nchar

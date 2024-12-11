@@ -4,10 +4,10 @@
 ##  Copyright (C) 2012 -- Roberto Canteri , Giorgio Speranza
 ##
 ## Note on CoreLine@Flags in XPSSamples:
-## Flag[1] == Binding Energy --> If TRUE then x scale is Binding Energy
-## Flag[2] == cps  --> If TRUE then y scale is cps. NB!! With vamas and scienta files is always TRUE!!
-## Flag[3] == Scienta --> If TRUE then sample is Scienta sample
-## Flag[4] == Vamas correction for transmission factor
+## Flags[1] == Binding Energy --> If TRUE then x scale is Binding Energy
+## Flags[2] == cps  --> If TRUE then y scale is cps. NB!! With vamas and scienta files is always TRUE!!
+## Flags[3] == Scienta --> If TRUE then sample is Scienta sample
+## Flags[4] == Vamas correction for transmission factor
 ##==============================================================================
 
 
@@ -219,7 +219,6 @@ setGeneric("setAsData.Frame", function(from, to="data.frame") standardGeneric("s
 #'
 setMethod("setAsData.Frame", signature(from = "XPSCoreLine"), 
      function (from, to="data.frame") {
-
      if ( ! hasRegionToFit(from) ) { X <- data.frame(x=from[[1]], y=from[[2]]) }
      else { X <- data.frame(x=from@RegionToFit$x, y=from@RegionToFit$y) }
 
@@ -229,7 +228,8 @@ setMethod("setAsData.Frame", signature(from = "XPSCoreLine"),
      if ( hasBaseline(from) ) { X$Baseline <- from@Baseline$y }
      # Components
      if ( hasComponents(from) ) {
-       Y <- do.call("data.frame", lapply(from@Components, function(jk) { jk@ycoor }) )
+       Y <- do.call("data.frame", lapply(from@Components, function(z) { z@ycoor }) )
+       Y <- as.data.frame(Y)
        X <- cbind(X,Y)
      }
      # Fit
@@ -1161,65 +1161,38 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
        ){
        assign("MatPlotMode", TRUE, envir=.GlobalEnv)  #basic matplot function used to plot data
        X <- NULL
-       X <- setAsMatrix(from=x, to="matrix")  
-       if ( is.null(ylim) ) {
-          ylim <- sort(range(X[,2]))
-       }
-       if ( is.null(xlim) ) {
-          xlim <- sort(range(X[,1]))
-       } else {
-          xlim <- sort(xlim) #xlim is the minimum X range
-          X <- subset(X, subset = ( X[,1] >= xlim[1] & X[,1] <= xlim[2] ))
-       }
-       XX <- X[,1]  ## x-axis vector first column
-       YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
-
-       if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
-
-       patt <- paste("\U0394.D.", 1, sep="")  #patt == Delta.D.1.
-
-#---- instructions to plot generic fitted corelines
-#---- colors of Baseline, Fit Components and Fit  (modified Giorgio2013)
-       NcolY <- dim(YY)[2]  #The second component of DIM = N columns
-       if (length(NcolY) > 0 && NcolY == 2) {  #NcolY == 2, YY represents Baseline only
-           color <- c("black", "sienna")
-       }
-       NComp <- length(x@Components)
-       color <- c("black", "sienna", rep("blue", NComp), "red")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
-       #------------------------------
-       matplot(x=XX,
-               y=YY,
-               type=type,
-               lty=ltype,
-               col=color,
-               xlim=xlim,
-               ylim=ylim,
-               main=main,
-               xlab=xlab,
-               ylab=ylab,
-       ... )
-       ## components label
-       if ( hasComponents(x) && labels) {
-          #  positions <- getMaxOfComponents(x)  #works only for Fit Components but not in the case of VBTop
-          position <- list(x=NULL, y=NULL)
-          LL <- length(x@Components)
-          RngX <- range(x@RegionToFit$x)
-          for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
-             position$x <- x@Components[[ii]]@param["mu", "start"]
-             if (is.na(position$x)==FALSE){   #in VBtop Lin Fit there is not a value for mu
-                if (position$x <= max(RngX) && position$x >= min(RngX)){   #Lab only if inside X-range
-                   position$y <- findY(x@RegionToFit, position$x)
-                   #labformula defined in XPSUtilities.r
-                   FitCompLbl(position.list=position, label=x@Components[[ii]]@label, cex=1.0, pos=4, offset=0.1 ) #draws component labels
-                }
-             }
-          }
-       }
-       TestName <- " "
-#----  check if the CoreLine is of type 'VBtop', 'VBFermi' or 'Derivative'
-#      and plots marker points instead of the best fit
-#      if it is a SPECIAL CoreLine print Markers (VBt, VBf, MaxMinD)
+       NComp <- 0
+       if (hasComponents(x)) { NComp <- length(x@Components) }
+       X <- setAsMatrix(from=x, to="matrix") #X contains both x, y values
        if (length(grep("VB", x@Symbol)) > 0){  #CoreLine is a VB
+#--- Plot VBtop markers
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+#           YY <- YY[,1:2]  #selects original and Baseline data
+           xlim <- range(XX)
+           ylim <- range(YY)
+#print((YY[1:5, ]))
+
+           if (is.null(ylim) == TRUE || is.na(ylim) == TRUE){ ylim <- range(X[,2]) }
+           if (x@Flags[1]) { xlim <- rev(xlim) } ## reverse x-axis
+           if (NComp > 0) {
+               color <- c("black", "sienna", rep("blue", NComp), "red", "green")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
+           } else {
+               color <- c("black", "sienna", "red", "green", "blue")
+           }
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type=type,
+                   lty=ltype,
+                   col=color,
+                   xlim=xlim,
+                   ylim=ylim,
+                   main=main,
+                   xlab=xlab,
+                   ylab=ylab,
+           ... )
+
            pos <- list(x=NULL, y=NULL)
            TestName <- NULL
            TestName <- sapply(x@Components, function(z) c(TestName, z@funcName))
@@ -1239,8 +1212,192 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                          x@Components[[idx]]@param["h", "max"])
            }
            points(pos$x, pos$y, col="orange", cex=3, lwd=2, pch=3)
+
+       } else if (length(grep("\U0394.", x@Symbol)) > 0 || length(grep("d.D.", x@Symbol)) > 0){  #CoreLine name contains greek symbol DELTA
+#--- Plot Derivative Max Min
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+           xlim <- range(XX)
+           ylim <- range(YY)
+           if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
+           color <- c("black", "sienna", "blue", "red", "green")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type=type,
+                   lty=ltype,
+                   col=color,
+                   xlim=xlim,
+                   ylim=ylim,
+                   main=main,
+                   xlab=xlab,
+                   ylab=ylab,
+           ... )
+
+           pos <- list(x=NULL, y=NULL)
+           TestName <- NULL
+           TestName <- sapply(x@Components, function(z) c(TestName, z@funcName))
+           if (length(idx <- grep("Derivative", TestName)) > 0){
+              pos$x <- c(pos$x, x@Components[[idx]]@param["mu", "min"],
+                         x@Components[[idx]]@param["mu", "max"])
+              pos$y <- c(pos$y, x@Components[[idx]]@param["h", "min"],
+                         x@Components[[idx]]@param["h", "max"])
+           }
+           points(pos$x, pos$y, col="orange", cex=3, lwd=2, pch=3)
+
+       } else if (x@Symbol == "Elmnt.DDstrb"){ #special plot for Element Depth Distribution
+#--- Plot Element Distribution Depth Profile
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+           if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
+           Color <- c("white", "white", XPSSettings$Colors)
+           SymIdx <- c(26,26,19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type="b", lty=1, lwd=1,
+                   pch=SymIdx,
+                   col=Color,
+                   xlim=range(XX), ylim=c(0,1.2),
+                   cex.axis=1.25, cex.lab=1.3,
+                   main="Element Concentration",
+                   xlab="Tilt [deg.]", ylab="Element Conc. [%]",
+           ... )
+           ElmtNames <- NULL
+           ElmtNames <- sapply(x@Components, function(z) c(ElmtNames, z@label))
+           Color <- XPSSettings$Colors
+           SymIdx <- c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
+           rowXcol <- c(1, 2, 4, 6, 9, 12)
+           Nrow <- c(1,1,2,2,3,3)
+           Ncol <- c(1,2,2,3,3,4)
+           idx <- min(which (rowXcol >= min(length(ElmtNames),12)))
+           Nrow <- Nrow[idx]
+           Ncol <- Ncol[idx]
+           legend(0, 1.2, legend=ElmtNames, ncol=Ncol, lty=1, pch=SymIdx, lwd=2,
+                  bty="n", col=Color, border="black", text.col=Color, text.font=2)
+
+       } else if (x@Symbol == "Dpth.Prof"){ #special plot for Depth Profiles
+#--- plot Concentration Depth Profile
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+
+           Color <- c("white", "white", XPSSettings$Colors)
+           SymIdx <- c(26,26,19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type="b", lty=1, lwd=2, 
+                   pch=SymIdx,
+                   col=Color,
+                   xlim=xlim, ylim=ylim,
+                   cex.axis=1.25, cex.lab=1.3,
+                   main="Element Concentration",
+                   xlab="Tilt [deg.]", ylab="Element Conc. [%]",
+           ... )
+           Color <- XPSSettings$Colors
+           SymIdx <- c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
+           ElmtNames <- x@names
+           rowXcol <- c(1, 2, 4, 6, 9, 12)
+           Nrow <- c(1,1,2,2,3,3)
+           Ncol <- c(1,2,2,3,3,4)
+           idx <- min(which (rowXcol >= min(length(ElmtNames),12)))
+           Nrow <- Nrow[idx]
+           Ncol <- Ncol[idx]
+           legend(x=min(XX), y=1.2*max(YY), xjust=0, legend=ElmtNames, ncol=Ncol, lty=1, pch=SymIdx,
+                  lwd=2, bty="n", col=Color, border=Color, text.col=XPSSettings$Colors, text.font=2)
+
+       } else if (x@Symbol == "ARXPS.Prof"){ #special plot for Depth Profiles
+#--- plot Concentration Depth Profile
+           if ( is.null(ylim) ) {
+              ylim <- range(X[,3:4])         #range on all the Y data
+           }
+           if ( is.null(xlim) ) {
+              xlim <- sort(range(X[,1]))
+           } else {
+              xlim <- sort(xlim) #xlim is the minimum X range
+              X <- subset(X, subset = ( X[,1] >= xlim[1] & X[,1] <= xlim[2] ))
+           }
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+
+           if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
+#---- instructions to plot generic fitted corelines
+#---- colors of Baseline, Fit Components and Fit  (modified Giorgio2013)
+           color <- c("black", "white", "green", "red")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
+           SymIdx <- c(19,19,19,19) #SymIdx == 26 => No Symbol
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type="b",
+                   lty="solid",
+                   pch=SymIdx,
+                   cex=1,
+                   col=color,
+                   xlim=xlim,
+                   ylim=ylim,
+                   main=main,
+                   xlab=xlab,
+                   ylab=ylab,
+           ... )
+       } else {
+#--- generic Core Line (not depth profile)
+           if ( is.null(ylim) ) {
+              ylim <- sort(range(X[,2]))
+           }
+           if ( is.null(xlim) ) {
+              xlim <- sort(range(X[,1]))
+           } else {
+              xlim <- sort(xlim) #xlim is the minimum X range
+              X <- subset(X, subset = ( X[,1] >= xlim[1] & X[,1] <= xlim[2] ))
+           }
+           if (hasComponents(x)) {
+               NComp <- length(x@Components)
+               x <- sortComponents(x)
+           }
+           XX <- X[,1]  ## x-axis vector first column
+           YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
+
+           if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
+#---- instructions to plot generic fitted corelines
+#---- colors of Baseline, Fit Components and Fit  (modified Giorgio2013)
+           NcolY <- dim(YY)[2]  #The second component of DIM = N columns
+           if (length(NcolY) > 0 && NcolY == 2) {  #NcolY == 2, YY represents Baseline only
+               color <- c("black", "sienna")
+           }
+           NComp <- length(x@Components)
+           color <- c("black", "sienna", rep("blue", NComp), "red")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
+           #------------------------------
+           matplot(x=XX,
+                   y=YY,
+                   type=type,
+                   lty=ltype,
+                   col=color,
+                   xlim=xlim,
+                   ylim=ylim,
+                   main=main,
+                   xlab=xlab,
+                   ylab=ylab,
+           ... )
+           ## components label
+           if ( hasComponents(x) && labels) {
+              #  positions <- getMaxOfComponents(x)  #works only for Fit Components but not in the case of VBTop
+              position <- list(x=NULL, y=NULL)
+              LL <- length(x@Components)
+              RngX <- range(x@RegionToFit$x)
+              for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
+                 position$x <- x@Components[[ii]]@param["mu", "start"]
+                 if (is.na(position$x)==FALSE){   #in VBtop Lin Fit there is not a value for mu
+                    if (position$x <= max(RngX) && position$x >= min(RngX)){   #Lab only if inside X-range
+                       position$y <- findY(x@RegionToFit, position$x)
+                       #labformula defined in XPSUtilities.r
+                       FitCompLbl(position.list=position, label=x@Components[[ii]]@label, cex=1.0, pos=4, offset=0.1 ) #draws component labels
+                    }
+                 }
+              }
+           }
+           TestName <- " "
        }
-    }
+  }
 )
 
 ## =====================================================
@@ -1449,6 +1606,7 @@ setMethod("c","XPSSample",
       return(y)
    }
 )
+
 
 ##=========================================================
 # show the XPS-Sample content
