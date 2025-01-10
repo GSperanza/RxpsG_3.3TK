@@ -703,7 +703,7 @@ XPSCustomPlot <- function(){
                Plot_Args$type <<- "l"
                Plot_Args$background <<- "transparent"
                Plot_Args$col <<- "black"
-               Plot_Args$main <<- list(label=expression(SpectName,cex=1.4))
+               Plot_Args$main <<- list(label=SpectName,cex=1.4)
                Plot_Args$xlab <<- list(label=FName[[SpectIndx]]@units[1], rot=0, cex=1.2)
                Plot_Args$ylab <<- list(label=FName[[SpectIndx]]@units[2], rot=90, cex=1.2)
                Plot_Args$scales <<- list(cex=1, tck=c(1,0), alternating=c(1), relation="same",

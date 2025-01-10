@@ -28,7 +28,6 @@ XPSDepthProfile <- function() {
 
 
      CK.Elmts <- function(){ #extracts the name of the profiled elements
-             CLnames <<- names(XPSSample)
              TmpNames <- CLnames
              LL <- length(CLnames)
              ii <- 1
@@ -62,6 +61,7 @@ XPSDepthProfile <- function() {
              tkdestroy(CoreLineCK) #eliminates the blank label to insert the checkbuttons
 
              LL <- length(CoreLineList)
+
              NR <- ceiling(LL/5)   #TKcheckbox will be split in solumns of 5 elements
              kk <- 1
              for(jj in 1:NR) {
@@ -126,6 +126,7 @@ XPSDepthProfile <- function() {
         SelectedXPSSamp <<- list()
         XPSSample <<- NULL
         CoreLineList <<- list()   #define a list for the XPSSample corelines
+        FitDone <<- FALSE
         BaseLine <<-  NULL        #by default baseline selected for BKGsubtraction
         splinePoints <<- list(x=NULL, y=NULL)
         BL.Ends <<- list(x=NULL, y=NULL)
@@ -157,7 +158,7 @@ XPSDepthProfile <- function() {
      DepthPrflCK <- list()      #pointer to the XPSSamp type checkbox
      CoreLineCK <- list()       #pointer to the profiled checkbox corelines
      BLRadio <- list()       #pointer to the Baseline radiobutton
-#     T1frameCoreLines <- NULL
+     FitDone <- FALSE
      TkoffAngles <- NULL
      BaseLine <-  NULL        #by default baseline selected for BKGsubtraction
      splinePoints <- list(x=NULL, y=NULL)
@@ -230,22 +231,42 @@ XPSDepthProfile <- function() {
                                        tkmessageBox(message="Select the XPSSample to analyze first", title="WARNING", icon="warning")
                                        return()
                                    }
-                                   if (N.XS == 1) {
-                                      XPSSample <<- get(SelectedXPSSamp[1], envir=.GlobalEnv)   #load the active XPSSample in memory
+                                   XPSSample <<- new("XPSSample")
+                                   if (N.XS == 1) {  #In just one XPSSample all the CoreLines acquired at different tilt angles
+                                      XPSSample <<- get(SelectedXPSSamp[1], envir=.GlobalEnv)
                                       assign("activeFName", SelectedXPSSamp[1], envir=.GlobalEnv)
-                                   } else if (N.XS > 1){  #more XPSSamp are loaded as for example in ARXPS: one XPSSample for each tilt angle
+                                      CLnames <<- XPSSample@names
+                                   } else if (N.XS > 1){  #Different XPSSample for different tilt angles
                                       Filename <- NULL
-                                      XPSSample <<- new("XPSSample")
+                                      tmp <<- get(SelectedXPSSamp[1], envir=.GlobalEnv)   #load the active XPSSample in memory
+                                      LLref <- length(tmp)
+                                      for(ii in 1:(N.XS*LLref)){ #Define the new XPSSample where to save all the ARXPS data
+                                          XPSSample[[ii]] <<- new("XPSCoreLine")
+                                      }
+                                      LL2 <- 0
+                                      CLnames <<- NULL
                                       for(ii in 1:N.XS){
                                           tmp <- get(SelectedXPSSamp[ii], envir=.GlobalEnv)
-                                          XPSSample <<- c(XPSSample, tmp)
+                                          LL1 <- length(tmp)
+                                          if (LL1 != LLref){
+                                              tkmessageBox(" Acquisitions Made on Different Number of Core.Lines. \n Cannot Proceed with Depth Porofile!",
+                                                             title="ERROR", icon="error")
+                                              return()
+                                          }
+                                          for(jj in 1:LL1){
+                                              XPSSample[[LL2+jj]] <<- tmp[[jj]]
+                                              XPSSample[[(LL2+jj)]]@Components <<- tmp[[jj]]@Components #Fit & Components loaded if already defined
+                                              XPSSample[[(LL2+jj)]]@Fit <<- tmp[[jj]]@Fit
+                                          }
+                                          LL2 <- LL2 + LL1
                                           Filename <- paste(Filename, tmp@Filename,",", sep="")
+                                          CLnames <<- c(CLnames, tmp@names) #cannot initialize XPSSample@names to NULL
+                                          XPSSample@names <<- CLnames
                                       }
                                       XPSSample@Project <<- ""
                                       XPSSample@Sample <<- dirname(tmp@Sample)
                                       XPSSample@Comments <<- paste(DPrflType, Filename, spe=" ")
                                       XPSSample@User <<- ""
-#                                      XPSSample@names <- ""  #this is already set by c(X, tmp)
                                       if (DPrflType == "ARXPS"){  #assign the filename to save the analysis in a unique datafile
                                           XPSSample@Filename <<- "ARXPS.RData"
                                           assign("activeFName", "ARXPS.RData", envir=.GlobalEnv)
@@ -253,7 +274,9 @@ XPSDepthProfile <- function() {
                                           XPSSample@Filename <<- "SputtDP.RData"
                                           assign("activeFName", "SputtDP.RData", envir=.GlobalEnv)
                                       }
+
                                    }
+
                                    CK.Elmts()
 
                                    if (DPrflType == "ARXPS"){
@@ -271,33 +294,30 @@ XPSDepthProfile <- function() {
 
                                        AA <- list()
                                        TkOff <- list()
-                                       indx <- NULL
-                                       for(ii in 1:NAng){
-                #                           txt <- paste(FNameList[ii], ii, sep="")
+                                       lapply(seq(from=1, to=NAng, by=1), function(ii){
                                            tkgrid( ttklabel(FrameTKAng, text=SelectedXPSSamp[ii]),
                                                    row = ii, column = 1, padx = 5, pady = 5, sticky="w")
                                            AA[[ii]] <- tclVar("Take-off ?")
                                            TkOff[[ii]] <- ttkentry(FrameTKAng, textvariable=AA[[ii]], width=15, foreground="grey", width=7)
                                            tkbind(TkOff[[ii]], "<FocusIn>", function(K){
-                                                             #ii cannot be used here: now get the index of the selected entry
-                                                             focused_entry <- as.character(tcl("focus"))
-                                                             XX <- as.character(sapply(TkOff, function(x) x$ID))
-                                                             indx <<- match(focused_entry, XX)
-                                                             tclvalue(AA[[indx]]) <- ""
-                                                             tkconfigure(TkOff[[indx]], foreground="red")
+                                                             tclvalue(AA[[ii]]) <- ""
+                                                             tkconfigure(TkOff[[ii]], foreground="red")
                                                           })
                                            tkbind(TkOff[[ii]], "<Key-Return>", function(K){
-                                                             tkconfigure(TkOff[[indx]], foreground="black")
+                                                             tkconfigure(TkOff[[ii]], foreground="black")
+                                                             TkoffAngles[[ii]] <<- as.numeric(tclvalue(AA[[ii]]))
                                                           })
                                            tkgrid(TkOff[[ii]], row = ii, column = 2)
-                                       }
+                                       })
                                        savexitBtn <- tkbutton(FrameTKAng, text="SAVE & EXIT", width=15, command=function(){
-                                                             TkoffAngles <<- as.numeric(sapply(AA, function(x) tclvalue(x)))
                                                              tkdestroy(winTKAng)
                                                           })
                                        tkgrid(savexitBtn, row = ii+2, column = 1, padx=5, pady=5, sticky="w")
+                                       tkwait.window(winTKAng)
                                    }
+
                                    MK.ClCkBox()
+
                                    plot(XPSSample)
                                    for(ii in 1:6){ WidgetState(BLRadio[[ii]], "normal") }
                                    WidgetState(SelectButt, "normal")
@@ -314,8 +334,26 @@ XPSDepthProfile <- function() {
      CoreLineCK <- ttklabel(T1frameCoreLines, text="            ")
      tkgrid(CoreLineCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
+     T1frameAnalysis <- ttklabelframe(DPGroup1, text = "Fit done on ALL Core Lines?", borderwidth=5)
+     tkgrid(T1frameAnalysis, row = 4, column = 1, padx = 5, pady = 5, sticky="we")
+     FITDONE <- tclVar(FALSE)
+     AnalCK <- tkcheckbutton(T1frameAnalysis, text="Fit Done", variable=FITDONE, onvalue=1, offvalue=0,
+                                command=function(){
+                                   if (tclvalue(FITDONE) == 1){
+                                       FitDone <<- TRUE
+                                       WidgetState(T1frameBaseline, "disabled")
+                                       WidgetState(BLGroup, "disabled")
+                                   } else {
+                                       FitDone <<- FALSE
+                                       WidgetState(T1frameBaseline, "normal")
+                                       WidgetState(BLGroup, "normal")
+                                   }
+                                })
+     tkgrid(AnalCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+
      T1frameBaseline <- ttklabelframe(DPGroup1, text = "Select the BASELINE to apply", borderwidth=5)
-     tkgrid(T1frameBaseline, row = 4, column = 1, padx = 5, pady = 5, sticky="we")
+     tkgrid(T1frameBaseline, row = 5, column = 1, padx = 5, pady = 5, sticky="we")
 
      BLGroup <- ttkframe(T1frameBaseline, borderwidth=0, padding=c(0,0,0,0) )
      tkgrid(BLGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
@@ -460,7 +498,7 @@ XPSDepthProfile <- function() {
      WidgetState(SelectButt, "disabled")
 
      T1frameProf <- ttklabelframe(DPGroup1, text = "Compute The Concentration Profile", borderwidth=5)
-     tkgrid(T1frameProf, row = 5, column = 1, padx = 5, pady = 5, sticky="we")
+     tkgrid(T1frameProf, row = 6, column = 1, padx = 5, pady = 5, sticky="we")
      ConcButt <- tkbutton(T1frameProf, text=" CONCENTRATION PROFILE ", command=function(){
 #among the elements determine the max number of acquired CL. Likely same number of CL for all elements = N Cycles etching
                                 QntMat <- matrix(data=NA, ncol=N.CL, nrow=N.Cycles)
@@ -471,7 +509,7 @@ XPSDepthProfile <- function() {
 
                                 idx <- CoreLineList[[1]][1]
                                 ReferencePE <- Get_PE(XPSSample[[idx]])
-                                for(jj in 1:N.Cycles){
+                                for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
                                     XSampTmp <- NULL
                                     XSampTmp <- new("XPSSample")  #generate a temporary XPSSample
                                     kk <- 0
@@ -479,6 +517,12 @@ XPSDepthProfile <- function() {
                                     N.CL <<- length(Matched)
                                     for(ii in Matched){         #for now runs only on the selected CL
                                         idx <- CoreLineList[[ii]][jj]
+                                        if (FitDone == TRUE && hasComponents(XPSSample[[idx]]) == FALSE){
+                                               msg <- paste(" Attention: Fit Done on ALL CORE LINES Selected but NO Fit Found on ", XPSSample[[idx]],
+                                                            "\n Cannot Proceed with Depth Profiling", sep="")
+                                               tkmessageBox(message=msg, title="ERROR", icon="error")
+                                               return()
+                                        }
                                         if(!is.na(CoreLineList[[ii]][jj])){
                                            kk <- kk+1
                                            PE <- Get_PE(XPSSample[[idx]])
@@ -488,13 +532,13 @@ XPSDepthProfile <- function() {
                                                tkmessageBox(message=msg, title="WARNING", icon="warning")
                                                return()
                                            }
-                                           XSampTmp[[kk]] <- XPSSample[[idx]] #load the acquired coreline at etch cycle ii
+                                           XSampTmp[[kk]] <- XPSSample[[idx]] #load only the selected coreline at etch cycle / tilt angle ii
 
                                         }
                                     }
 #cannot load directly quantification results into QntMat because acquisition of some coreline could be stopped
 #this generates a CoreLineList where some elements (corelines) are lacking and NA is inserted see ((<<<===))
-                                    tmp <- XPSquantify(XSampTmp, verbose=FALSE)   #compute the quantification
+                                    tmp <- XPSquantify(XSampTmp, verbose=TRUE)   #compute the quantification
                                     TotQ <- sum(unlist(sapply(tmp, function(x) x$quant)))
                                     kk <- 0
                                     for(ii in Matched){
@@ -573,7 +617,7 @@ XPSDepthProfile <- function() {
                                 WidgetState(SelectButt, "normal")
                                 WidgetState(ConcButt, "normal")
                            })
-     tkgrid(ResButt, row = 6, column = 1, padx = 5, pady = 5,  sticky="we")
+     tkgrid(ResButt, row = 7, column = 1, padx = 5, pady = 5,  sticky="we")
 
      SaveExitButt <- tkbutton(DPGroup1, text=" SAVE & EXIT ", command=function(){
      	                          tkdestroy(DPwin)
@@ -593,7 +637,7 @@ XPSDepthProfile <- function() {
                                 XPSSaveRetrieveBkp("save")
                                 options(warn = 0)
                            })
-     tkgrid(SaveExitButt, row = 7, column = 1, padx = 5, pady = 5,  sticky="we")
+     tkgrid(SaveExitButt, row = 8, column = 1, padx = 5, pady = 5,  sticky="we")
 
      ExitButt <- tkbutton(DPGroup1, text=" EXIT ", command=function(){
      	                          tkdestroy(DPwin)
@@ -601,7 +645,7 @@ XPSDepthProfile <- function() {
                                 XPSSaveRetrieveBkp("save")
                                 options(warn = 0)
                            })
-     tkgrid(ExitButt, row = 8, column = 1, padx = 5, pady = 5,  sticky="we")
+     tkgrid(ExitButt, row = 9, column = 1, padx = 5, pady = 5,  sticky="we")
 
      ResFrame <- ttklabelframe(MainGroup, text = "CONCENTRATION PROFILE", borderwidth=2)
      tkgrid(ResFrame, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
@@ -609,7 +653,7 @@ XPSDepthProfile <- function() {
      tkgrid(Results, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
      tkgrid.rowconfigure(ResFrame, 1, weight=4)
      addScrollbars(ResFrame, Results, type="x", Row = 1, Col = 1, Px=0, Py=0)
-     tkwait.window(DPwin)
+#     tkwait.window(DPwin)
 
 }
 

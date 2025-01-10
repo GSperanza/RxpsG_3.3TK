@@ -17,7 +17,6 @@ XPSMoveBaseLine <- function(){
    ReDraw <- function(){
 #--- Here the coreline and Baseline+Fit has to be displayed separately
        SampData <- as.matrix(XPSSample[[indx]]@.Data) #create spectrum data matrix for plot
-       ## SampData is not of Class XPSSample nor XPSCoreLine: generic plot is used
        plot(x=SampData[[1]], y=SampData[[2]], xlim=Xrange1, ylim=Yrange1, type="l", lty="solid", lwd=1, col="black")
        SampData <- setAsMatrix(XPSSample[[indx]], "matrix") #create Baseline+Fit data matrix for plot
        NC <- ncol(SampData)
@@ -122,9 +121,9 @@ XPSMoveBaseLine <- function(){
    XS <- tclVar(activeFName)
    SourceFile <- ttkcombobox(MBLFrame1, width = 25, textvariable = XS, values = XPSSampleList)
    tkbind(SourceFile, "<<ComboboxSelected>>", function(){
-                    SelectedXPSSample <- tclvalue(XS)
-                    XPSSample <<- get(SelectedXPSSample,envir=.GlobalEnv)
-                    SpectList <<- XPSSpectList(SelectedXPSSample)
+                    activeFName <<- tclvalue(XS)
+                    XPSSample <<- get(activeFName,envir=.GlobalEnv)
+                    SpectList <<- XPSSpectList(activeFName)
                     tkconfigure(SourceCoreline, values=SpectList)
                     plot(XPSSample)
             })
@@ -314,20 +313,30 @@ XPSMoveBaseLine <- function(){
                     SetZoom <<- FALSE
                     LL <- length(XPSSample[[indx]]@Components)
                     XPSSample[[indx]] <<- XPSSampleBkp[[indx]]
+                    Xrange0 <<- range(XPSSample[[indx]]@.Data[[1]])
+                    Yrange0 <<- range(XPSSample[[indx]]@.Data[[2]])
+                    Xrange1 <<- range(XPSSample[[indx]]@.Data[[1]])
+                    if (XPSSample[[indx]]@Flags[1]) {   #reverse if BE scale
+                        Xrange1 <<- rev(Xrange1)
+                    }
+                    Yrange1 <<- range(XPSSample[[indx]]@.Data[[2]])
                     ReDraw()
             })
    tkgrid(RSTbutton, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    SAVEbutton <- tkbutton(MBLFrame4, text=" SAVE ", width=45, command=function(){
-    	            assign(activeFName, XPSSample, envir=.GlobalEnv)
+    	               assign(activeFName, XPSSample, envir=.GlobalEnv)
                     XPSSaveRetrieveBkp("save")
             })
    tkgrid(SAVEbutton, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
    SAVEXITbutton <- tkbutton(MBLFrame4, text=" SAVE & EXIT ", width=45, command=function(){
                     tkdestroy(MBLwin)
-     	            assign(activeFName, XPSSample, envir=.GlobalEnv)
+                    assign("activeFName", activeFName, envir=.GlobalEnv)
+     	              assign(activeFName, XPSSample, envir=.GlobalEnv)
+                    assign("activeSpectIndx", indx, envir=.GlobalEnv)
                     XPSSaveRetrieveBkp("save")
+                    UpdateXS_Tbl()
             })
    tkgrid(SAVEXITbutton, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
 

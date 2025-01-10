@@ -294,6 +294,7 @@ XPSMoveComp <- function(){
                                 FComp <<- as.numeric(unlist(strsplit(FComp, split="C")))   #index selected compoent
                                 FComp <<- FComp[2]
                                 xx <- Object@Components[[FComp]]@param[2,1] #component position mu
+                                yy <- Object@Components[[FComp]]@param[1,1] #component height h
                                 Rng <- range(Object@RegionToFit[[1]])
                                 if (xx < Rng[1]) {xx <- Rng[1]}
                                 if (xx > Rng[2]) {xx <- Rng[2]}
@@ -311,7 +312,7 @@ XPSMoveComp <- function(){
                                 }
                                 GetCurPos(SingClick=FALSE)
                        })
-           tkgrid(FitComp, row = 5, column = ii, padx = 5, pady=5, sticky="w")
+           tkgrid(FitComp, row = 1, column = 1, padx = 5, pady=5, sticky="w")
        }
        txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
                     "\n=> Left click with the mouse to enter the cursor coordinates.",

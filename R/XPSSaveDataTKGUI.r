@@ -53,7 +53,7 @@ XPSSaveData <- function() {
           FName@Sample <- PathFileName
 
           assign("activeFName", saveFName, envir=.GlobalEnv)  #change the activeFName in the .GlobalEnv
-          assign(saveFName, FName, envir=.GlobalEnv)  #save the xxx.RData XPSSample in the .GlobalEnv
+          assign(saveFName, FName, envir=.GlobalEnv)  #This is needed to save the 'saveFName' name for the save() command
           RVersion <- as.integer(tclvalue(FMT)) #by default no indication of the R Version is saved
           if (RVersion == 1) {
               RVersion <- NULL
@@ -62,7 +62,7 @@ XPSSaveData <- function() {
           } else if (RVersion == 3) {
               RVersion <- 2  # code for R version <= 2
           }
-          save(list=saveFName, file=PathFileName, version=RVersion, compress=TRUE)
+          save(list=saveFName, file=PathFileName, version=RVersion, compress=TRUE) #save() will use the name contained in saveFName for the XPSSample data 
           ShortPathName <- CutPathName(PathFileName)
           txt <- paste("\n Analyzed Data saved in: ", ShortPathName, sep="")
           cat("\n", txt)

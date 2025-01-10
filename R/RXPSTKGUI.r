@@ -18,7 +18,7 @@
           idx <- IdxList[idx]  #select the actual element index
           tcl(XS_Tbl_Ptr[[2]], "selection", "set", idx)  #set the actual XPSSample as selected in the MAIN-GUI
       }
-      assign("XS_Tbl", XS_Tbl, envir=.GlobalEnv)
+      assign("Tbl_Ptr", XS_Tbl_Ptr, envir=.GlobalEnv)
    }
 
 
@@ -317,7 +317,7 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
             FName <- basename(PathFile)
             DirName <- dirname(PathFile)
             setwd(DirName)
-            cat("\n New Working Directory: ", DirName)
+            cat("\n Actual Working Directory: ", DirName)
             CheckName <- unlist(strsplit(FName, "\\." ))
             FNameList <- NULL
 
@@ -636,7 +636,7 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
              XPSResetAnalysis()
       })
 
-      tkadd(AnalysisMenu, "command", label = "   Adjust Baseline", command = function() {
+      tkadd(AnalysisMenu, "command", label = "   Refine Baseline", command = function() {
              XPSMoveBaseLine()
       })
 

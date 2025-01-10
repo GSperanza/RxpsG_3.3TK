@@ -2375,14 +2375,14 @@ cat("\n 111", SelectedNames$CoreLines)
                                       tmp <- unlist(strsplit(Legends[ii], "\\."))  #skip the number at beginning coreline name
                                       Legends[ii] <- paste(tmp[2], "_", SelectedNames$XPSSample[ii], sep="")
                                   }
-                                  Plot_Args$auto.key$text <<- as.vector(Legends)
+                                  AutoKey_Args$text <<- Legends
                               } else {
                                   Legends <- SelectedNames$CoreLines
                                   for(ii in seq_along(Legends)){
                                       tmp <- unlist(strsplit(Legends[ii], "\\."))   #skip the number at beginning coreline name
                                       Legends[ii] <- tmp[2]
                                   }
-                                  Plot_Args$auto.key$text <<- as.vector(Legends)
+                                  AutoKey_Args$text <<- Legends
                               }
                            }
                            SetLinesPoints()

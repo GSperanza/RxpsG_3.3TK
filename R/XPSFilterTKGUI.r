@@ -323,8 +323,8 @@ XPSFilter <- function() {
       tmp1[1] <- RawData[1]
       tmp2[LL] <- RawData[LL]
       for(ii in 2:LL){
-          tmp1[ii]=FFO*tmp1[ii-1] + (1-FFO)*RawData[ii];              #forward filtering
-          tmp2[LL-ii+1]=FFO*tmp2[LL-ii+2]+(1-FFO)*RawData[LL-ii+1];   #backward filtering
+          tmp1[ii] <- FFO*tmp1[ii-1] + (1-FFO)*RawData[ii];              #forward filtering
+          tmp2[LL-ii+1] <- FFO*tmp2[LL-ii+2]+(1-FFO)*RawData[LL-ii+1];   #backward filtering
       }
       Filtered <<- (tmp1+tmp2)/2
    }
