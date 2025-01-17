@@ -314,8 +314,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
          if (length(PlotParameters$Colors)==1) {   # B/W LINES
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- rep(NA, 20)
-             palette <-  rep(PlotParameters$Colors[1], 20)          # "Black","black","black",....
-             FitStyle$Lty <- PlotParameters$CompLty
+             palette <-  rep(PlotParameters$Colors[1], 20)     # "Black","black","black",....
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)   # up to 20 fit components can be plotted
              FitStyle$BaseColor <- rep("black", 20)
              FitStyle$CompColor <- rep("grey45", 20)
              FitStyle$FitColor <- rep("black", 20)
@@ -328,7 +328,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              }
              SType <- rep(NA, 20)
              palette <- PlotParameters$Colors      #"black", "red", "green"....
-             FitStyle$Lty <- PlotParameters$CompLty
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
              FitStyle$CompColor <- PlotParameters$FitCol$CompColor   #Single or MultiColors
              FitStyle$FitColor <- PlotParameters$FitCol$FitColor
@@ -339,7 +339,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              LType <- rep("solid", 20)
              SType <- Plot_Args$pch                # VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <-  rep(PlotParameters$Colors[1], 20)          # "black","black","black",....
-             FitStyle$Lty <- PlotParameters$CompLty
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
              FitStyle$BaseColor <- rep("black", 20)
              FitStyle$CompColor <- rep("grey45", 20)
              FitStyle$FitColor <- rep("black", 20)
@@ -348,7 +348,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              LType <- rep("solid", 20)
              SType <- Plot_Args$pch   # VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <- PlotParameters$Colors      # "black", "red", "green"....
-             FitStyle$Lty <- PlotParameters$CompLty
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
              FitStyle$CompColor <- PlotParameters$FitCol$CompColor   #Single or MultiColors
              FitStyle$FitColor <- PlotParameters$FitCol$FitColor
@@ -359,14 +359,14 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- Plot_Args$pch                # "VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <-  rep(PlotParameters$Colors[1], 20)          # "black","black","black",....
-             FitStyle$Lty <- PlotParameters$CompLty
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
              FitStyle$Col <- c("black", "grey45", "black")
              SetPltArgs(LType, SType, palette, FitStyle)
          } else if (length(PlotParameters$Colors) > 1) {   # RainBow LINES & SYMBOLS
              LType <- Plot_Args$lty                # "solid", "dashed", "dotted" ....
              SType <- Plot_Args$pch                # "VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <- PlotParameters$Colors      #"black", "red", "green"....
-             FitStyle$Lty <- PlotParameters$CompLty
+             FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
              FitStyle$CompColor <- PlotParameters$FitCol$CompColor  #Single or MultiColors
              FitStyle$FitColor <- PlotParameters$FitCol$FitColor

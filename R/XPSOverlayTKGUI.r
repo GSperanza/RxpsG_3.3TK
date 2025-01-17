@@ -581,7 +581,7 @@ cat("\n 111", SelectedNames$CoreLines)
    PlotParameters$OverlayType <- "Spectrum"
    PlotParameters$OverlayMode <- "Single-Panel"
    PlotParameters$Colors <- Colors
-   PlotParameters$CompLty <- "dotted"
+   PlotParameters$CompLty <- "solid"
    PlotParameters$FitCol <- FitColors
 #--- legend options
    PlotParameters$Labels <- NULL
@@ -1797,9 +1797,15 @@ cat("\n 111", SelectedNames$CoreLines)
      T3F_FitCompStyle <- ttklabelframe(T3group3, text="FIT COMPONENT LINESTYLE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T3F_FitCompStyle, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
      FCSTYLE <- tclVar("Dotted")
-     T3_FitCompStyle <- ttkcombobox(T3F_FitCompStyle, width = 15, textvariable = FCSTYLE, values = c("Dotted", "Solid", "dashed"))
+     T3_FitCompStyle <- ttkcombobox(T3F_FitCompStyle, width = 15, textvariable = FCSTYLE, values = c("Dotted", "Solid", "Dashed"))
      tkbind(T3_FitCompStyle, "<<ComboboxSelected>>", function(){
-                           PlotParameters$CompLty <<- tclvalue(FCSTYLE)
+                           if (tclvalue(FCSTYLE) == "Solid") {
+                               PlotParameters$CompLty <<- "solid"
+                           } else if (tclvalue(FCSTYLE) == "Dashed") {
+                               PlotParameters$CompLty <<- "dashed"
+                           } else if (tclvalue(FCSTYLE) == "Dotted") {
+                               PlotParameters$CompLty <<- "dotted"
+                           }
                            CtrlPlot()
                     })
      tkgrid(T3_FitCompStyle, row = 1, column = 1, padx = 5, pady = 5, sticky="w")

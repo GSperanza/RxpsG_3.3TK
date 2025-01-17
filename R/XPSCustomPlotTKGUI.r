@@ -460,6 +460,7 @@ XPSCustomPlot <- function(){
                        Ylim <<- sort(Ylim)
                    }
                }
+               if (sum(Ylim) == 0) {Ylim <<- c(0, 1.1)}
                Plot_Args$xlim <<- Xlim
                Plot_Args$ylim <<- Ylim
    }
@@ -684,6 +685,7 @@ XPSCustomPlot <- function(){
                Plot_Args$groups	<<- rep(1, length(SampData$x))
                Xlim <<- sort(range(SampData$x))
                Ylim <<- sort(range(SampData$y))
+               if (sum(Ylim) == 0) {Ylim <<- c(0,1.1)}
                wdth <- Xlim[2]-Xlim[1]
                Xlim[1] <<- Xlim[1]-wdth/15
                Xlim[2] <<- Xlim[2]+wdth/15
