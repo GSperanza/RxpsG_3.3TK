@@ -832,8 +832,7 @@ XPSOverlay <- function(){
      T1LimitRTF <- tkcheckbutton(T1frameOvType, text="Limit Plot To Fit Region", variable=LIMITRTF, onvalue = 1, offvalue = 0,
                            command=function(){
                             PlotParameters$RTFLtd <<- as.logical(as.numeric(tclvalue(LIMITRTF)))
-                            CtrlPlot() ####PLOT FOLLOWING SELECTIONS
-
+                            CtrlPlot() 
                    })
      tclvalue(LIMITRTF) <- FALSE
      tkgrid(T1LimitRTF, row = 4, column = 1, padx = 5, pady = 5, sticky="w")

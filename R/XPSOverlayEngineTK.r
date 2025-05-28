@@ -117,7 +117,6 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
         SpectName <- unlist(strsplit(SpectName, "\\."))   #skip the initial number at beginning of the CoreLine name
         SpectIdx <- as.numeric(SpectName[1])
         #now modify the amplitude of the spectrum, baseline, and fit
-cat("\n #### Scalfact", ii,  SelectedNames$Ampli[ii])
 
         FName[[SpectIdx]]@.Data[[2]] <- FName[[SpectIdx]]@.Data[[2]]*SelectedNames$Ampli[ii]    #if an amplification factor was seleted, AmpliFact != 1
         if (length(FName[[SpectIdx]]@Baseline) > 0){
