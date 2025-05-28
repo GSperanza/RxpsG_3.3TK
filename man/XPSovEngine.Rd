@@ -4,14 +4,12 @@
 \alias{XPSovEngine}
 \title{XPSovEngine}
 \usage{
-XPSovEngine(PlotParameters, Plot_Args, AutoKey_Args, SelectedNames, Xlim, Ylim)
+XPSovEngine(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 }
 \arguments{
 \item{PlotParameters}{the plot parameters asociated to the XPSOverlayGUI options;}
 
 \item{Plot_Args}{list of plot options;}
-
-\item{AutoKey_Args}{list of options for annotation;}
 
 \item{SelectedNames}{list containing the XPSSample names and the Corelines to be plotted;}
 

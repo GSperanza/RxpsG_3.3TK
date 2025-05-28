@@ -9,6 +9,8 @@
 \alias{getParam,fitComponents-method}
 \alias{Ycomponent}
 \alias{Ycomponent,fitComponents-method}
+\alias{ComponentWidth}
+\alias{ComponentWidth,XPSCoreLine-method}
 \title{Class "fitComponents"}
 \usage{
 setParam(object, parameter = NULL, variable = NULL, value = NULL)
@@ -22,10 +24,13 @@ getParam(object, parameter = NULL, variable = NULL)
 Ycomponent(object, x, y)
 
 \S4method{Ycomponent}{fitComponents}(object, x, y)
+
+ComponentWidth(object, idx)
+
+\S4method{ComponentWidth}{XPSCoreLine}(object, idx)
 }
 \arguments{
-\item{object}{a fit component object of the type CL@Components[[j]] where
-CL is of class 'XPSCoreLine', j indicates the jth fit component}
+\item{object}{an object of class \code{XPSCoreLine}}
 
 \item{parameter}{character is one of the "start", "max" or "min" parameter to be set}
 
@@ -38,6 +43,8 @@ CL is of class 'XPSCoreLine'}
 
 \item{y}{numeric vector of the type CL@Baseline$y where
 CL is of class 'XPSCoreLine'}
+
+\item{idx}{numeric is the index of the fitting component}
 }
 \value{
 'setParam' returns the object withthe parameter set
@@ -51,6 +58,10 @@ CL is of class 'XPSCoreLine'}
 'Ycomponent' returns Baseline subtracted vales of the fit component
 
 'Ycomponent' returns Baseline subtracted vales of the fit component
+
+'ComponentWidth' returns the FWHM of the fit component
+
+'ComponentWidth' returns the FWHM of the fit component
 }
 \description{
 a class that describes a fit component.  The class has the
@@ -74,6 +85,16 @@ S4method 'Ycomponent' method for generate the Y values of the
 
 S4method 'Ycomponent' method for generate the Y values of the
   fit component using the chosen fitting function and the associated fit parameters
+
+'ComponentWidth' computes the FWHM of 'mixed' fit components
+  such as "GaussLorentzProd", "GaussLorentzSum", "AsymmGauss", "AsymmLorentz"
+  "AsymmVoigt", "AsymmGaussLorentz", "AsymmGaussVoigt", "AsymmGaussLorentzProd" ||
+  "DoniachSunjicGauss", "DoniachSunjicGaussTail"
+
+'ComponentWidth' computes the FWHM of 'mixed' fit components
+  such as "GaussLorentzProd", "GaussLorentzSum", "AsymmGauss", "AsymmLorentz"
+  "AsymmVoigt", "AsymmGaussLorentz", "AsymmGaussVoigt", "AsymmGaussLorentzProd" ||
+  "DoniachSunjicGauss", "DoniachSunjicGaussTail"
 }
 \section{Slots}{
 
@@ -105,5 +126,8 @@ S4method 'Ycomponent' method for generate the Y values of the
 }
 \dontrun{
   Ycomponent(test[["C1s"]]@Component[[2]],test[["C1s"]]@RegionToFit$x, test[["C1s"]]@Baseline$y)
+}
+\dontrun{
+  ComponentWidth(test[["C1s"]], idx=2)
 }
 }

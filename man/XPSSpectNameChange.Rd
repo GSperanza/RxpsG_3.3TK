@@ -7,8 +7,8 @@
 XPSSpectNameChange()
 }
 \description{
-XPSSpectNameChange is a functin to change the name of
-  obects of class XPSSample and/or the name associated to CoreLines
+XPSSpectNameChange is a function to change the name of
+  objects of class XPSSample and/or the name associated to CoreLines
   of class XPSCoreLine
 }
 \examples{
