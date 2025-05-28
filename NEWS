@@ -1,12 +1,13 @@
 NEWS information for package RxpsG
-Exploratory and Processing for XPS Spectra
+Software for Processing XPS Spectra
 by Giorgio Speranza
 
-==> RxpsG version 3.1 derived from version 2.3-2 but now directly using tcltk.
-Libraries gWidgets2, gWidgets2tcltk, memoise are no more necessary reducing 
-the package requirements. 
-The software was controlled but still some bugs could be present: contact 
-speranza@fbk.eu for problems.  
+==> RxpsG version 3.2 is derived from version 2.3-2. Now the software directly uses
+the TclTk functions to generate the GUIs.
+Packages gWidgets2, gWidgets2tcltk, and memoise are no more necessary reducing 
+the RxpsG requirements. 
+The software was controlled and is continuously corrected/updated. 
+However, still some bugs could be present: contact speranza@fbk.eu for problems.  
 
 ==> Previous version RxpsG 2.3-2
 Number of bugs fixed, more robust code for working in Windows and Linux operating systems
