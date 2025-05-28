@@ -13,7 +13,7 @@
 #'
 #' @importFrom grDevices dev.copy dev.cur dev.next dev.prev dev.print dev.set dev.size
 #' @importFrom grDevices graphics.off bmp jpeg pdf png postscript tiff 
-#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11 
+#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11  
 #'
 #' @importFrom lattice cloud panel.arrows panel.identify panel.points panel.segments panel.superpose
 #' @importFrom lattice panel.text panel.xyplot xyplot xscale.components.default yscale.components.default
@@ -27,9 +27,11 @@
 #'
 #' @importFrom signal filter freqz sgolay hamming fir1 filtfilt butter
 #'
+#' @importFrom MASS ginv
+#'
 #' @importFrom stats as.formula coef convolve fft fitted formula getInitial lm
 #' @importFrom stats model.weights na.omit nls.control numericDeriv predict residuals
-#' @importFrom stats runif setNames spline update window
+#' @importFrom stats runif setNames spline update vcov window
 #'
 #' @importFrom utils capture.output installed.packages read.table str
 #' @importFrom utils write.csv write.csv2 write.table

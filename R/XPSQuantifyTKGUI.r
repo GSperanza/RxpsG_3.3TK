@@ -545,25 +545,27 @@ XPSQuant <- function(){
             NComp <- length(XPSSample[[indx]]@Components)
             if(CLCK[[ii]] == FALSE && NComp==0) {  #Coreline with baseline only, is un-selected
 #               CoreLineComp[[ii]] <<- sapply(CoreLineComp[[ii]], function(x) x <- "")
-               CoreLineComp[[ii]] <<- NULL
+               if (is.null(CoreLineComp[[ii]]) ==  FALSE) { CoreLineComp[[ii]] <<- "" }
             } else if(CLCK[[ii]] == FALSE && NComp > 0) {  #Coreline with fit is un-selected
                CoreLineComp[[ii]] <<- sapply(CoreLineComp[[ii]], function(x) x <- "")   #deselect all fit components
                CMPCK[[ii]] <<- sapply(CMPCK[[ii]], function(x) x <- "")   #deselect all fit components
                sapply(SelCMP[[ii]], function(x) tclvalue(x) <- FALSE)   #deselect all fit components
             } else if(CLCK[[ii]] == TRUE && sum(nchar(CoreLineComp[[ii]])) == 0) {  #Coreline with fit is reselected, all components deselected
-               CMPCK[[ii]] <<- "" # reselect al components previously all deselected
-               CoreLineComp[[ii]] <<- CMPCK[[ii]]
-               sapply(SelCMP[[ii]], function(x) tclvalue(x) <- TRUE)   #deselect all fit components
+               if (is.null(CoreLineComp[[ii]]) == FALSE){
+                   CMPCK[[ii]] <<- names(XPSSample[[indx]]@Components) # reselect all components previously all deselected
+                   CoreLineComp[[ii]] <<- CMPCK[[ii]]
+                   sapply(SelCMP[[ii]], function(x) tclvalue(x) <- TRUE)   #deselect all fit components
+               }
+
             } else if(length(CMPCK[[ii]]) != length(CoreLineComp[[ii]])) {  #Coreline fit components are un-selected
                CoreLineComp[[ii]] <<- "" #reset CoreLineComp[[ii]]
                CoreLineComp[[ii]] <<- sapply(CMPCK[[ii]], function(x) CoreLineComp[[ii]] <<- x) #uncheck CL checkbox => all fit_comp unselected
             }
-            if(is.null(CoreLineComp[[ii]]) == TRUE) {
-               CoreLineComp[[ii]] <<- ""
-            }  # the correspondent coreline does NOT possess fitting components but only the BaseLine
+#            if(is.null(CoreLineComp[[ii]]) == TRUE) {
+#               CoreLineComp[[ii]] <<- ""
+#            }  # the correspondent coreline does NOT possess fitting components but only the BaseLine
 #cat("\n---------------------------------------------------- ")
          }
-cat("\n ")
    }
 
 
@@ -577,7 +579,7 @@ cat("\n ")
           tmp <- names(XPSSample[[indx]]@Components)
           if (is.null(tmp)) { NoComp <- "TRUE" }
           CoreLineComp <<- c(CoreLineComp, list(tmp))   #create a list containing the fit components of corelines
-          txt <- paste(" CORE LINE", ii, " " , sep="")
+          txt <- paste(" CORE LINE ", ii, " " , sep="")
           CLframe[[ii]] <<- ttklabelframe(Qgroup[[ii]], text=txt, borderwidth=2)
           tkgrid(CLframe[[ii]], row = 1, column = 1, padx = 5, pady = 5, sticky="w")
           SelCL[[ii]] <<- TRUE #initialize the selected coreline to TRUE
@@ -615,7 +617,7 @@ cat("\n ")
                                                          CMPCK[[ii]] <<- CMPCK[[ii]][-ll] #remove unchecked fit component
                                                       } else {
 #                                                         CMPCK[[ii]][ll] <<- CoreLineComp[[ii]][ll] #set checked fit components
-                                                         CMPCK[[ii]][ll] <<- names(XPSSample[[indx]]@Components)[ll] #set checked fit components
+                                                         CMPCK[[ii]][ll] <<- unlist(names(XPSSample[[indx]]@Components)[ll]) #set checked fit components
                                                       }
                                                   }
                                                   CKHandlers()
@@ -644,8 +646,8 @@ cat("\n ")
               tkbind(unlist(RelSensFactCK[[ii]][1]), "<Key-Return>", function(K){
                          ii <- as.integer(tcl(QNB, "index", "current"))+1 #ii+1= index of active notebook page starting from 0
                          tkconfigure(unlist(RelSensFactCK[[ii]][1]), foreground="black")
-                            RSF[[ii]][1] <<- sapply(RSFCK[[ii]][1], function(x) tclvalue(x)) #sapply needed to correctly get tclvalue()
-                            RSF[[ii]][1] <<- as.numeric(RSF[[ii]][1])
+                         RSF[[ii]][1] <<- sapply(RSFCK[[ii]][1], function(x) tclvalue(x)) #sapply needed to correctly get tclvalue()
+                         RSF[[ii]][1] <<- as.numeric(RSF[[ii]][1])
                      })
          } else {
                lapply(seq_along(CoreLineComp[[ii]]), function(jj){  #for(jj 1:LL){ does not work correctly
@@ -682,10 +684,10 @@ cat("\n ")
 
       QuantBtn <- tkbutton( QuantGroup, text=" QUANTIFY ", command=function(){
                            SetRSF()
-                           #extract indexes of CoreLines selected for quantification
 
+                           #extract indexes of CoreLines selected for quantification
                            CheckedCL <- names(CoreLineComp)
-                           CheckedCL <- CheckedCL[which(CheckedCL !="")]
+                           CheckedCL <- CheckedCL[which(CheckedCL != "")]
                            CheckedCL <- sapply(CheckedCL, function(x) { x <- unlist(strsplit(x, "\\."))
                                                   x <- unname(x)[1]
                                                   return(x)
@@ -697,11 +699,12 @@ cat("\n ")
                            idx <- unname(which(CK.PassE != CK.PassE[1])) #are the selected elements acquired at different PE?
                            is.NC <- TRUE #logic, TRUE if NormCoeff is already computed
                            idx <- CheckedCL[idx]  #now idx correctly indicates the corelines
-                           for(ii in idx){
-                               if (length(XPSSample[[jj]]@RegionToFit) < 3){  #NormCoeff not saved in ...RegionToFit@NormCoeff
+                           for(ii in seq_along(idx)){
+                               if (length(XPSSample[[ii]]@RegionToFit) < 3){  #NormCoeff not saved in ...RegionToFit@NormCoeff
                                    is.NC <- FALSE
                                }
                            }
+
                            if (length(idx) > 0 && is.NC == FALSE) {  #selected elements are acquired at different PE and NormCoeff not computed
                                answ <- tkmessageBox(message=" Found Spectra Acquired at Different Pass Energies. \n Do You Want Proceed with Quantification?",
                                                     type="yesno", title="NORMALIZATION COEFFICIENT", icon="warning")
@@ -753,7 +756,7 @@ cat("\n ")
                                 }
                            }
                            quant(CoreLineComp)
-                 })      
+                 })
       tkgrid(QuantBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 #      ww <- as.numeric(tkwinfo("reqwidth", QuantBtn)) + 15
       

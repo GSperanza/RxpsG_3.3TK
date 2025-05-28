@@ -895,15 +895,15 @@ XPSProcessCoreLine <- function(){
       DiffBtn <- tkbutton(MathFrame4, text=" DIFFERENTIATE CORELINE1 ", command=function(){
                                SourceFile <- tclvalue(XS2) <- tclvalue(XS11)
                                CoreLine <- tclvalue(CL11)
-                               SourceFile <- get(SourceFile1, envir=.GlobalEnv)
-                               CoreLine <- unlist(strsplit(CoreLine, "\\."))   #tolgo il "NUMERO." all'inizio del nome coreline
+                               SourceFile <- get(SourceFile, envir=.GlobalEnv)
+                               CoreLine <- unlist(strsplit(CoreLine, "\\."))   #skip number at beginning of the core.line name
                                SpectIndx <- as.integer(CoreLine[1])
                                SpectName <- CoreLine[2]
                                LL <- length(SourceFile[[SpectIndx]]@.Data[[1]])
                                SourceFile[[SpectIndx]]@RegionToFit <- list(x=NULL, y=NULL)
                                SourceFile[[SpectIndx]]@Baseline <- list(x=NULL, y=NULL, type=NULL)
                                SourceFile[[SpectIndx]]@Baseline$x <- SourceFile[[SpectIndx]]@RegionToFit$x <- SourceFile[[SpectIndx]]@.Data[[1]]
-                               SourceFile[[SpectIndx]]@Baseline$y <- rep(0, LL) #creo una baseline fittizia nulla
+                               SourceFile[[SpectIndx]]@Baseline$y <- rep(0, LL) #make a dummy core zero line
                                SourceFile[[SpectIndx]]@Baseline$type <- "linear"
                                k <- max(SourceFile[[SpectIndx]]@.Data[[2]])-min(SourceFile[[SpectIndx]]@.Data[[2]])
                                for (ii in 2:LL){
@@ -913,9 +913,18 @@ XPSProcessCoreLine <- function(){
                                Dmin <- min(SourceFile[[SpectIndx]]@RegionToFit$y)
                                Dmax <- max(SourceFile[[SpectIndx]]@RegionToFit$y)
                                SourceFile[[SpectIndx]]@RegionToFit$y <- k*(SourceFile[[SpectIndx]]@RegionToFit$y-Dmin)/(Dmax-Dmin)
+                               MinX <- min(SourceFile[[SpectIndx]]@.Data[[1]])
+                               MaxX <- max(SourceFile[[SpectIndx]]@.Data[[1]])
+                               SourceFile[[SpectIndx]]@Boundaries$x <- c(MinX, MaxX)
+                               if (SourceFile[[SpectIndx]]@Flags[1] == TRUE){  #Binding energy scale set
+                                   MinX <- min(SourceFile[[SpectIndx]]@.Data[[1]])
+                                   MaxX <- max(SourceFile[[SpectIndx]]@.Data[[1]])
+                                   Xlim <- sort(c(MinX, MaxX), decreasing=TRUE)
+                                   SourceFile[[SpectIndx]]@Boundaries$x <- Xlim
+                               }
                                matplot(x=matrix(c(SourceFile[[SpectIndx]]@.Data[[1]], SourceFile[[SpectIndx]]@RegionToFit$x), nrow=LL, ncol=2),
                                        y=matrix(c(SourceFile[[SpectIndx]]@.Data[[2]], SourceFile[[SpectIndx]]@RegionToFit$y), nrow=LL, ncol=2),
-                                       type="l", lty=c(1,1), col=c("black","blue"),
+                                       xlim=Xlim, type="l", lty=c(1,1), col=c("black","red3"),
                                        xlab=SourceFile[[SpectIndx]]@units[1], ylab=SourceFile[[SpectIndx]]@units[2])
                                DestFName <<- SourceFile
                                activeSpectIndx <<- SpectIndx

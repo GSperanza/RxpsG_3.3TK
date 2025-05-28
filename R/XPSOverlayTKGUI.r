@@ -195,7 +195,6 @@ XPSOverlay <- function(){
          if (FNameList == "0"){       #if the last FName is de-selected
              LL <- length(SelectedNames$XPSSample)  #remove the last FName from the list of selected files
              SelectedNames$XPSSample <<- SelectedNames$XPSSample[-LL]
-cat("\n 111", SelectedNames$CoreLines)
              LL <- length(SelectedNames$CoreLines)
              if (SelectedNames$CoreLines[LL] == "-----") {
                  SelectedNames$CoreLines <<- SelectedNames$CoreLines[-LL] #Remove the last Coreline from the list of selected Corelines
@@ -597,6 +596,7 @@ cat("\n 111", SelectedNames$CoreLines)
    PlotParameters$TreDAspect <- c(1,1)
    PlotParameters$AzymuthRot <- 35
    PlotParameters$ZenithRot <- 15
+   PlotParameters$AxOffset <- NULL
 
    PlotParameters$Annotate <- FALSE
    DefaultPlotParameters <- PlotParameters
@@ -1072,8 +1072,8 @@ cat("\n 111", SelectedNames$CoreLines)
 #---Funct5: Amplify
      tkgrid( ttklabel(T2frame2, text="XPS Sample:"),
              row = 3, column = 1, padx = 5, pady = 5, sticky="e")
-     XS2 <- tclVar("")     
-     objFunctAmpliXS <- ttkcombobox(T2frame2, width = 15, textvariable = XS2, values = "    ")
+     XS2 <- tclVar("XPSSample")
+     objFunctAmpliXS <- ttkcombobox(T2frame2, width = 15, textvariable = XS2, values = "    ", foreground="grey")
      tkbind(objFunctAmpliXS, "<<ComboboxSelected>>", function(){
                               XSamp <- tclvalue(XS2)
                               CLlist <- XPSSpectList(XSamp)
@@ -1081,10 +1081,10 @@ cat("\n 111", SelectedNames$CoreLines)
                     })
      tkgrid(objFunctAmpliXS, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
 
-     tkgrid( ttklabel(T2frame2, text="Core.Line"),
-             row = 3, column = 3, padx = 5, pady = 5, sticky="e")
-     CL2 <- tclVar("")
-     objFunctAmpliCL <- ttkcombobox(T2frame2, width = 15, textvariable = CL2, values = "    ")
+#     tkgrid( ttklabel(T2frame2, text="Core.Line"),
+#             row = 3, column = 3, padx = 5, pady = 5, sticky="e")
+     CL2 <- tclVar("Core.Line")
+     objFunctAmpliCL <- ttkcombobox(T2frame2, width = 15, textvariable = CL2, values = "    ", foreground="grey")
      tkbind(objFunctAmpliCL, "<<ComboboxSelected>>", function(){
                               WidgetState(objFunctFact, "normal")
                     })
@@ -1100,7 +1100,8 @@ cat("\n 111", SelectedNames$CoreLines)
                     })
      tkbind(objFunctFact, "<Key-Return>", function(K){
                            tkconfigure(objFunctFact, foreground="black")
-                           indx <- grep(tclvalue(XS2), SelectedNames$XPSSample)
+                           indx <- grep(tclvalue(CL2), SelectedNames$CoreLines)
+print(SelectedNames)
                            SelectedNames$Ampli[indx] <<- as.numeric(tclvalue(SCALEfACT))
                            CtrlPlot()
                     })
@@ -1147,15 +1148,15 @@ cat("\n 111", SelectedNames$CoreLines)
      tkgrid(T2frame33, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      PSEUDO3D <- tclVar(FALSE)
-     objFunctPseudo3D <- tkcheckbutton(T2frame33, text="Pseudo-3D Rendering", variable=PSEUDO3D, onvalue = 1, offvalue = 0,
+     objFunctPseudo3D <- tkcheckbutton(T2frame33, text="Pseudo-3D", variable=PSEUDO3D, onvalue = 1, offvalue = 0,
                          command=function(){
                            PlotParameters$Pseudo3D <<- as.logical(as.numeric(tclvalue(PSEUDO3D)))
                            CtrlPlot()
                     })
-     tkgrid(objFunctPseudo3D, row = 1, column = 1, padx = 5, pady=5, sticky="w")
+     tkgrid(objFunctPseudo3D, row = 1, column = 1, padx = c(1,15), pady=5, sticky="w")
 
      TRED <- tclVar(FALSE)
-     objFunctTreD <- tkcheckbutton(T2frame33, text="3D Rendering", variable=TRED, onvalue = 1, offvalue = 0,
+     objFunctTreD <- tkcheckbutton(T2frame33, text="3D ", variable=TRED, onvalue = 1, offvalue = 0,
                          command=function(){
                            PlotParameters$TreD <<- as.logical(as.numeric(tclvalue(TRED)))
                            OvType <- tclvalue(PLOTTYPE)
@@ -1170,8 +1171,13 @@ cat("\n 111", SelectedNames$CoreLines)
                                   if ( tclvalue(NORMALIZE) == "1") {
                                      Plot_Args$zlab$label <<- "Intensity [a.u.]"
                                   }
+#                                  Plot_Args$main$label <<- tclvalue(MAINTITLE)
+#                                  if (tclvalue(MAINTITLE) == ""){
+#                                      Plot_Args$main$label <<- activeSpectName
+#                                  }
                                   WidgetState(T4_ZAxNameChange, "normal")
                               } else {
+                                  PlotParameters$OverlayMode <<- FALSE
                                   PlotParameters$OverlayMode <<- "Single-Panel"
                                   Plot_Args$ylab$label <<- "Intensity [cps]"   #restore Y axis label for the 2D graphic mode
                                   Plot_Args$zlab$label <<- NULL
@@ -1183,19 +1189,36 @@ cat("\n 111", SelectedNames$CoreLines)
                            }
                            CtrlPlot()
                     })
-     tkgrid(objFunctTreD, row = 1, column = 2, padx = 5, pady=5, sticky="w")
+     tkgrid(objFunctTreD, row = 1, column = 2, padx = c(1,15), pady=5, sticky="w")
 
-     tkgrid( ttklabel(T2frame33, text="X|Y aspect ratio"),
-             row = 1, column = 3, padx = 5, pady = 5, sticky="e")
+     AXOFFSET <- tclVar("Ax_Off=")  #sets the initial msg
+     AxOffsetobj <- ttkentry(T2frame33, textvariable=AXOFFSET, width = 7, foreground="grey")
+     tkbind(AxOffsetobj, "<FocusIn>", function(K){
+                           tclvalue(AXOFFSET) <- ""
+                           tkconfigure(AxOffsetobj, foreground="red")
+                    })
+     tkbind(AxOffsetobj, "<Key-Return>", function(K){
+                           tkconfigure(AxOffsetobj, foreground="black")
+                           dd <- as.numeric(tclvalue(AXOFFSET))
+                           if ( is.na(dd) ) dd <- NULL
+                           PlotParameters$AxOffset <<- dd
+                           CtrlPlot()
+                    })
+     tkgrid(AxOffsetobj, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+     tkgrid( ttklabel(T2frame33, text="Ax.Name Offset "),
+             row = 1, column = 4, padx = c(1,15), pady = 5, sticky="e")
+
      TREDASPECT <- tclVar()
-     objTreDAspect <- ttkcombobox(T2frame33, width = 15, textvariable = TREDASPECT, values = c("3|1", "2|1","1|1", "1|2", "1|3"))
+     objTreDAspect <- ttkcombobox(T2frame33, width = 7, textvariable = TREDASPECT, values = c("3|1", "2|1","1|1", "1|2", "1|3"))
      tkbind(objTreDAspect, "<<ComboboxSelected>>", function(){
-                           indx <- grep(tclvalue(TREDASPECT), c("3|1", "2|1","1|1", "1|2", "1|3"))
-                           aspect <- matrix(c(0.3,0.5,1,2,3, 1,1,1,1,1), nrow=5) # this are the corresponding values to set the 3d aspect
+                           indx <- grep(tclvalue(TREDASPECT), c("3|1", "2|1","1|1", "1|2", "1|3"), fixed=TRUE)
+                           aspect <- matrix(c(0.3,0.5,1,2,3,   1,1,1,1,1), nrow=5) # this are the corresponding values to set the 3d aspect
                            PlotParameters$TreDAspect <<- as.vector(aspect[indx,])
                            CtrlPlot()
                     })
-     tkgrid(objTreDAspect, row = 1, column = 4, padx = 5, pady = 5, sticky="w")
+     tkgrid(objTreDAspect, row = 1, column = 5, padx = 5, pady = 5, sticky="w")
+     tkgrid( ttklabel(T2frame33, text="X|Y aspect ratio"),
+             row = 1, column = 6, padx = c(1,5), pady = 5, sticky="e")
 
      T2frame333 <- ttkframe(T2frame3, borderwidth=0, padding=c(0,0,0,0))
      tkgrid(T2frame333, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1218,7 +1241,6 @@ cat("\n 111", SelectedNames$CoreLines)
                            CtrlPlot()
                     })
      tkgrid(T2ZenithRot, row = 1, column = 4, padx = 5, pady = 5, sticky="w")
-
 
 #---Funct8: Zoom
      T2frame4 <- ttklabelframe(T2group1, text=" ZOOM & CURSOR POSITION ", borderwidth=2, padding=c(5,5,5,5))
@@ -1371,9 +1393,11 @@ cat("\n 111", SelectedNames$CoreLines)
                            Ylim <<- c(y1, y2)
                            if (tclvalue(REVERSE)=="TRUE") { #Reverse axis
                                Plot_Args$xlim <<- sort(c(x1, x2), decreasing=TRUE)
+                               Xlim <<- sort(c(x1, x2), decreasing=TRUE)
                                Plot_Args$ylim <<- sort(c(y1, y2))
                            } else {
                                Plot_Args$xlim <<- sort(c(x1, x2))
+                               Xlim <<- sort(c(x1, x2))
                                Plot_Args$ylim <<- sort(c(y1, y2))
                            }
                            CtrlPlot()
@@ -1899,6 +1923,10 @@ cat("\n 111", SelectedNames$CoreLines)
                                 Plot_Args$xlab <<- list(label=Xlabel, rot=0, cex=1.2)
                                 Plot_Args$xscale.components <<- xscale.components.subticks
                              } else if (tclvalue(XSCALETYPE) == "Power") {
+                                if (PlotParameters$TreD == TRUE){
+                                    tkmessageBox(message="In 3D only standard scales allowed", title="WARNING", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$x$log <<- 10    # 10^ power scale
                                 Plot_Args$xscale.components <<- xscale.components.logpower
                              } else if (tclvalue(XSCALETYPE) == "Log.10") {
@@ -1928,6 +1956,10 @@ cat("\n 111", SelectedNames$CoreLines)
                                 Plot_Args$scales$x$log <<- "e"   # log e scale
                                 Plot_Args$xscale.components <<- xscale.components.subticks
                              } else if (tclvalue(XSCALETYPE) == "X E10"){ #X E+n
+                                if (PlotParameters$TreD == TRUE){
+                                    tkmessageBox(message="In 3D only standard scales allowed", title="WARNING", icon="warning")
+                                    return()
+                                }
                                 Xlim <- sort(Xlim)
                                 x_at <- NULL
                                 x_labels <- NULL
@@ -1940,6 +1972,10 @@ cat("\n 111", SelectedNames$CoreLines)
                                 x_labels <- formatC(x_at, digits = 1, format = "e")
                                 Plot_Args$scales$x <<- list(at = x_at, labels = x_labels)
                              } else if (tclvalue(XSCALETYPE) == "X^10") { #X^10 scale
+                                if (PlotParameters$TreD == TRUE){
+                                    tkmessageBox(message="In 3D only standard scales allowed", title="WARNING", icon="warning")
+                                    return()
+                                }
                                 Plot_Args$scales$x$rot <<- 0
                                 Plot_Args$scales$y$rot <<- 90
                                 Xlim <- sort(Xlim)
@@ -1972,6 +2008,13 @@ cat("\n 111", SelectedNames$CoreLines)
      YSCALETYPE <- tclVar("Standard")
      T4_YScale <- ttkcombobox(T4F_YScale, width = 15, textvariable = YSCALETYPE, values = c("Standard", "Power", "Log.10", "Log.e", "Y E10", "Y^10"))
      tkbind(T4_YScale, "<<ComboboxSelected>>", function(){
+                             if (PlotParameters$TreD == TRUE){
+                                 tkmessageBox(message="In 3D only 'standard' Scale Allowed", title="WARNING", icon="warning")
+                                 Plot_Args$scales <<- list(cex=1, tck=c(1,0), tick.number=5, alternating=c(1), relation="same",
+                                                           y=list(log=FALSE), axs="i")
+                                 Plot_Args$yscale.components <<- yscale.components.subticks
+                                 return()
+                             }
                              xx1 <- as.numeric(tclvalue(X1RANGE))
                              xx2 <- as.numeric(tclvalue(X2RANGE))
                              yy1 <- as.numeric(tclvalue(Y1RANGE))
@@ -2086,20 +2129,23 @@ cat("\n 111", SelectedNames$CoreLines)
 
      T4F_PanelTitles <- ttklabelframe(T4AxOptgroup, text="CHANGE MULTI-PANEL TITLES", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T4F_PanelTitles, row = 2, column = 3, padx = 5, pady = 5, sticky="w")
-     T4_PanelTitles <- tkbutton(T4F_PanelTitles, text="  EXIT  ", command=function(){
+     T4_PanelTitles <- tkbutton(T4F_PanelTitles, text="  CHANGE  ", command=function(){
                            PTitles <- as.data.frame(PanelTitles, stringsAsFactors=FALSE)
                            Title <- "CHANGE PANEL TITLE"
                            ColNames <- "Titles"
                            RowNames <- ""
-                           Plot_Args$PanelTitles <- DFrameTable("PTitles", Title, ColNames="", RowNames="", 
-                                                                 Width=15, Modify=TRUE, Env=environment())
+                           PTitles <- DFrameTable(PTitles, Title, ColNames="", RowNames="",
+                                                                 Width=25, Modify=TRUE, Env=environment(),
+                                                                 Border=c(3,3,3,3))
+                           PTitles <- unname(unlist(PTitles))
+                           Plot_Args$PanelTitles <<- PTitles
                            CtrlPlot()
                     })
      tkgrid(T4_PanelTitles, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      T4F_AxNumSize <- ttklabelframe(T4AxOptgroup, text="AXIS NUMBERS SIZE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T4F_AxNumSize, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-     AXNUMSIZE <- tclVar("1.4")
+     AXNUMSIZE <- tclVar("1.2")
      T4_AxNumSize <- ttkcombobox(T4F_AxNumSize, width = 15, textvariable = AXNUMSIZE, values = FontSize)
      tkbind(T4_AxNumSize, "<<ComboboxSelected>>", function(){
                            Plot_Args$scales$cex <<- tclvalue(AXNUMSIZE)
@@ -2109,7 +2155,7 @@ cat("\n 111", SelectedNames$CoreLines)
 
      T4F_AxLabSize <- ttklabelframe(T4AxOptgroup, text="AXIS LABEL SIZE", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T4F_AxLabSize, row = 3, column = 2, padx = 5, pady = 5, sticky="w")
-     AXLABELSIZE <- tclVar("1.4")
+     AXLABELSIZE <- tclVar("1.2")
      T4_AxLabSize <- ttkcombobox(T4F_AxLabSize, width = 15, textvariable = AXLABELSIZE, values = FontSize)
      tkbind(T4_AxLabSize, "<<ComboboxSelected>>", function(){
                            Plot_Args$xlab$cex <<- tclvalue(AXLABELSIZE)
@@ -2309,7 +2355,7 @@ cat("\n 111", SelectedNames$CoreLines)
                            Plot_Args$ylim <<- NULL    #ylim set in XPSOverlayEngine
                            CtrlPlot()
                     })
-     tkgrid(T4_OKBtn, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
+     tkgrid(T4_OKBtn, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
 
 
 # --- TAB5 ---
@@ -2447,10 +2493,11 @@ cat("\n 111", SelectedNames$CoreLines)
 
      T5F_LegSize <- ttklabelframe(T5group1, text="Text Size", borderwidth=2, padding=c(5,5,5,5))
      tkgrid(T5F_LegSize, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-     LEGENDSIZE <- tclVar("0.4")
+     LEGENDSIZE <- tclVar("1")
      T5_LegSize <- ttkcombobox(T5F_LegSize, width = 15, textvariable = LEGENDSIZE, values = LegTxtSize)
      tkbind(T5_LegSize, "<<ComboboxSelected>>", function(){
 		           	             Plot_Args$auto.key$cex <<- as.numeric(tclvalue(LEGENDSIZE))
+                           AutoKey_Args$cex <<- as.numeric(tclvalue(LEGENDSIZE))
                            CtrlPlot()
                     })
      tkgrid(T5_LegSize, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -2551,7 +2598,6 @@ cat("\n 111", SelectedNames$CoreLines)
                                                             ColNames=ColNames, RowNames=RowNames,
                                                             Width=15, Modify=TRUE, Env=environment())
                            AutoKey_Args$text <<- unname(unlist(Legends))
-cat("\n xxx", AutoKey_Args$text)
                            CtrlPlot()
                     })
      tkgrid(T5_ChngLegBtn, row = 5, column = 1, padx = 5, pady = 5, sticky="w")

@@ -24,7 +24,6 @@ XPSCustomPlot <- function(){
                r[lim[1] <= r & r <= lim[2]]
             }
 
-
             if ( tclvalue(LINEONOFF) == "ON" && tclvalue(SYMONOFF) == "ON") {  # symbols OFF
                Plot_Args$type <<- "b"  # both: line and symbols
             }  #conditions on lines and symbols see above (T2obj4==ON   T2obj7==ON)
@@ -97,7 +96,6 @@ XPSCustomPlot <- function(){
             x2 <- as.numeric(tclvalue(XMAX))
             y2 <- as.numeric(tclvalue(YMAX))
 
-
             MinX <- min(SampData$x)
             MaxX <- max(SampData$x)
             Xlim <<- c(MinX, MaxX)
@@ -106,6 +104,7 @@ XPSCustomPlot <- function(){
             MaxY <- MaxY + (MaxY-MinY)/15
             MinY <- MinY - (MaxY-MinY)/15
             Ylim <<- c(MinY, MaxY)
+
             if (is.na(x1) && is.na(x2) && is.na(y1) && is.na(y2)){
                 Plot_Args$ylim <<- Ylim  <<- c(MinY, MaxY)
             } else {
@@ -605,7 +604,7 @@ XPSCustomPlot <- function(){
                   }
                   if (tclvalue (FCOMPONOFF) == "1") {
                      LTy <- grep(tclvalue(FCOMPLTY), LineTypes)
-                     Plot_Args$col <<- c(Plot_Args$col, FCompCol)
+                     Plot_Args$col <<- c(Plot_Args$col, FCompCol[1:NComp])
                      Plot_Args$lty <<- c(Plot_Args$lty, rep(LTy, NComp))
                      Plot_Args$lwd <<- c(Plot_Args$lwd, rep(as.numeric(tclvalue(FCOMPLWD)), NComp))
                   }
@@ -673,12 +672,10 @@ XPSCustomPlot <- function(){
                SampData <<- OrigData
                NColS <<- ncol(SampData)
                SetErrBars <<- NULL
-               
                SpectCol <<- "black"
                BLineCol <<- "sienna"
                FCompCol <<- XPSSettings$ComponentsColor
                FitCol <<- "red"
-
 
 	              Plot_Args$x	<<- formula("y ~ x")
                Plot_Args$data <<- SampData
@@ -739,10 +736,17 @@ XPSCustomPlot <- function(){
                SpectName <<- SpName[2]
                assign("activeSpectName",SpectName,envir=.GlobalEnv)
                assign("activeSpectIndx",SpectIndx,envir=.GlobalEnv)
-               OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
-                                       y=FName[[SpectIndx]]@.Data[[2]])
+               if (length(FName[[SpectIndx]]@.Data) < 4){
+                   OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
+                                          y=FName[[SpectIndx]]@.Data[[2]])
+               }
+               if (length(FName[[SpectIndx]]@.Data) == 4){
+                   OrigData <<- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
+                                          y=FName[[SpectIndx]]@.Data[[2]],
+                                          err=FName[[SpectIndx]]@.Data[[4]])
+                   ErrData <- TRUE
+               }
                ResetPlot()
-               NColS <<- ncol(SampData)
    }
 
 
@@ -769,12 +773,11 @@ XPSCustomPlot <- function(){
    }
    FNameList <- XPSFNameList()
    ErrData <- FALSE
-   NonNull <- which(!sapply(FName[[1]]@.Data, is.null))
-   if (length(NonNull) < 4){
+   if (length(FName[[SpectIndx]]@.Data) < 4){
        OrigData <- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
                               y=FName[[SpectIndx]]@.Data[[2]])
    }
-   if (length(NonNull) == 4){
+   if (length(FName[[SpectIndx]]@.Data) == 4){
        OrigData <- data.frame(x=FName[[SpectIndx]]@.Data[[1]],
                               y=FName[[SpectIndx]]@.Data[[2]],
                               err=FName[[SpectIndx]]@.Data[[4]])
@@ -1821,7 +1824,7 @@ XPSCustomPlot <- function(){
        tkgrid( ttklabel(T5frame1, text="Double click to change colors"),
              row = 1, column = 1, padx = 5, pady = 5)
 
-       #building the widget to change CL colors
+       #building the widget to change Fit color
        T5FitCol <- ttklabel(T5frame1, text=as.character(1), width=6, font="Serif 8", background=FitCol)
        tkgrid(T5FitCol, row = ii, column = 1, padx = c(5,0), pady = 1, sticky="w")
        tkbind(T5FitCol, "<Double-1>", function( ){

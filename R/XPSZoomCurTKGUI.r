@@ -187,7 +187,7 @@ FindNearest <- function(){
                      SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
                      SpectIndx <<- as.integer(SpectName[1])
                      XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
-                     if (length(FName[[SpectIndx]]@RegionToFit)>0) {   #reverse if BE scale
+                     if (length(FName[[SpectIndx]]@RegionToFit) > 0) {   
                         XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
                         XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
                      } else {

@@ -82,6 +82,8 @@ addScrollbars <- function(parent, widget, type = c("x", "y"), Row=1, Col=1, Px=0
           tkconfigure(widget, wrap="none")
       }
       tcl("autoscroll::autoscroll", xscrl)
+      tkgrid.propagate(parent, FALSE)
+      return(xscrl)
    }
    if(any(type %in% c("y"))) {
       yscrl <- ttkscrollbar(parent, orient = "vertical",
@@ -93,8 +95,9 @@ addScrollbars <- function(parent, widget, type = c("x", "y"), Row=1, Col=1, Px=0
           tkconfigure(widget, wrap="none")
       }
       tcl("autoscroll::autoscroll", yscrl)
+      tkgrid.propagate(parent, FALSE)
+      return(yscrl)
    }
-   tkgrid.propagate(parent, FALSE)
 }
 
 #' @title get_common_list Common XPS coreline for different XPS Samples
@@ -205,13 +208,13 @@ clear_widget <- function(widget) {
 updateTable <- function(widget, items) {
     #check if all elements items are NULL
     if (length(items) > 0 && sum(sapply(items, function(x) length(x))) == 0) {
-        widget <- clear_treeview(widget)
+        clear_treeview(widget)
         return(widget)
     }
     #check if items is NULL or items==list() or if its elements are all equal to ""
     if (length(items) == 0 || is.null(items[[1]][1]) == TRUE || items[[1]][1] == "") {
 #        tkmessageBox(message="NO Items Found. Please Control Data!", title="WARNING", icon="warning")
-        widget <- clear_treeview(widget)
+        clear_treeview(widget)
         return(widget)
     }
     if(is.list(items)){
@@ -224,7 +227,7 @@ updateTable <- function(widget, items) {
        }
     }
     items <- as.data.frame(items, stringsAsFactors=FALSE)
-    widget <- populate_treeview(widget = widget, items = items)
+    populate_treeview(widget = widget, items = items)
     tcl("update", "idletasks")
     return(widget)
 }

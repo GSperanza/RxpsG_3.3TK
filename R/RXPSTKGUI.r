@@ -50,13 +50,14 @@ options(guiToolkit = "tcltk")
 Pkgs <- utils::installed.packages(lib.loc=.libPaths())  #matrix of installed packages: names and additional  information
 Pkgs <- unname(Pkgs[, 1])                  #retain only the pakage names
 assign("Pkgs", Pkgs, envir=.GlobalEnv)     #save the list of installed Packages
-NeededPckgs <- c("RxpsG", "import", "latticeExtra", "minpack.lm", "signal")
+NeededPckgs <- c("RxpsG", "import", "latticeExtra", "minpack.lm", "SparseM", "signal")
 sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if the package 'RxpsG' is correctly installed
                           cat("\n ERROR Package", x, " not installed!")
                           cat("\n Please control correct installation of required packages:")
                           cat("\n import
                                \n latticeExtra
                                \n minpack.lm
+                               \n SparseM
                                \n signal "
                              )
                           return()
@@ -328,6 +329,7 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                    CheckName[1] <- FNameList[ii]
                    XPSSample <- get(FNameList[ii],envir=.GlobalEnv)  #load XPSSample data in FName
                    XPSSample <- XPSpkgCtrl(XPSSample)         #controls the attribute "package" of XPSSample and set it to ".GlobalEnv"
+                   XPSSample <- CtrlSurname(XPSSample)
                    FNameList[ii] <- paste(unlist(strsplit(FNameList[ii], " ")), collapse="") #drop blank spaces
                    XPSSample@Sample <- PathFile <- paste(DirName, "/", FNameList[ii], sep="") #forces the @Sample to be equal to ActualDir+activeFName
                    if ((dirname(PathFile) != ".RData")){  #It happen that the XPSSample==FNameList[1] still contains the original name XXX.vms or XXX.pxt instead of XXX.RData
@@ -536,7 +538,6 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       })
 
       tkadd(FileMenu, "command", label = "   Refresh XPS Sample List", command = function() {
-            Items <- XPSFNameList()
             UpdateXS_Tbl()
       })
 
@@ -687,6 +688,10 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
              XPSElemTab()
       })
 
+      tkadd(AnalysisMenu, "command", label = "   Fit Goodness", command = function() {
+             XPSChiSquare()
+      })
+
       tkadd(AnalysisMenu, "command", label = "   VMS Data Transmission Correction", command = function() {
              XPSVmsCorr()
       })
@@ -701,6 +706,7 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       })
 
       tkadd(PlotMenu, "command", label = "Overlay Spectra", command = function() {
+             tkmessageBox(message="Wait a second...", title="INFO", icon="info")
              XPSOverlay()
       })
 

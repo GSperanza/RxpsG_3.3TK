@@ -1,6 +1,6 @@
 #' @title XPSSpectNameChange
-#' @description XPSSpectNameChange is a functin to change the name of
-#'   obects of class XPSSample and/or the name associated to CoreLines
+#' @description XPSSpectNameChange is a function to change the name of
+#'   objects of class XPSSample and/or the name associated to CoreLines
 #'   of class XPSCoreLine
 #' @examples
 #' \dontrun{
@@ -31,14 +31,13 @@ XPSSpectNameChange <- function(){
    }
 
 #--- Global variables definition ---
-   activeFName <- get("activeFName", envir = .GlobalEnv)
+   XPSSampName <- get("activeFName", envir = .GlobalEnv)
    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
    FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
-   XPSSampName <- activeFName
-   FName <- get(activeFName, envir=.GlobalEnv)  #load in FName the XPSSample data
+   FName <- get(XPSSampName, envir=.GlobalEnv)  #load in FName the XPSSample data
    OldSpectList <- list(items=names(FName))
    SpectList <- unname(sapply(FName, function(z) z@Symbol))
    if(identical(OldSpectList$items,SpectList) == FALSE) {
@@ -131,18 +130,34 @@ XPSSpectNameChange <- function(){
                })
    tkgrid(XSName, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-#   SaveBtn <- tkbutton(LabGroup, text=" SAVE CHANGES ", width=30, command=function(){
-#       	                if( activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
-#       	                assign(XPSSampName, FName, envir=.GlobalEnv)
-#       	                assign("activeFName", XPSSampName, envir=.GlobalEnv)
-#                        tkconfigure(CLLable, text="  ")
-#                        tkconfigure(XSName, text="  ")
-#                        plot(FName)
-#                        XPSSaveRetrieveBkp("save")
-#               })
-#   tkgrid(SaveBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
+   BtnGroup <- ttkframe(LabWin, borderwidth=0, padding=c(0,0,0,0) )
+   tkgrid(BtnGroup, row = 5, column = 1, padx = 0, pady = 0, sticky="w")
 
-   SaveExitBtn <- tkbutton(LabGroup, text=" SAVE CHANGES and EXIT ", width=30, command=function(){
+   SaveBtn <- tkbutton(BtnGroup, text="SAVE", width=10, command=function(){
+                        SpectList <<- get("SpectList", envir=environment())
+                        for (ii in 1:length(FName)){
+                             if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
+                                 FName[[ii]]@Symbol <<- SpectList$items[ii]
+                                 FName[[ii]]@RSF <<- 0 #otherwise XPSClass does not set RSF (see next row)
+                                 FName[[ii]] <<- XPSsetRSF(FName[[ii]])
+                             }
+                        }
+                        FName@names <<- unname(unlist(SpectList))
+                        stopLoop <<- FALSE
+                        SpectListCtrl()
+                        if( activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
+       	                assign("activeFName", XPSSampName, envir=.GlobalEnv)
+       	                assign(XPSSampName, FName, envir=.GlobalEnv)
+       	                FNameList <- XPSFNameList()
+       	                tkconfigure(LabXS, values = FNameList)
+                        plot(FName)
+      	                 XPSSaveRetrieveBkp("save")
+      	                 stopLoop <<- TRUE
+      	                 UpdateXS_Tbl()
+               })
+   tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+   SaveExitBtn <- tkbutton(BtnGroup, text=" SAVE & EXIT ", width=15, command=function(){
                         SpectList <<- get("SpectList", envir=environment())
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
@@ -163,6 +178,6 @@ XPSSpectNameChange <- function(){
       	                 stopLoop <<- TRUE
       	                 UpdateXS_Tbl()
                })
-   tkgrid(SaveExitBtn, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
+   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
    SpectList <- OldSpectList
 }

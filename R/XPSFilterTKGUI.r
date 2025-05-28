@@ -1112,33 +1112,34 @@ XPSFilter <- function() {
                         Symbol <- get("activeSpectName",.GlobalEnv)
                         CLNames <- names(FName)
                         LL <- length(FName)
+                        ChckName <- paste("ST.", CLNames[SpectIndx], sep="")
 #                        chrPos <- regexpr("ST.", CLNames[SpectIndx])    #Are we working on a Smoothing-Test core line?
-                        chrPos <- FindPattern(CLNames[SpectIndx], "ST.")
+                        chrPos <- FindPattern(CLNames, ChckName)
                         if (length(chrPos[2]) > 0) {                               #Smoothing-Test Coreline IS PRESENT
-                           TestIdx <- SpectIndx
+                           TestIdx <- chrPos[1]
                            Info <- FName[[TestIdx]]@Info                #update filter information
                            LL <- length(Info)
                            Info[LL] <- paste("   ::: Smoothing Test: ", FiltInfo, sep="")
                            FName[[TestIdx]]@Info <<- Info
                         } else {
 #                           chrPos <- which(regexpr("ST.", CLNames) > 0)  #Find the index if there is a "ST." identifying the Smoothing-Test coreline
-                           chrPos <- FindPattern(CLNames, "ST.")
-                           if (length(chrPos[2])==0) {                   #Smoothing-Test coreline is NOT present
+#                           chrPos <- FindPattern(CLNames, "ST.")
+                           if (length(chrPos[2]) == 0) {                   #Smoothing-Test coreline is NOT present
                               TestIdx <- LL+1                            #Smoothing-Test coreline is added to FName as a new coreline
                               FName[[TestIdx]] <<- FName[[SpectIndx]]    #We are testing a filter on a coreline and save results in the Smoothing-Test coreline
-                              FName@names <<- c(CLNames,paste("ST.", Symbol, sep=""))  #modify the names and info of the new Smoothing-Test coreline
+                              FName@names <<- c(CLNames, ChckName)  #modify the names and info of the new Smoothing-Test coreline
                               Info <- FName[[TestIdx]]@Info
                               LL <- length(Info)
                               chrPos <- FindPattern(Info[LL], "   ::: Smoothing Test")
-                              if (length(chrPos[1]) == 0){ LL <- LL+1 }    #Smoothing-Test Info still not present
+                              if (length(chrPos[1]) == 0){ LL <- LL+1 }    #Smoothing-Test Info still not present}
                               Info[LL] <- paste("   ::: Smoothing Test: ", FiltInfo, sep="")
                               FName[[TestIdx]]@Info <<- Info
-                              FName[[TestIdx]]@Symbol <<- paste("ST.", Symbol, sep="")
+                              FName[[TestIdx]]@Symbol <<- ChckName
                            } else {
-                               TestIdx <- chrPos[2]                            #Smoothing-Test coreline is present
+                              TestIdx <- chrPos[1]                            #Smoothing-Test coreline is present
                               Info <- FName[[TestIdx]]@Info
                               LL <- length(Info)
-                              Info[LL] <- paste("   ::: Smoothing Test: ", FiltInfo, sep="")
+                              Info[LL] <- paste("   ::: Smoothing Test: ", FiltInfo, sep="") #update Info with new filter settings
                               FName[[TestIdx]]@Info <<- Info
                            }
                         }

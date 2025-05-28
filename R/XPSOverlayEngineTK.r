@@ -29,7 +29,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              tmp2 <- NULL
              Cex <- Plot_Args$cex
              BaseIdx <- CompIdx <- FitIdx <- 1
-             for ( jj in seq_along(Ylength[[ii]]) ) {    #jj corre sulle componenti Corelines
+             for ( jj in seq_along(Ylength[[ii]]) ) {    #jj runs on the Core-lines
                    if (attr(Ylength[[ii]][jj], "names") == "MAIN"     #holds when just the spectrum is plotted
                        || attr(Ylength[[ii]][jj], "names") =="RTF"){  #holds when spectrum + Baseline or fit are plotted
                        Plot_Args$col[idx] <<- palette[ii]
@@ -58,13 +58,13 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
                        Plot_Args$cex[idx] <<- Plot_Args$cex
                        FitIdx <- FitIdx+1
                    }
-                   tmp1 <- c(tmp1, rep(ii, times=as.integer(Ylength[[ii]][jj])))   #indice associato ai vari XPSSample
-                   tmp2 <- c(tmp2, rep(idx, times=as.integer(Ylength[[ii]][jj])))  #indice associato alle componenti della CoreLine (baseline o componenti del fit)
+                   tmp1 <- c(tmp1, rep(ii, times=as.integer(Ylength[[ii]][jj])))   #ii runs on the XPSSample
+                   tmp2 <- c(tmp2, rep(idx, times=as.integer(Ylength[[ii]][jj])))  #idx associated to the core line elements (baseline fit components fit...)
                    idx <- idx+1
              }
              levx[[ii]] <<- tmp1 #required to distinguish multiple panels
              cx[[ii]] <<- tmp2   #required to distinguish different curves
-             Xlimits[[ii]] <<- rev(range(X[[ii]]))  #costruisco una lista di xlim invertiti
+             Xlimits[[ii]] <<- rev(range(X[[ii]]))  #build a list of reversed Xlimits
   	     }
     }
 
@@ -117,6 +117,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
         SpectName <- unlist(strsplit(SpectName, "\\."))   #skip the initial number at beginning of the CoreLine name
         SpectIdx <- as.numeric(SpectName[1])
         #now modify the amplitude of the spectrum, baseline, and fit
+cat("\n #### Scalfact", ii,  SelectedNames$Ampli[ii])
+
         FName[[SpectIdx]]@.Data[[2]] <- FName[[SpectIdx]]@.Data[[2]]*SelectedNames$Ampli[ii]    #if an amplification factor was seleted, AmpliFact != 1
         if (length(FName[[SpectIdx]]@Baseline) > 0){
            FName[[SpectIdx]]@Baseline[[2]] <- FName[[SpectIdx]]@Baseline[[2]]*SelectedNames$Ampli[ii]
@@ -167,12 +169,13 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
     XPSSampLen <- length(overlayXPSSample)
     XPSSampNames <- names(overlayXPSSample)
     Nspettri <- length(XPSSampNames)
-    if (length(grep("\U0394", XPSSampNames)) > 0){  #Control id greek Char is present in CoreLine names
+    idx <- grep("\U0394", CLnames)
+    if (length(idx) > 0 && !is.na(idx)){  #Control if greek Char DELTA is present in CoreLine names
         idx <- grep("\U0394", CLnames)[1]
         if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
         if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- FName[[idx]]@units[2] }
         if (length(Plot_Args$main$label) > 0){
-            Plot_Args$main$label <- expression(paste(Plot_Args$main$label))  #renders Title containing Grrek symbol compatible to XYplot()
+            Plot_Args$main$label <- expression(paste(Plot_Args$main$label))  #renders Title containing Greek symbol compatible to XYplot()
         }
     } else {
         if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[SpectName]]@units[1] } #set the axis labels if not defined
@@ -403,11 +406,11 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
           }
        }
 
-       Plot_Args$xlim <- NULL  #X range is defined inside xyplot
-       Plot_Args$ylim <- NULL  #Y range is defined inside xyplot
-       if (PlotParameters$Reverse) { #If reverse is TRUE limits must be given through a list containing:
+#       Plot_Args$xlim <- NULL  #X range is defined inside xyplot
+#       Plot_Args$ylim <- NULL  #Y range is defined inside xyplot
+       if (PlotParameters$Reverse && is.null(Plot_Args$xlim)) { #If reverse is TRUE limits must be given through a list containing:
           Plot_Args$xlim <- Xlimits    #Xlimits[[1]]=X1max, X1min
-       }                             #Xlimits[[2]]=X2max, X2min
+       }                               #Xlimits[[2]]=X2max, X2min
        cx <- unlist(cx)
        levx <- unlist(levx)
        df <- data.frame(x = unname(unlist(X)), y = unname(unlist(Y)))
@@ -428,6 +431,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
        plot(graph)
        assign("RxpsGGraph", graph, envir=.GlobalEnv)
     }
+
 
 ##--- Pseudo  TreD ---
     if (PlotParameters$XOffset*PlotParameters$YOffset != 0  #both XOffset che YOffset different from zero
@@ -510,13 +514,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 ##--- Real TreD ---
     LL <- length(XPSSampNames) #number of spectra
     if (PlotParameters$OverlayMode == "TreD") {
-       Z <- NULL
-       Cloud_Args <- list()
-       for (ii in 1:XPSSampLen){
-            Z <- c(Z, rep(ii, SpectLengths[ii]))
-       }
-
-   	   df <- data.frame(x =unname(unlist(X)), y=as.vector(Z), z=unname(unlist(Y)) )
+    Cloud_Args <- list()
 
 #---Set Cloud Style parameters---
        LType <- Plot_Args$lty   # "solid", "dashed", "dotted" ....
@@ -546,9 +544,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
        }
 #---axis options---
        if (length(Plot_Args$main$label) == 0) { Plot_Args$main$label <- SpectName }
-       idx <- grep("\U0394", XPSSampNames)[1] #Control id greek Char is present in CoreLine names
 
-       if (length(grep("\U0394", XPSSampNames)[1]) > 0){  #Control id greek Char is present in CoreLine names
+       idx <- grep("\U0394", XPSSampNames)[1] #Control if greek Char is present in CoreLine names
+       if (length(idx) > 0 && !is.na(idx)){  #Control if greek Char DELTA is present in CoreLine names
            idx <- grep("\U0394", CLnames)[1]
            if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
            if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- "Sample" }
@@ -560,37 +558,82 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
            if (length(Plot_Args$zlab$label) == 0) { Plot_Args$zlab$label <- FName[[SpectName]]@units[2] }
        }
        if (PlotParameters$Normalize == TRUE ) { Plot_Args$zlab$label <- "Intensity [a.u.]" }
-       if (PlotParameters$Reverse) { #If reverse==TRUE compute limits and reverse
-          Xmax <- max(sapply(Xlimits, max))
-          Xmin <- min(sapply(Xlimits, min))
-          Cloud_Args$xlim<-c(Xmax,Xmin)  #Xlimits[[1]]=X1max, X1min
+
+#---Axis scale
+       Cloud_Args$scales <- list(cex=Plot_Args$scales$cex, tck=c(1,0), alternating=c(1), relation="free",
+                                 x=list(log=FALSE), y=list(log=FALSE), z=list(log=FALSE), 
+                                 distance=rep(PlotParameters$AxOffset, 3), arrows=FALSE)
+       if (Plot_Args$scales$x$log == "e" || Plot_Args$scales$x$log == "Log.10" || Plot_Args$scales$x$log == "10"){
+           LogXOnOff <- Plot_Args$scales$x$log #if x axis log TRUE all axes TRUE
+           LogYOnOff <- Plot_Args$scales$y$log #if x axis log TRUE all axes TRUE
+           Cloud_Args$scales <- list(cex=Plot_Args$scales$cex, tck=c(1,0), alternating=c(1), relation="free",
+                                     x=list(log=Plot_Args$scales$x$log), y=list(log=FALSE),z=list(log=Plot_Args$scales$y$log),
+                                     distance=rep(PlotParameters$AxOffset, 3), arrows=FALSE)
        }
 
-       Cloud_Args$ylim<-as.character(c(1:XPSSampLen))  #in Y ho messo i channels Z
-       LogOnOff<-Plot_Args$scales$x$log #if x ax log TRUE all axes TRUE
-       Cloud_Args$scales<-list(cex=Plot_Args$scales$cex, tck=c(1,0), alternating=c(1), relation="free",
-                               x=list(log=LogOnOff), y=list(log=LogOnOff),z=list(log=LogOnOff),
-                               arrows=FALSE)
+#---axis label orientation
+       Cloud_Args$scales$x$rot <- Plot_Args$scales$x$rot
+       Cloud_Args$scales$y$rot <- Plot_Args$scales$y$rot
+       Cloud_Args$scales$z$rot <- Plot_Args$scales$y$rot
+
+#---axis limits
+       Cloud_Args$xlim <- Plot_Args$xlim
+       if (PlotParameters$Reverse) { #If reverse==TRUE compute limits and reverse
+          Xmax <- max(Plot_Args$xlim)
+          Xmin <- min(Plot_Args$xlim)
+          Cloud_Args$xlim <- c(Xmax,Xmin)
+
+       }
+       Cloud_Args$ylim <- as.character(c(1:XPSSampLen))  #in Y the different channels (Samples)
+       Zmax <- max(Plot_Args$ylim)      #Y is the axis of the channels (Samples)
+       Zmin <- min(Plot_Args$ylim)      #Z is the axis of the spectral intensities (old Y axis)
+       Cloud_Args$zlim <- c(Zmin,Zmax)
+
+#---Zoom present?
+
+       idx1 <- findXIndex(unname(unlist(X[[1]])), min(Plot_Args$xlim))  #X coontains the abscissa of all the selected core.lines
+       idx2 <- findXIndex(unname(unlist(X[[1]])), max(Plot_Args$xlim))
+       idx <- sort(c(idx1, idx2), decreasing=FALSE)
+
+#---Prepare data to plot
+       Z <- NULL  #use Z as a temporary vector
+       for(ii in 1:XPSSampLen){
+           Z <- c(Z, unname(unlist(X[[1]])[idx[1]:idx[2]]))
+       }
+       X <- Z
+       Z <- NULL
+       for(ii in 1:XPSSampLen){
+           Z <- c(Z, unname(unlist(Y[[ii]])[idx[1]:idx[2]]))
+       }
+       Y <- Z
+       Z <- NULL #now build the Z vector to identify the different samples from which core.lines are derived
+       for (ii in 1:XPSSampLen){
+            Z <- c(Z, rep(ii, (idx[2]-idx[1]+1)))
+       }
+       cx <- Z #cx identifies the different groups of data i.e. different samples
+
+   	   df <- data.frame(x=X, y=as.vector(Z), z=Y) #exchange Y <-> Z axes: spectral intensity along Z
+
 #---3D rendering---
-       Cloud_Args$aspect<-as.numeric(PlotParameters$TreDAspect)
-       Cloud_Args$screen<-list(x=-60,
+       Cloud_Args$aspect <- as.numeric(PlotParameters$TreDAspect)
+       Cloud_Args$screen <- list(x=-60,
                                y= PlotParameters$AzymuthRot,
                                z= PlotParameters$ZenithRot)
-       Cloud_Args$main<-list(label=Plot_Args$main$label,cex=Plot_Args$main$cex)
-       Cloud_Args$xlab<-list(label=Plot_Args$xlab$label, rot=PlotParameters$AzymuthRot-10, cex=Plot_Args$xlab$cex)
-       Cloud_Args$ylab<-list(label=Plot_Args$ylab$label, rot=PlotParameters$AzymuthRot-80, cex=Plot_Args$xlab$cex)
-       Cloud_Args$zlab<-list(label=Plot_Args$zlab$label, rot=90, cex=Plot_Args$xlab$cex)
+       Cloud_Args$main <- list(label=Plot_Args$main$label,cex=Plot_Args$main$cex)
+       Cloud_Args$xlab <- list(label=Plot_Args$xlab$label, rot=PlotParameters$AzymuthRot-10, cex=Plot_Args$xlab$cex)
+       Cloud_Args$ylab <- list(label=Plot_Args$ylab$label, rot=PlotParameters$AzymuthRot-80, cex=Plot_Args$xlab$cex)
+       Cloud_Args$zlab <- list(label=Plot_Args$zlab$label, rot=90, cex=Plot_Args$xlab$cex)
        LL<-length(Y)
 
 #---legend options---
        if (length(Plot_Args$auto.key) > 1) { #auto.key TRUE
           Plot_Args$auto.key$space <- NULL   #Inside top right position
-          Plot_Args$auto.key$corner<-c(1,1)
-          Plot_Args$auto.key$x<- 0.95
-          Plot_Args$auto.key$y<- 0.95
+          Plot_Args$auto.key$corner <-c(1,1)
+          Plot_Args$auto.key$x <- 0.95
+          Plot_Args$auto.key$y <- 0.95
 
-          Cloud_Args$auto.key<-Plot_Args$auto.key
-          Cloud_Args$par.settings<-Plot_Args$par.settings
+          Cloud_Args$auto.key <- Plot_Args$auto.key
+          Cloud_Args$par.settings <- Plot_Args$par.settings
        }
 #---plot commands---
 	      Cloud_Args$x <- formula("z ~ x*y")
