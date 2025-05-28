@@ -1,17 +1,18 @@
 Package: RxpsG
 Type: Package
 Title: Processing Tool for X-ray Photoelectron Spectroscopy Data
-Version: 2.3-2
-Date: 14-01-2024
+Version: 3.2
+Date: 30-4-2025
 Author: Giorgio Speranza & Roberto Canteri
 Maintainer: Giorgio Speranza <speranza@fbk.eu>
 Description: Software for spectral analysis of ray Photoelectron Data.
-Depends: R (>= 3.0.0), digest, gWidgets2, gWidgets2tcltk,
-          import, latticeExtra, memoise, minpack.lm, signal  
-Suggests: rootSolve
+Depends: R (>= 3.0.0), latticeExtra, signal, SparseM, tcltk 
+Imports: grDevices, graphics, grid, lattice, MASS,  
+         methods, minpack.lm, stats, utils
+Suggests: baseline, FME, rootSolve, wavelets         
 License: file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 VignetteBuilder: utils
 NeedsCompilation: no
-Packaged: 14-01-2024 
+Packaged: 30-4-2025 
