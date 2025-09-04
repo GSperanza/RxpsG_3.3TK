@@ -217,7 +217,8 @@ XPSProcessCoreLine <- function(){
       CullData <- NULL  #rangeX of the region to cull
       prefix <- ""
       SpectName <- ""
-      
+      Xlim <- NULL
+
       tkmessageBox(message=" Remember to save data after each operation \n otherwise you will loss the results", title="SAVE RESULTS", icon="warning")
 
 #####----main---

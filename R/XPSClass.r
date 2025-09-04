@@ -537,7 +537,7 @@ setMethod("XPSbaseline", signature(object="XPSCoreLine"),
        object <- XPSsetRegionToFit(object)
     }
 
-#-----  modificato Giorgio2018
+#-----  modified Giorgio2018
     info <- NULL
     tmp <- NULL
     spectra <- matrix(data = object@RegionToFit$y, nrow = 1)
@@ -563,6 +563,7 @@ setMethod("XPSbaseline", signature(object="XPSCoreLine"),
               LL <- length(object@RegionToFit$x)
               av1 <- mean(object@RegionToFit$y[1:3])  #average1 at beginning
               av2 <- mean(object@RegionToFit$y[(LL-3): LL])  #average2 at end
+
               X <- object@Boundaries$x
               Linbgnd <- lm(formula=c(av1, av2) ~ X)
               newx <- data.frame(X=object@RegionToFit$x)
@@ -581,7 +582,7 @@ setMethod("XPSbaseline", signature(object="XPSCoreLine"),
               wgts <- rep(1, LL)
               wgts[1:5] <- wgts[(LL-5):LL] <- 1000     #the first and least 5 points have weight 1000 to force the baseline be overlapped to them
               bgnd <- lm(formula=yyy ~ stats::poly(X, deg), weights=wgts)
-              bgnd <- matrix(data = predict(bgnd, newx), nrow=1)+Linbgnd
+              bgnd <- matrix(data = predict(bgnd, newx), nrow=1) #+Linbgnd
               tmp <- new("baseline",
                           baseline = bgnd,
                           corrected = spectra - bgnd,
@@ -709,9 +710,9 @@ setMethod("XPSapplyshift", signature(object = "XPSCoreLine"),
           def=function(object, shift) {
 
      # If shift == NULL no shift applied to the coreline
-     if ( is.null(shift) || !is.numeric(shift) ) {
-     newshift <- -slot(object,"Shift")
-     slot(object,"Shift") <- 0
+     if (is.null(shift) || shift == 0 || !is.numeric(shift) ) {
+         newshift <- -slot(object,"Shift")
+         slot(object,"Shift") <- 0
      } else newshift <- shift
 
      # shift for original data
@@ -731,8 +732,9 @@ setMethod("XPSapplyshift", signature(object = "XPSCoreLine"),
                                              )
      }
 
-     if ( ! is.null(shift) ) slot(object,"Shift") <- newshift + slot(object,"Shift")
-
+     if ( ! is.null(shift) ) {
+        if( shift != 0) slot(object,"Shift") <- newshift + slot(object,"Shift")
+     }
      return(object)
   }
 )
@@ -854,10 +856,10 @@ setMethod("XPSsetRSF", signature(object="XPSCoreLine"),
     if (!is.null(rsf) && rsf != 0) {
        slot(object,"RSF") <- rsf
     } else {
-    if ( slot(object,"RSF") == 0 ) {
+    if ( object@RSF == 0 || length(object@RSF) == 0 ) {
        # with slot(object,"Symbol") get Symbol and Orbitals
        pattern <- c("[[:alpha:]]{1,2}")  # pattern composed only by letters
-       if (object@Symbol=="survey" || object@Symbol=="Survey" || object@Symbol=="VB") { return(object) }  #definition of a baseline on the survey
+       if (object@Symbol=="survey" || object@Symbol=="Survey" || object@Symbol=="VB") { return(object) }  #NO RSF for Survey, VB spectra
        mpat <- regexpr(pattern, object@Symbol)
        # symbol element
        element <- regmatches(object@Symbol, mpat)
@@ -870,104 +872,108 @@ setMethod("XPSsetRSF", signature(object="XPSCoreLine"),
                cat("\n Unknown Element Orbital: RSF not set. Please check the Core Line Symbol")
                return(object)
            } else {
-               # if Scienta: Flag[3] == TRUE modification 18/9/2012
-               # but for older saved data length(Flags) = 2, then
-               if (length(object@Flags) == 2) { slot(object,"Flags")[3] <- TRUE }
+               object <- XPSDefineRSF(object, object@Symbol)
+               XPSSaveRetrieveBkp("save")
 
-               # get RSF
-               if (slot(object,"Flags")[3]){
-                 analyzer <- "scienta"    # if Scienta
-               } else {
-                 analyzer <- "kratos"     # if Kratos
-               }
-               rsf <- getElementValue(element, orbital, analyzer, what="RSF") #vedi XPSElement.r
-               LL <- length(unique(rsf)) # removes equal values: if LL > 1 multiple RSF value associated to the same coreline
-#------ Check
-               if ( is.null(rsf) || is.na(prod(rsf)) || prod(rsf)==0 || LL > 1 ) { #prod() needed when length(rsf) > 1
-                  rsf <- NA
-
-                  RSFwin <- tktoplevel()
-                  tkwm.title(RSFwin,"SET RSF")
-                  tkwm.geometry(RSFwin, "+100+50")   #position respect topleft screen corner
-
-                  RSFframe <- ttklabelframe(RSFwin, text = "Display RSF table", borderwidth=5)
-                  tkgrid(RSFframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-                  txt <- paste("WARNING: ZERO, UNDEFINED OR DIFFERENT RSF VALUES! \n",
-                               "Please chose the RSF for the selected element orbital: ", collapse="")
-                  tkgrid( ttklabel(RSFframe, text=txt),
-                                   row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-                  RSFgroup <- ttkframe(RSFframe, borderwidth=0, padding=c(0,0,0,0) )
-                  tkgrid(RSFgroup, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
-
-                  Table <- showTableElement(element, analyzer)
-                  Table[[1]] <- c(Table[[1]]," ")  #Number of Table rows is unknown. If Table has just 1 row
-                  Table[[2]] <- c(Table[[2]]," ")  #formatting has no effect on GTABLE
-                  Table[[3]] <- c(Table[[3]]," ")  #Then a row made just of spaces is added
-                  Table[[4]] <- c(Table[[4]]," ")
-                  Table[[5]] <- c(Table[[5]]," ")
-                  Table[[1]] <- encodeString(Table[[1]], justify="centre", width=9)
-                  Table[[2]] <- encodeString(Table[[2]], justify="centre", width=9)
-                  Table[[3]] <- encodeString(Table[[3]], justify="centre", width=9)
-                  Table[[4]] <- encodeString(Table[[4]], justify="centre", width=9)
-                  Table[[5]] <- encodeString(Table[[5]], justify="centre", width=9)
-                  names(Table) <- colNames <- c("Element", "Orbitals", "BE", "KE", "RSF")
-                  ColWdth <- c(60, 65, 80, 80, 50)
-
-                  RSFTab <- XPSTable(parent=RSFgroup, items=Table, NRows=5, ColNames=colNames, Width=ColWdth)
-                  tkbind(RSFTab, "<Double-1>", function() {  #bind the table elements to the LEFT mouse button PRESS
-                           idx <- tclvalue(tcl(RSFTab, "selection"))
-                           idx <- as.numeric(gsub("[^0-9]","", idx))
-                           NewRSF <- Table[[5]][idx] #get the selected element symbol
-                           if (is.na(NewRSF)) {
-                               txt <- paste("RSF = ", NewRSF, ": Incorrect Value. Please Input a new RSF", sep="")
-                               tkmessageBox(message=txt, title="WARNING", icon="warning")
-                           } else {
-                               rsf <<- NewRSF
-                               tclvalue(NRSF) <<- NewRSF
-                           }
-                     })
-
-                  NRSF <- tclVar("RSF ? ")  #sets the initial msg
-                  EnterRSF <- ttkentry(RSFframe, textvariable=NRSF, foreground="grey")
-                  tkbind(EnterRSF, "<FocusIn>", function(K){
-                           tclvalue(NRSF) <- ""
-                           tkconfigure(EnterRSF, foreground="red")
-                     })
-                  tkbind(EnterRSF, "<Key-Return>", function(K){
-                           tkconfigure(EnterRSF, foreground="black")
-                           NewRSF <- as.numeric(tclvalue(NRSF))
-                           if (is.na(NewRSF)) {
-                               txt <- paste("RSF = ", NewRSF, ": Incorrect Value. Please Input a new RSF", sep="")
-                               tkmessageBox(message=txt, title="WARNING", icon="warning")
-                           } else {
-                               rsf <<- NewRSF
-                           }
-                     })
-                  tkgrid(EnterRSF, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-
-                  SaveCloseBtn <- tkbutton(RSFframe, text=" Save and Close ", width=15, command=function(){
-                           NewRSF <- as.numeric(tclvalue(NRSF))
-                           if (is.na(NewRSF)) {
-                               tkmessageBox(message="Give the RSF value please.", title="New RSF", icon="warning")
-                           } else {
-                               rsf <<- NewRSF
-                               tkdestroy(RSFwin)
-                               XPSSaveRetrieveBkp("save")
-                           }
-                     })
-                  tkgrid(SaveCloseBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-                  tkwait.window(RSFwin)   #toplevel in modal mode
-
-              } else {
-                  rsf <- unique(rsf)
-              } # end if ( is.null(rsf)
-              object@RSF <- rsf       # set the RSF in the coreline slot
-              N_comp=length(object@Components)
-              if (N_comp > 0){
-                 for(ii in 1:N_comp){  #coreline fit is present
-                    object@Components[[ii]]@rsf <- rsf   #set the RSF of the fit components
-                 }
-              }
+#               # if Scienta: Flag[3] == TRUE modification 18/9/2012
+#               # but for older saved data length(Flags) = 2, then
+#               if (length(object@Flags) == 2) { slot(object,"Flags")[3] <- TRUE }
+#
+#               # get RSF
+#               if (slot(object,"Flags")[3]){
+#                 analyzer <- "scienta"    # if Scienta
+#               } else {
+#                 analyzer <- "kratos"     # if Kratos
+#               }
+#               rsf <- getElementValue(element, orbital, analyzer, what="RSF") #vedi XPSElement.r
+#               LL <- length(unique(rsf)) # removes equal values: if LL > 1 multiple RSF value associated to the same coreline
+##------ Check
+#               if ( is.null(rsf) || is.na(prod(rsf)) || prod(rsf)==0 || LL > 1 ) { #prod() needed when length(rsf) > 1
+#                  rsf <- NA
+#
+#                  RSFwin <- tktoplevel()
+#                  tkwm.title(RSFwin,"SET RSF")
+#                  tkwm.geometry(RSFwin, "+100+50")   #position respect topleft screen corner
+#
+#                  RSFframe <- ttklabelframe(RSFwin, text = "Display RSF table", borderwidth=5)
+#                  tkgrid(RSFframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+#                  txt <- paste("WARNING: ZERO, UNDEFINED OR DIFFERENT RSF VALUES! \n",
+#                               "Please chose the RSF for the selected element orbital: ", collapse="")
+#                  tkgrid( ttklabel(RSFframe, text=txt),
+#                                   row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+#                  RSFgroup <- ttkframe(RSFframe, borderwidth=0, padding=c(0,0,0,0) )
+#                  tkgrid(RSFgroup, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
+#
+#                  Table <- showTableElement(element, analyzer)
+#                  Table[[1]] <- c(Table[[1]]," ")  #Number of Table rows is unknown. If Table has just 1 row
+#                  Table[[2]] <- c(Table[[2]]," ")  #formatting has no effect on GTABLE
+#                  Table[[3]] <- c(Table[[3]]," ")  #Then a row made just of spaces is added
+#                  Table[[4]] <- c(Table[[4]]," ")
+#                  Table[[5]] <- c(Table[[5]]," ")
+#                  Table[[1]] <- encodeString(Table[[1]], justify="centre", width=9)
+#                  Table[[2]] <- encodeString(Table[[2]], justify="centre", width=9)
+#                  Table[[3]] <- encodeString(Table[[3]], justify="centre", width=9)
+#                  Table[[4]] <- encodeString(Table[[4]], justify="centre", width=9)
+#                  Table[[5]] <- encodeString(Table[[5]], justify="centre", width=9)
+#                  names(Table) <- colNames <- c("Element", "Orbitals", "BE", "KE", "RSF")
+#                  ColWdth <- c(60, 65, 80, 80, 50)
+#
+#                  RSFTab <- XPSTable(parent=RSFgroup, items=Table, NRows=5, ColNames=colNames, Width=ColWdth)
+#                  tkbind(RSFTab, "<Double-1>", function() {  #bind the table elements to the LEFT mouse button PRESS
+#                           idx <- tclvalue(tcl(RSFTab, "selection"))
+#                           idx <- as.numeric(gsub("[^0-9]","", idx))
+#                           NewRSF <- Table[[5]][idx] #get the selected element symbol
+#                           if (is.na(NewRSF)) {
+#                               txt <- paste("RSF = ", NewRSF, ": Incorrect Value. Please Input a new RSF", sep="")
+#                               tkmessageBox(message=txt, title="WARNING", icon="warning")
+#                           } else {
+#                               rsf <<- NewRSF
+#                               tclvalue(NRSF) <<- NewRSF
+#                           }
+#                     })
+#
+#                  NRSF <- tclVar("RSF ? ")  #sets the initial msg
+#                  EnterRSF <- ttkentry(RSFframe, textvariable=NRSF, foreground="grey")
+#                  tkbind(EnterRSF, "<FocusIn>", function(K){
+#                           tclvalue(NRSF) <- ""
+#                           tkconfigure(EnterRSF, foreground="red")
+#                     })
+#                  tkbind(EnterRSF, "<Key-Return>", function(K){
+#                           tkconfigure(EnterRSF, foreground="black")
+#                           NewRSF <- as.numeric(tclvalue(NRSF))
+#                           if (is.na(NewRSF)) {
+#                               txt <- paste("RSF = ", NewRSF, ": Incorrect Value. Please Input a new RSF", sep="")
+#                               tkmessageBox(message=txt, title="WARNING", icon="warning")
+#                           } else {
+#                               rsf <<- NewRSF
+#                           }
+#                     })
+#                  tkgrid(EnterRSF, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
+#
+#                  SaveCloseBtn <- tkbutton(RSFframe, text=" Save and Close ", width=15, command=function(){
+#                           NewRSF <- as.numeric(tclvalue(NRSF))
+#                           if (is.na(NewRSF)) {
+#                               tkmessageBox(message="Give the RSF value please.", title="New RSF", icon="warning")
+#                           } else {
+#                               rsf <<- NewRSF
+#                               tkdestroy(RSFwin)
+#                               XPSSaveRetrieveBkp("save")
+#                           }
+#                           XPSSaveRetrieveBkp("save")
+#                     })
+#                  tkgrid(SaveCloseBtn, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
+#                  tkwait.window(RSFwin)   #toplevel in modal mode
+#
+#              } else {
+#                  rsf <- unique(rsf)
+#              } # end if ( is.null(rsf)
+#              object@RSF <- rsf       # set the RSF in the coreline slot
+#              N_comp=length(object@Components)
+#              if (N_comp > 0){
+#                 for(ii in 1:N_comp){  #coreline fit is present
+#                    object@Components[[ii]]@rsf <- rsf   #set the RSF of the fit components
+#                 }
+#              }
            } # if (length(orbital))
         } else {
            cat("Element not recognized! Please check Element Symbol")
@@ -1159,11 +1165,13 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            ylab=x@units[2],
            ...
        ){
+
        assign("MatPlotMode", TRUE, envir=.GlobalEnv)  #basic matplot function used to plot data
        X <- NULL
        NComp <- 0
        if (hasComponents(x)) { NComp <- length(x@Components) }
        X <- setAsMatrix(from=x, to="matrix") #X contains both x, y values
+
        if (length(grep("VB", x@Symbol)) > 0){  #CoreLine is a VB
 #--- Plot VBtop markers
            XX <- X[,1]  ## x-axis vector first column
@@ -1232,8 +1240,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                    main=main,
                    xlab=xlab,
                    ylab=ylab,
-           ... )
-
+                  )
            pos <- list(x=NULL, y=NULL)
            TestName <- NULL
            TestName <- sapply(x@Components, function(z) c(TestName, z@funcName))
@@ -1245,13 +1252,14 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            }
            points(pos$x, pos$y, col="orange", cex=3, lwd=2, pch=3)
 
-       } else if (x@Symbol == "Elmnt.DDstrb"){ #special plot for Element Depth Distribution
+       } else if (x@Symbol == "Elmnt.D.Dstrb"){ #special plot for Element Depth Distribution
 #--- Plot Element Distribution Depth Profile
            XX <- X[,1]  ## x-axis vector first column
            YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
            if ( x@Flags[1] ) { xlim <- rev(xlim) } ## reverse x-axis
            Color <- c("white", "white", XPSSettings$Colors)
-           SymIdx <- c(26,26,19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+#           SymIdx <- c(26,26, 19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+           SymIdx <- c(26,26, rep(19, 20))
            #------------------------------
            matplot(x=XX,
                    y=YY,
@@ -1259,54 +1267,53 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                    pch=SymIdx,
                    col=Color,
                    xlim=range(XX), ylim=c(0,1.2),
-                   cex.axis=1.25, cex.lab=1.3,
-                   main="Element Concentration",
-                   xlab="Tilt [deg.]", ylab="Element Conc. [%]",
-           ... )
+                   cex=0.8, cex.axis=1.25, cex.lab=1.3,
+                   main="Element Depth Distribution",
+                   xlab="Depth [nm]", ylab="Element Conc. [%]",
+                  )
            ElmtNames <- NULL
            ElmtNames <- sapply(x@Components, function(z) c(ElmtNames, z@label))
            Color <- XPSSettings$Colors
-           SymIdx <- c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
+           SymIdx <- rep(19, 20) #c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
            rowXcol <- c(1, 2, 4, 6, 9, 12)
-           Nrow <- c(1,1,2,2,3,3)
-           Ncol <- c(1,2,2,3,3,4)
-           idx <- min(which (rowXcol >= min(length(ElmtNames),12)))
-           Nrow <- Nrow[idx]
-           Ncol <- Ncol[idx]
-           legend(0, 1.2, legend=ElmtNames, ncol=Ncol, lty=1, pch=SymIdx, lwd=2,
+           Ncol <- length(ElmtNames)
+           if (Ncol > 5) {
+               Ncol <- 5
+           }
+           legend(0, 1.2, legend=ElmtNames, ncol=Ncol, lty=1, pch=SymIdx, cex=1, lwd=2,
                   bty="n", col=Color, border="black", text.col=Color, text.font=2)
 
-       } else if (x@Symbol == "Dpth.Prof"){ #special plot for Depth Profiles
+       } else if (x@Symbol == "Dpth.Prof"){ #special plot trend Elmnt Conc.% with Tilt
 #--- plot Concentration Depth Profile
            XX <- X[,1]  ## x-axis vector first column
            YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
 
            Color <- c("white", "white", XPSSettings$Colors)
-           SymIdx <- c(26,26,19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+#           SymIdx <- c(26,26, 19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3) #SymIdx == 26 => No Symbol
+           SymIdx <- c(26,26, rep(19, 20))
            #------------------------------
            matplot(x=XX,
                    y=YY,
-                   type="b", lty=1, lwd=2, 
+                   type="b", lty=1, lwd=1,
                    pch=SymIdx,
                    col=Color,
                    xlim=xlim, ylim=ylim,
-                   cex.axis=1.25, cex.lab=1.3,
+                   cex=0.8, cex.axis=1.25, cex.lab=1.3,
                    main="Element Concentration",
                    xlab="Tilt [deg.]", ylab="Element Conc. [%]",
-           ... )
+                  )
            Color <- XPSSettings$Colors
-           SymIdx <- c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
-           ElmtNames <- x@names
-           rowXcol <- c(1, 2, 4, 6, 9, 12)
-           Nrow <- c(1,1,2,2,3,3)
-           Ncol <- c(1,2,2,3,3,4)
-           idx <- min(which (rowXcol >= min(length(ElmtNames),12)))
-           Nrow <- Nrow[idx]
-           Ncol <- Ncol[idx]
-           legend(x=min(XX), y=1.2*max(YY), xjust=0, legend=ElmtNames, ncol=Ncol, lty=1, pch=SymIdx,
-                  lwd=2, bty="n", col=Color, border=Color, text.col=XPSSettings$Colors, text.font=2)
+           SymIdx <- rep(19, 20) #c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
+           ElmtNames <- NULL
+           ElmtNames <- sapply(x@Components, function(z) c(ElmtNames, z@label))
+           Ncol <- length(ElmtNames)
+           if (Ncol > 5) {
+               Ncol <- 5
+           }
+           legend("top", xjust=0, legend=ElmtNames, lty=1, pch=SymIdx, cex=1, ncol=Ncol,
+                  lwd=1, bty="n", col=Color, border=Color, text.col=XPSSettings$Colors, text.font=2)
 
-       } else if (x@Symbol == "ARXPS.Prof"){ #special plot for Depth Profiles
+       } else if (x@Symbol == "ARXPS.Prof"){ #special plot for AR_XPS plot trend OverlayerElmnt, BulkElmnt
 #--- plot Concentration Depth Profile
            if ( is.null(ylim) ) {
               ylim <- range(X[,3:4])         #range on all the Y data
@@ -1328,17 +1335,15 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            #------------------------------
            matplot(x=XX,
                    y=YY,
-                   type="b",
-                   lty="solid",
+                   type="b", lty=1, lwd=1,
                    pch=SymIdx,
-                   cex=1,
-                   col=color,
-                   xlim=xlim,
-                   ylim=ylim,
-                   main=main,
-                   xlab=xlab,
-                   ylab=ylab,
-           ... )
+                   col=Color,
+                   xlim=xlim, ylim=ylim,
+                   cex=0.8, cex.axis=1.25, cex.lab=1.3,
+                   main="ARXPS.Prof",
+                   xlab="Tilt [deg.]", ylab="Element Conc. [%]",
+                   ...
+                  )
        } else {
 #--- generic Core Line (not depth profile)
            if ( is.null(ylim) ) {
@@ -1377,7 +1382,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                    main=main,
                    xlab=xlab,
                    ylab=ylab,
-           ... )
+                  )
            ## components label
            if ( hasComponents(x) && labels) {
               #  positions <- getMaxOfComponents(x)  #works only for Fit Components but not in the case of VBTop

@@ -194,13 +194,18 @@ XPSSwitch.BE.KE <- function() {
    tkgrid(ConvertBtn, row = 5, column = 1, padx = 5, pady = c(5,20), sticky="we")
 
    SaveBtn <- tkbutton(Egroup, text=" SAVE ", command=function(){
-                       assign(FName, XPSSample, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       assign("activeFName", activeFName, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       assign(activeFName, XPSSample, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       XPSSaveRetrieveBkp("save")
                   })
    tkgrid(SaveBtn, row = 6, column = 1, padx = 5, pady = 5, sticky="we")
 
    SaveExitBtn <- tkbutton(Egroup, text=" SAVE and EXIT ", command=function(){
-                       assign(FName, XPSSample, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       assign("activeFName", activeFName, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       assign(activeFName, XPSSample, envir = .GlobalEnv)  #save changes in the originasl datafile
+                       XPSSaveRetrieveBkp("save")
                        tkdestroy(Ewin)
+                       UpdateXS_Tbl()
                   })
    tkgrid(SaveExitBtn, row = 7, column = 1, padx = 5, pady = 5, sticky="we")
    

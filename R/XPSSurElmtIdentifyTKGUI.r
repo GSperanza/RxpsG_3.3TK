@@ -27,7 +27,8 @@ reset.boundaries <- function(h, ...) {
 
 
 #---- Variables ----
-   baseline.PKG <- get("baseline.PKG", envir=.GlobalEnv)
+   Pkgs <- get("Pkgs", envir=.GlobalEnv)
+   baseline.PKG <- "baseline" %in% Pkgs
    if( baseline.PKG == FALSE ){
        txt <- "Pakage 'baseline' is NOT Installed. \nCannot Execute the 'Element Identification' option!"
        tkmessageBox(message= txt, title = "ERROR", icon="error")

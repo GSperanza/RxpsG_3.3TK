@@ -177,6 +177,8 @@ FindNearest <- function(){
                      FName <<- get(activeFName, envir=.GlobalEnv)
                      SpectList <<- XPSSpectList(activeFName)
                      tkconfigure(Core.Lines, values=SpectList)
+                     tclvalue(CL) <- ""
+                     plot.new()
                  })
    tkgrid(XPS.Sample, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -187,7 +189,7 @@ FindNearest <- function(){
                      SpectName <- unlist(strsplit(SpectName, "\\."))   #drop the N. at beginning core-line name
                      SpectIndx <<- as.integer(SpectName[1])
                      XYrange <<- list(x=range(FName[[SpectIndx]]@.Data[1]), y=range(FName[[SpectIndx]]@.Data[2]))
-                     if (length(FName[[SpectIndx]]@RegionToFit) > 0) {   
+                     if (length(FName[[SpectIndx]]@RegionToFit) > 0) {
                         XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
                         XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
                      } else {
@@ -205,7 +207,7 @@ FindNearest <- function(){
    ZMframe1 <- ttklabelframe(ZMgroup, text = "Define the Zoom Area", borderwidth=2)
    tkgrid(ZMframe1, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
    ZMareaBtn <- tkbutton(ZMframe1, text=" Set the Zoom Area ", width=22, command=function(){
-                     txt <- " LEFT Mouse Button to Set the TWO Opposite Corners of the Zoom Area\n RIGHT Mouse Button to exit \n Click Near Markers to Modify The zoom area"
+                     txt <- " LEFT Mouse Button to Set the TWO Opposite Corners of the Zoom Area \n Click Near Markers to Modify The zoom area \n RIGHT Mouse Button to exit "
                      tkmessageBox(message=txt , title = "WARNING",  icon = "warning")
                      ZOOM <<- TRUE
                      GetCurPos(SingClick=2)

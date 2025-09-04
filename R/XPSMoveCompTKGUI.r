@@ -19,30 +19,26 @@ XPSMoveComp <- function(){
        WidgetState(MCFrame4, "disabled")   #prevent exiting Analysis if locatore active
        Estep <- abs(Object@RegionToFit[[1]][1] - Object@RegionToFit[[1]][2])
        while(EXIT == FALSE){
-            pos <- locator(n=1)
-            if (is.null(pos)) {
+            LocPos <- locator(n=1, type="p", pch=3, cex=1.5, col="blue", lwd=2) #to modify the zoom limits
+            if (is.null(LocPos)) {
                 WidgetState(MCFrame3, "normal")
                 WidgetState(MCFrame4, "normal")
                 EXIT <<- TRUE
             } else {
-                if (SingClick){
+                if (SingClick && SetZoom == FALSE){
                      WidgetState(MCFrame3, "normal")
                      WidgetState(MCFrame4, "normal")
                      EXIT <<- TRUE
                 }
                 if (SetZoom == TRUE) {  #define zoom area
-                    xx <- pos$x
-                    yy <- pos$y
-                    Xindx <- which(Object@RegionToFit[[1]] > xx-Estep/2 & Object@RegionToFit[[1]] < xx+Estep/2)
-                    yy_BasLin <- yy-Object@Baseline$y[Xindx]  #spectral intensity at xx without Baseline
-                    coords <<- c(xx, yy, yy_BasLin)
+                    Xindx <- which(Object@RegionToFit[[1]] > LocPos$x-Estep/2 & Object@RegionToFit[[1]] < LocPos$x+Estep/2)
+                    yy_BasLin <- LocPos$y-Object@Baseline$y[Xindx]  #spectral intensity at LocPos$x without Baseline
+                    coords <<- c(LocPos$x, LocPos$y, yy_BasLin)
                     RBmousedown()  #selection of the zoom area
                 } else {
-                    xx <- pos$x
-                    yy <- pos$y
-                    Xindx <- which(Object@RegionToFit[[1]] > xx-Estep/2 & Object@RegionToFit[[1]] < xx+Estep/2)
-                    yy_BasLin <- yy-Object@Baseline$y[Xindx]  #spectral intensity at xx without Baseline
-                    coords <<- c(xx, yy, yy_BasLin)
+                    Xindx <- which(Object@RegionToFit[[1]] > LocPos$x-Estep/2 & Object@RegionToFit[[1]] < LocPos$x+Estep/2)
+                    yy_BasLin <- LocPos$y-Object@Baseline$y[Xindx]  #spectral intensity at LocPos$x without Baseline
+                    coords <<- c(LocPos$x, LocPos$y, yy_BasLin)
                     LBmousedown()
                 }
             }
@@ -69,13 +65,11 @@ XPSMoveComp <- function(){
      	  point.coords$x[point.index] <<- coords[1]   #abscissa
      	  point.coords$y[point.index] <<- coords[2]   #ordinate
      	  if (point.index == 1) {   #First rect corner C1
+     	     point.index <<- 2
+     	  } else if (point.index == 2) {   #First rect corner C1
      	     point.index <<- 3
            Corners$x <<- c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2])
            Corners$y <<- c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2])
-#  	     } else if (point.index == 2) { #Second rect corner C2 opposite to C1
-#           point.index <<- 3
-#           Corners$x <<- c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2])
-#           Corners$y <<- c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2])
   	     } else if (point.index == 3) { #modifies corner positions
            D <- vector("numeric", 4)
            Dmin <- ((point.coords$x[3]-Corners$x[1])^2 + (point.coords$y[3]-Corners$y[1])^2)^0.5  #valore di inizializzazione
@@ -110,6 +104,41 @@ XPSMoveComp <- function(){
         replot()
      }
   }
+
+  replot <- function(...) {
+     if (point.index==1 && refresh==FALSE) {  #point.index==1 when moving mcomponent
+         plot(Object, xlim=Xlimits, ylim=Ylimits)
+         points(x=coords[1], y=coords[2], col=2, cex=1.2, lwd=2.5, pch=1)  # if refresh==FALSE plot spectrum with component marker
+     } else if (SetZoom == TRUE){   #set zoom area corners
+	        if (point.index < 3) {    #normal plot
+ 	           plot(Object)
+             points(point.coords, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
+  	      } else if (point.index == 3){  #plot zoom area corners
+ 	           plot(Object, xlim=Xlimits, ylim=Ylimits)
+             points(Corners, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
+             rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
+         }
+     } else {
+         plot(Object, xlim=Xlimits, ylim=Ylimits)
+     }
+     if (! is.null(coords)){
+         txt <- paste("x =",round(coords[1],2), "y =",round(coords[2],2), sep="   ")
+         tkconfigure(StatusBar, text=txt)
+     }
+  }
+
+  reset.plot <- function(h, ...) {
+       point.coords$x <<- range(Object@RegionToFit$x) #set original X range
+       point.coords$y <<- range(Object@RegionToFit$y) #set original Y range
+       Object@Boundaries <<- point.coords
+       Xlimits <<- point.coords$x
+       Ylimits <<- sort(point.coords$y, decreasing=FALSE)
+       Corners <- list(x=c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2]),
+                       y=c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2]))
+       replot()
+  }
+
+
 
   Check.PE <- function(){
     	PassE <- NULL
@@ -207,42 +236,10 @@ XPSMoveComp <- function(){
      }
   }
 
-  replot <- function(...) {
-     if (point.index==1 && refresh==FALSE) {  #point.index==1 when moving mcomponent
-         plot(Object, xlim=Xlimits, ylim=Ylimits)
-         points(x=coords[1], y=coords[2], col=2, cex=1.2, lwd=2.5, pch=1)  # if refresh==FALSE plot spectrum with component marker
-     } else if (SetZoom == TRUE){   #set zoom area corners
-	        if (point.index == 1) {    #normal plot
- 	           plot(Object)
-             points(point.coords, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
-  	      } else if (point.index == 3){  #plot zoom area corners
- 	           plot(Object, xlim=Xlimits, ylim=Ylimits)
-             points(Corners, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
-             rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
-         }
-     } else {
-         plot(Object, xlim=Xlimits, ylim=Ylimits)
-     }
-     if (! is.null(coords)){
-         txt <- paste("x =",round(coords[1],2), "y =",round(coords[2],2), sep="   ")
-         tkconfigure(StatusBar, text=txt)
-     }
-  }
-
-  reset.plot <- function(h, ...) {
-       point.coords$x <<- range(Object@RegionToFit$x) #set original X range
-       point.coords$y <<- range(Object@RegionToFit$y) #set original Y range
-       Object@Boundaries <<- point.coords
-       Xlimits <<- point.coords$x
-       Ylimits <<- sort(point.coords$y, decreasing=FALSE)
-       Corners <- list(x=c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2]),
-                       y=c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2]))
-       replot()
-  }
-
   ComponentMenu <- function(){
        ClearWidget(MCFrame3) #clears previous tkradio of fit components
        LL <- length(ComponentList)
+       ii <- 1 #needed for the HelpBtn
        if (LL > 1){    #gradio works with at least 2 items
            FC <<- tclVar()
            NCol <- ceiling(LL/5) #ii runs on the number of columns
@@ -276,6 +273,7 @@ XPSMoveComp <- function(){
                                     tkmessageBox(message="Left click to enter Fit Component position. Right click to stop slection", title="WARNING", icon="warning")
                                 }
                                 GetCurPos(SingClick=FALSE)
+                                ShowMsg <<- FALSE
                        })
                    tkgrid(FitComp, row = jj, column = ii, padx = 5, pady = 5, sticky="w")
                }
@@ -314,16 +312,15 @@ XPSMoveComp <- function(){
                        })
            tkgrid(FitComp, row = 1, column = 1, padx = 5, pady=5, sticky="w")
        }
-       txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
-                    "\n=> Left click with the mouse to enter the cursor coordinates.",
-                    "\n=> Right click to stop position selection and cursor position reading when not required.",
-                    "\n",
-                    "=> Show the WARNING Messages Again? ", sep="")
-       if (ShowMsg == TRUE && WarnMsg == "ON"){
-           ShowMsg <<- tclvalue(tkmessageBox(message=txt, type="yesno", title="WARNING", icon="question")) #ShowMsg==FALSE if answer=YES
-           if (ShowMsg == "no") {ShowMsg <<- FALSE}
-           if (ShowMsg == "yes") {ShowMsg <<- TRUE}
-       }
+       HelpBtn <- tkbutton(MCFrame3, text="?", width=3, command=function(){
+                                txt <- paste("The selection of a Core-Line or Fit-Component always activates reading the [X,Y] cursor position.",
+                                             "\n=> Left click with the mouse to enter the cursor coordinates.",
+                                             "\n=> Right click to stop position selection and cursor position reading when not required.",
+                                             "\n",
+                                             "=> Show the WARNING Messages Again? ", sep="")
+                                tkmessageBox(message=txt, title="INFO", icon="info")
+                       })
+       tkgrid(HelpBtn, row = 1, column = ii+1, padx = c(20, 5), pady = 5, sticky="w")
   }
 
   LoadCoreLine <- function(){
@@ -399,7 +396,7 @@ XPSMoveComp <- function(){
       return()
   }
 
-  reset.vars <- function(){
+  ResetVars <- function(){
      Indx <<- 2
      assign("activeSpectIndx", 1, envir=.GlobalEnv)
      OldXPSSample <<- XPSSample
@@ -408,21 +405,20 @@ XPSMoveComp <- function(){
      ComponentList <<- names(Object@Components)
      FNameList <<- XPSFNameList()
      SpectList <<- XPSSpectList(activeFName)
+
      FComp <<- 1
-     if (is.null(FitComp) == FALSE){
+     if (is.null(FitComp) == FALSE && length(FitComp) > 0){
          tkdestroy(FitComp)
      }
      UpdateCompMenu <<- TRUE
      coords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
      CompCoords <<- c(xx=NA, yy=NA, yy_BasLin=NA)
-
      refresh <<- TRUE
      SetZoom <<- FALSE
      NoFit <<- FALSE
      ShowMsg <<- TRUE
      WinSize <<- as.numeric(XPSSettings$General[4])
      hscale <<- as.numeric(WinSize)
-
      if (length(ComponentList)==0) {
         tkmessageBox(message="ATTENTION NO FIT FOUND: change coreline please!" , title = "WARNING",  icon = "warning")
         Xlimits <<- range(Object@.Data[1])
@@ -450,7 +446,7 @@ XPSMoveComp <- function(){
      if(activeSpectIndx > length(XPSSample)) { Indx <- 1 }
      OldXPSSample <- XPSSample
      Object <- XPSSample[[Indx]]
-     SpectName <- NULL
+     SpectName <- activeSpectName
      ComponentList <- names(Object@Components)
      FNameList <- XPSFNameList()
      SpectList <- XPSSpectList(activeFName)
@@ -524,7 +520,7 @@ XPSMoveComp <- function(){
                            activeFName <<- tclvalue(XS)
                            assign("activeFName", activeFName, envir=.GlobalEnv)
                            XPSSample <<- get(activeFName, envir=.GlobalEnv)
-                           reset.vars()
+                           ResetVars()
                            tkconfigure(Core.Lines, values = SpectList)
                            refresh <<- FALSE #now plot also the component marker
                            Xlimits <<- range(Object@RegionToFit$x)
@@ -536,7 +532,7 @@ XPSMoveComp <- function(){
 
      MCFrame2 <- ttklabelframe(SelectGroup, text = " Core-Lines ", borderwidth=2)
      tkgrid(MCFrame2, row = 1, column = 1, padx = c(175, 0), pady = 5, sticky="w")
-     CL <- tclVar("")
+     CL <- tclVar(SpectName)
      Core.Lines <- ttkcombobox(MCFrame2, width = 15, textvariable = CL, values = SpectList)
      tkgrid(Core.Lines, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
      tkbind(Core.Lines, "<<ComboboxSelected>>", function(){
@@ -617,23 +613,24 @@ XPSMoveComp <- function(){
                            WidgetState(LMFitbutton, "disabled")
                            WidgetState(MFFitbutton, "disabled")
                            WidgetState(RSTbutton, "disabled")
+                           txt <- " LEFT Mouse Button to Set the TWO Opposite Corners of the Zoom Area \n Click Near Markers to Modify The zoom area \n RIGHT Mouse Button to exit "
+                           tkmessageBox(message=txt , title = "WARNING",  icon = "warning")
+                           Xlimits <<- point.coords$x
+                           Ylimits <<- range(Object@RegionToFit$y)
+                           point.index <<- 1 #plot initial zoom area
                            SetZoom <<- TRUE
+                           refresh <<- TRUE
+                           LL <- length(Object@RegionToFit$y)
                            point.coords$x <<- range(Object@RegionToFit$x)
-                           point.coords$y <<- range(Object@RegionToFit$y)
+                           point.coords$y <<- c(Object@RegionToFit$y[1], Object@RegionToFit$y[LL])
+                           if (Object@Flags[1]){
+                               point.coords$x <<- sort(point.coords$x, decreasing=TRUE) #pos$x in decreasing order
+                           }
+                           replot()
                            if (Object@Flags[1]) { #Binding energy set
                                point.coords$x <<- sort(c(point.coords$x[1], point.coords$x[2]), decreasing=TRUE) #pos$x in decreasing order
                            }
-                           Xlimits <<- point.coords$x
-                           Ylimits <<- point.coords$y
-                           Corners$x <<- c(point.coords$x[1],point.coords$x[1],point.coords$x[2],point.coords$x[2])
-                           Corners$y <<- c(point.coords$y[1],point.coords$y[2],point.coords$y[1],point.coords$y[2])
-#                           Marker <<- list(Points=Corners, col=4, cex=1.2, lwd=2.5, pch=3)
-                           point.index <<- 3 #plot initial zoom area
-                           replot()
-                           msg <- paste("\n => Left click near corners to adjust Zoom Region Dimensions",
-                                        "\n => When Zoom Region OK, right click and press  MAKE ZOOM", sep="")
-                           tkmessageBox(message=msg, title="WARNING", icon="warning")
-                           GetCurPos(SingClick=FALSE)
+                           GetCurPos(SingClick=2)
                  })
      tkgrid(ZRbutton, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 

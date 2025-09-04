@@ -22,7 +22,7 @@
 XPSConstraints <- function(){
 
 #---------- setCommand ----------
-   setCommand <- function(h,...){
+   setCommand <- function(){
            Nc1 <- as.integer(gsub("[^0-9]", "", component1))  #extract index from string component1: if component1 is a vector, a vector of indexes is generated
            Nc2 <- as.integer(gsub("[^0-9]", "", component2))  #extract index from string component2
            switch(operation,
@@ -34,6 +34,10 @@ XPSConstraints <- function(){
            },
            "link" = {
               FuncName2 <- FName[[SpectIndx]]@Components[[Nc2]]@funcName
+              if (is.null(Nc1) || is.na(Nc1) || length(Nc1) == 0) {
+                  tkmessageBox(message="\n Please Diefine the Link Components!\n", title="WARNING", icon="warning")
+                  return()
+              }
               LL <- length(Nc1)
               for (ii in 1:LL){  #if a link on 'paramter' is aleady present, erase the old link to set the newone
                   #now control we are linking parameters of same kind of fit-function
@@ -67,21 +71,17 @@ XPSConstraints <- function(){
               } else {
                  value <- NULL
                  expression <- paste(parameter,Nc2,linkExpression,sep="") #save linked component and link expression in the XPSSample
-                 if (LL == 0){
-                    cat("\n Please specify the Fit component!\n")
-                    return()
-                 }
                  for(ii in 1:LL){
                     FName[[SpectIndx]] <<- XPSConstrain(FName[[SpectIndx]],Nc1[ii],action="link",variable=parameter,value=value,expr=expression)
                  }
               }
            },
            "remove" = {
-              LL <- length(Nc1)
-              if (LL == 0){
-                 cat("\n Please specify the Fit component!\n")
-                 return()
+              if (is.null(Nc1) || is.na(Nc1) || length(Nc1) == 0) {
+                  tkmessageBox(message="\n Please Diefine the Fit Component!\n", title="WARNING", icon="warning")
+                  return()
               }
+              LL <- length(Nc1)
               for(ii in 1:LL){
                  if (length(FName[[SpectIndx]]@Components[[ Nc1[ii] ]]@link) > 0) {  #FitComponents selected to set links can be reset although links are still not set
                     FName[[SpectIndx]] <<- XPSConstrain(FName[[SpectIndx]],Nc1[ii],action="remove",variable=NULL,value=NULL,expr=NULL)
@@ -259,7 +259,7 @@ XPSConstraints <- function(){
 #---------- editFitFrame ----------
 
    editFitFrame <- function(){
-      selectedComp <- tclvalue(T1FitCompA)
+      selectedComp <- tclvalue(T1FitComp)
       CompIndx <- as.integer(gsub("[^0-9]", "", selectedComp))
       fitParam <<- FName[[SpectIndx]]@Components[[CompIndx]]@param #load DataFrame relative to the selected component
       fitParam <<- round(fitParam, 4)
@@ -398,38 +398,37 @@ XPSConstraints <- function(){
       T1group1 <- ttkframe(NB,  borderwidth=2, padding=c(5,5,5,5) )
       tkadd(NB, T1group1, text=" EDIT FIT PARAMETERS ")
 
-      T1frame1 <- ttklabelframe(T1group1, text = "SELECT COMPONENT TO EDIT", borderwidth=2)
+      T1frame1 <- ttklabelframe(T1group1, text = "SELECT THE FIT COMPONENT", borderwidth=2)
       tkgrid(T1frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-      T1FitCompA <- tclVar("")
-      T1obj1 <- ttkcombobox(T1frame1, width = 20, textvariable = T1FitCompA, values = FitComp1)
+
+      T1FitComp <- tclVar("")
+      T1obj1 <- ttkcombobox(T1frame1, width = 20, textvariable = T1FitComp, values = FitComp1)
       tkbind(T1obj1, "<<ComboboxSelected>>", function(){
-                           editFitFrame()
-                     })
-      tkgrid(T1obj1, row = 1, column = 1, padx = 10, pady = 5, sticky="w")
-
-      tkgrid( ttkseparator(T1group1, orient="horizontal"),
-              row = 2, column = 1, pady = c(15, 10), sticky="we")
-      tkgrid( ttkseparator(T1group1, orient="horizontal"),
-              row = 2, column = 2, pady = c(15, 10), sticky="we")
-
-      T1group2 <- ttkframe(T1group1, borderwidth=2, padding=c(0,0,0,0))
-      tkgrid(T1group2, row = 3, column = 1, padx = 0, pady = 0, sticky="w")
-      T1frame2 <- ttklabelframe(T1group2, text = "SELECT COMPONENT to CHANGE RSF", borderwidth=2)
-      tkgrid(T1frame2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-      T1FitCompB <- tclVar("")
-      T1obj2 <- ttkcombobox(T1frame2, width = 20, textvariable = T1FitCompB, values = FitComp1)
-      tkbind(T1obj2, "<<ComboboxSelected>>", function(){
-                           FitComp <- tclvalue(T1FitCompB)
+                           FitComp <- tclvalue(T1FitComp)
                            CompIndx <- as.integer(gsub("[^0-9]", "", FitComp))
                            OldRSF <- FName[[SpectIndx]]@Components[[CompIndx]]@rsf
                            tclvalue(SetRelSensFact) <- OldRSF
                      })
-      tkgrid(T1obj2, row = 1, column = 1, padx = 10, pady = 5, sticky="w")
+      tkgrid(T1obj1, row = 1, column = 1, padx = 10, pady = 5, sticky="w")
+
+      T1EditBtn <- tkbutton(T1frame1, text=" EDIT FIT COMPONENT ", width=20, command=function(){
+                           FitComp <- tclvalue(T1FitComp)
+                           editFitFrame()
+                     })
+      tkgrid(T1EditBtn, row = 2, column = 1, padx = 10, pady = 5, sticky="w")
+      
+      T1group2 <- ttkframe(T1frame1, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(T1group2, row = 3, column = 1, padx = 0, pady = 0, sticky="w")
+
+
+      tkgrid( ttklabel(T1group2, text="New  RSF  Value:"),
+              row = 1, column = 1, padx = c(10,5), pady = 5, sticky="w")
 
       SetRelSensFact <- tclVar("")
-      SetRSF <- ttkentry(T1frame2, textvariable=SetRelSensFact)
-      tkgrid(SetRSF, row = 1, column = 2, padx = 10, pady = 5, sticky="w")
+      SetRSF <- ttkentry(T1group2, textvariable=SetRelSensFact)
+      tkgrid(SetRSF, row = 1, column = 2, padx = c(5, 10), pady = 5, sticky="w")
       tkbind(SetRSF, "<FocusIn>", function(K){
+                           tclvalue(SetRelSensFact) <- ""
                            tkconfigure(SetRSF, foreground="red")
                      })
       tkbind(SetRSF, "<Key-Return>", function(K){
@@ -441,20 +440,26 @@ XPSConstraints <- function(){
                            }
                      })
 
-      T1ButtRSF <- tkbutton(T1frame2, text=" SAVE  RSF ", width=20, command=function(){
-                           FitComp <- tclvalue(T1FitCompB)
+      T1ButtRSF <- tkbutton(T1group2, text=" SAVE  RSF ", width=20, command=function(){
+                           FitComp <- tclvalue(T1FitComp)
                            CompIndx <- as.integer(gsub("[^0-9]", "", FitComp))
-                           slot(FName[[SpectIndx]]@Components[[CompIndx]], "rsf") <- NewRSF #load new parameter in the XPSSample slot
-                           FName[[SpectIndx]] <<- FName[[SpectIndx]]
+                           FName[[SpectIndx]]@Components[[CompIndx]]@rsf <<- NewRSF #load new parameter in the XPSSample slot
                      })
-      tkgrid(T1ButtRSF, row = 2, column = 1, padx = 10, pady = 5, sticky="w")
+      tkgrid(T1ButtRSF, row = 2, column = 1, padx = c(10, 5), pady = 5, sticky="w")
 
-      T1ButtRmvCnst <- tkbutton(T1group1, text="REMOVE COMPONENT CONTRAINTS", width=30, command=function(){
+      T1ButtResetRSF <- tkbutton(T1group2, text=" RESET ", width=20, command=function(){
+                           tclvalue(SetRelSensFact) <- ""
+                           tclvalue(T1FitComp) <- ""
+                           CompIndx <- NULL
+                     })
+      tkgrid(T1ButtResetRSF, row = 2, column = 2, padx = c(5, 10), pady = 5, sticky="w")
+
+      T1ButtRmvCnst <- tkbutton(T1frame1, text="REMOVE COMPONENT CONTRAINTS", width=30, command=function(){
                            operation <<- "remove"
-                           component1 <<- tclvalue(T1FitCompB)
+                           component1 <<- tclvalue(T1FitComp)
                            setCommand()
                      })
-      tkgrid(T1ButtRmvCnst, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
+      tkgrid(T1ButtRmvCnst, row = 5, column = 1, padx = c(10, 0), pady = c(5, 10), sticky="w")
 
       T1ButtRmvAll <- tkbutton(T1group1, text="REMOVE ALL CONSTRAINTS", width=30, command=function(){
                            SigmaCtrl <<- list(FitComp=c(1:NComp), CompLnkd=NULL, ToComp=NULL, Expression=NULL)
@@ -464,7 +469,7 @@ XPSConstraints <- function(){
                                setCommand()
                            }
                      })
-      tkgrid(T1ButtRmvAll, row = 6, column = 1, padx = 5, pady = 5, sticky="w")
+      tkgrid(T1ButtRmvAll, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
 
 
@@ -1007,7 +1012,6 @@ XPSConstraints <- function(){
 
 #--- pag1
                            tkconfigure(T1obj1, values=FitComp1)
-                           tkconfigure(T1obj2, values=FitComp1)
                            tclvalue(SetRelSensFact) <<- ""
 #--- pag2
                            tkconfigure(T2obj1, values=FitComp1)
@@ -1103,6 +1107,7 @@ XPSConstraints <- function(){
                               }
                            }
                            XPSSaveRetrieveBkp("save")
+                           FName <<- get(activeFName, envir=.GlobalEnv) #to correctly refresh the plot
                            plot(FName[[SpectIndx]])
                            UpdateXS_Tbl()
                      })

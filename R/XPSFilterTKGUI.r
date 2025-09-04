@@ -535,6 +535,52 @@ XPSFilter <- function() {
       WidgetState(F3group2, "disabled")
       WidgetState(F3group3, "disabled")
    }
+   
+   ResetVars <- function(){
+      FNameList <<- XPSFNameList()                   #list of all XPSSamples loaded in .GlobalEnv
+      FNameIdx <<- grep(activeFName,FNameList)
+      SpectIndx <<- NULL
+      Object <<- NULL
+      SpectList <<- XPSSpectList(activeFName)
+
+      RawData <<- NULL
+      Filtered <<- NULL
+      coeff <<- NULL
+      CutOFF <<- NULL
+      FiltResp <<- NULL
+      BackGnd <<- NULL
+      BkgSubtr <<- FALSE
+      SigAmpli <<- NULL
+      SaveAmpli <<- FALSE
+      filterType <<- c("AutoRegressive", "MovingAverage")
+      waveletType <<- list("Daubechies", "LeastAsymmetric", "BestLocalized", "Coiflet")
+      waveletType[["Daubechies"]] <<- c(2,4,6,8,10,12,14,16,18,20)
+      waveletType[["LeastAsymmetric"]] <<- c(8,10,12,14,16,18,20)
+      waveletType[["BestLocalized"]] <<- c(14,18,20)
+      waveletType[["Coiflet"]] <<- c(6,12,18,24,30)
+      waveNumber <<- "  "
+      FiltInfo <<- NULL
+      pos <<- list(x=NULL, y=NULL)
+
+      tclvalue(CL) <<- ""
+      tclvalue(F2Deg) <<- ""
+      tclvalue(F2Bkg) <<- FALSE
+      tclvalue(F3Type) <<- ""
+      tclvalue(F3Deg) <<- ""
+      tclvalue(F3Bkg) <<- FALSE
+      tclvalue(F3Edges) <<- FALSE
+      tclvalue(F4Deg) <<- ""
+      tclvalue(F4Bkg) <<- FALSE
+      tclvalue(F5WavN) <<- ""
+      tclvalue(F5Deg) <<- ""
+      tclvalue(F5Bkg) <<- FALSE
+      tclvalue(F6Ord) <<- ""
+      tclvalue(F6Coff) <<- ""
+      tclvalue(F6Bkg) <<- FALSE
+      tclvalue(F7Ord) <<- ""
+      tclvalue(F7Coff) <<- ""
+      tclvalue(F7Bkg) <<- FALSE
+   }
 
 
 #----- Variabiles -----
@@ -587,6 +633,7 @@ XPSFilter <- function() {
    F1XpsSpect <- ttkcombobox(F1frame1, width = 20, textvariable = XS, values = FNameList)
    tkgrid(F1XpsSpect, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
    tkbind(F1XpsSpect, "<<ComboboxSelected>>", function(){
+                        ResetVars()
                         activeFName <<- tclvalue(XS)
                         FName <<- get(activeFName,envir=.GlobalEnv)  #carico in SampID il relativo XPSSAmple
                         SpectList <<- XPSSpectList(activeFName)

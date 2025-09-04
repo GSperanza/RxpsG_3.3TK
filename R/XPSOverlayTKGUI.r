@@ -400,6 +400,7 @@ XPSOverlay <- function(){
             tclvalue(LINEWIDTH) <- "1"
             tclvalue(SYMTYPE) <- "Single-Symbol"
             tclvalue(SYMSIZE) <- "0.8"
+            tclvalue(BLSTYLE) <- "Dashed"
             tclvalue(FCSTYLE) <- "Dotted"
             tclvalue(STRIPCOLOR) <- "grey"
             tclvalue(TICKPOS) <- "LeftBottom"
@@ -426,7 +427,8 @@ XPSOverlay <- function(){
             tclvalue(LEGENDSIZE) <- "0.4"
             tclvalue(LEGENDDIST) <- "0.08"
             tclvalue(LEGLINWIDTH) <- "1"
-            tclvalue(LEGTXTCOLOR) <<- "Reinbow"
+            tclvalue(LEGTXTCOLOR) <<- "Rainbow"
+
             XPSSettings <<- get("XPSSettings", envir=.GlobalEnv)
             Colors <<- XPSSettings$Colors
             LType <<- XPSSettings$LType
@@ -580,6 +582,7 @@ XPSOverlay <- function(){
    PlotParameters$OverlayType <- "Spectrum"
    PlotParameters$OverlayMode <- "Single-Panel"
    PlotParameters$Colors <- Colors
+   PlotParameters$BasLinLty <- "dashed"
    PlotParameters$CompLty <- "solid"
    PlotParameters$FitCol <- FitColors
 #--- legend options
@@ -830,7 +833,7 @@ XPSOverlay <- function(){
 
      LIMITRTF <- tclVar()
      T1LimitRTF <- tkcheckbutton(T1frameOvType, text="Limit Plot To Fit Region", variable=LIMITRTF, onvalue = 1, offvalue = 0,
-                           command=function(){
+                            command=function(){
                             PlotParameters$RTFLtd <<- as.logical(as.numeric(tclvalue(LIMITRTF)))
                             CtrlPlot() 
                    })
@@ -1100,7 +1103,6 @@ XPSOverlay <- function(){
      tkbind(objFunctFact, "<Key-Return>", function(K){
                            tkconfigure(objFunctFact, foreground="black")
                            indx <- grep(tclvalue(CL2), SelectedNames$CoreLines)
-print(SelectedNames)
                            SelectedNames$Ampli[indx] <<- as.numeric(tclvalue(SCALEfACT))
                            CtrlPlot()
                     })
@@ -1817,8 +1819,24 @@ print(SelectedNames)
                     })
      tkgrid(T3_SymSize, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
+     T3F_BasLinStyle <- ttklabelframe(T3group3, text="BASELINE LINESTYLE", borderwidth=2, padding=c(5,5,5,5))
+     tkgrid(T3F_BasLinStyle, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
+     BLSTYLE <- tclVar("Dashed")
+     T3_BasLinStyle <- ttkcombobox(T3F_BasLinStyle, width = 15, textvariable = BLSTYLE, values = c("Dotted", "Solid", "Dashed"))
+     tkbind(T3_BasLinStyle, "<<ComboboxSelected>>", function(){
+                           if (tclvalue(BLSTYLE) == "Solid") {
+                               PlotParameters$BasLinLty <<- "solid"
+                           } else if (tclvalue(BLSTYLE) == "Dashed") {
+                               PlotParameters$BasLinLty <<- "dashed"
+                           } else if (tclvalue(BLSTYLE) == "Dotted") {
+                               PlotParameters$BasLinLty <<- "dotted"
+                           }
+                           CtrlPlot()
+                    })
+     tkgrid(T3_BasLinStyle, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
      T3F_FitCompStyle <- ttklabelframe(T3group3, text="FIT COMPONENT LINESTYLE", borderwidth=2, padding=c(5,5,5,5))
-     tkgrid(T3F_FitCompStyle, row = 5, column = 1, padx = 5, pady = 5, sticky="w")
+     tkgrid(T3F_FitCompStyle, row = 5, column = 2, padx = 5, pady = 5, sticky="w")
      FCSTYLE <- tclVar("Dotted")
      T3_FitCompStyle <- ttkcombobox(T3F_FitCompStyle, width = 15, textvariable = FCSTYLE, values = c("Dotted", "Solid", "Dashed"))
      tkbind(T3_FitCompStyle, "<<ComboboxSelected>>", function(){
@@ -1834,7 +1852,7 @@ print(SelectedNames)
      tkgrid(T3_FitCompStyle, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
      T3F_PanStripCol <- ttklabelframe(T3group3, text="PANEL STRIP COLOR", borderwidth=2, padding=c(5,5,5,5))
-     tkgrid(T3F_PanStripCol, row = 5, column = 2, padx = 5, pady = 5, sticky="w")
+     tkgrid(T3F_PanStripCol, row = 6, column = 1, padx = 5, pady = 5, sticky="w")
      STRIPCOLOR <- tclVar("grey")
      T3_PanStripCol <- ttkcombobox(T3F_PanStripCol, width = 15, textvariable = STRIPCOLOR,
                            values = c("white","grey", "darkgrey","lightblue","blue","darkblue","deepskyblue","lightbeige","beige","darkbeige","lightpink","pink","darkpink","lightgreen","green","darkgreen"))

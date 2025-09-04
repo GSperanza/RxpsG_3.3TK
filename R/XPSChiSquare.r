@@ -186,7 +186,7 @@ XPSChiSquare <- function(){
                              tkmessageBox(message=" Cannot Compute the Inverse of Covariance Matrix.\n Computation stops!", title="WARNING", icon="warning")
                          }
                          Npar <- dim(CovMatrix)[1] # dim(CovMatrix) is n x n where n is the number of fitting parameters
-                         I.CovMatrix <- ginv(CovMatrix)
+                         I.CovMatrix <- MASS::ginv(CovMatrix)
                          SigmaPar <- sqrt(Chi2 * diag(I.CovMatrix) /(LL-Npar))
                          names(SigmaPar) <- ParamNames
                          cat("\n\n\n --- Summary of Fit Goodness ---------------------------------\n")

@@ -272,6 +272,7 @@ XPSTable <- function(parent, items, NRows=0, ColNames, Width) {
         tcl(Tbl, "heading", (ii-1), text=ColNames[ii])
         tcl(Tbl, "column", (ii-1), width=Width[ii])
     }
+
     tkgrid(Tbl, row = 1, column = 1, padx = c(5, 0), pady = c(5, 0), sticky="w")
     updateTable(widget=Tbl, items=items)
     return(Tbl)

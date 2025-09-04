@@ -329,7 +329,7 @@ XPSVBTop <- function() {
 
 
   add.FitFunct <- function(h, ...) {
-     ObjectBKP <<- Object[[coreline]]
+#     ObjectBKP <<- Object[[coreline]]
      tab2 <- as.numeric(tclvalue(tcl(nbVBfit, "index", "current")))+1 #retrieve nbVBfit page index
      if (coreline != 0 && hasBaseline(Object[[coreline]])) {
          Xrange <- Object[[coreline]]@Boundaries$x
@@ -373,11 +373,11 @@ XPSVBTop <- function() {
 
 
   del.FitFunct <- function(h, ...) {  #title="DELETE COMPONENT KILLS CONSTRAINTS!!!"
-     ObjectBKP <<- Object[[coreline]]
+#     ObjectBKP <<- Object[[coreline]]
      answ <- tkmessageBox(message="Deleting fit function. Are you sure you want to proceed?",
                       type="yesno", title="DELETE", icon="warning") 
-     if (tclvalue(answ == "yes")) {
-         LL<-length(Object[[coreline]]@Components)
+     if (tclvalue(answ) == "yes") {
+         LL <- length(Object[[coreline]]@Components)
          for (ii in 1:LL) { #Rimuovo tutti i CONSTRAINTS
               Object[[coreline]] <<- XPSConstrain(Object[[coreline]],ii,action="remove",variable=NULL,value=NULL,expr=NULL)
          }
@@ -388,7 +388,7 @@ XPSVBTop <- function() {
              FCgroup <- ttkframe(delWin, borderwidth=0, padding=c(0,0,0,0) )
              tkgrid(FCgroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
              txt <- c("Select the fit component to delete")
-             tkgrid( ttklabel(FCgroup, text=txt, font="Serif, 11, normal"),
+             tkgrid( ttklabel(FCgroup, text=txt, font="Serif 11 normal"),
                      row = 1, column = 1, padx = 5, pady = 5, sticky="w")
              tkSep <- ttkseparator(FCgroup, orient="horizontal")
              tkgrid(tkSep, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
@@ -399,8 +399,9 @@ XPSVBTop <- function() {
 
              OKBtn <- tkbutton(FCgroup, text="  OK  ", width=15, command=function(){
                             if (tclvalue(compIdx) != "All"){
-                                indx <- as.numeric(tclvalue(compIdx))
-                                Object[[coreline]] <<- XPSremove(Object[[coreline]], what="components", number=indx )
+                                indx <- tclvalue(compIdx)
+                                indx <- as.integer(substr(indx,2,3))
+                                Object[[coreline]] <<- XPSremove(Object[[coreline]], "components", indx )
                                 if (length(Object[[coreline]]@Components) > 0 ) {
                                     #to update the fit:
                                     tmp <- sapply(Object[[coreline]]@Components, function(z) matrix(data=z@ycoor))
@@ -464,11 +465,6 @@ XPSVBTop <- function() {
 
 
   MakeFit <- function(h, ...) {
-     ObjectBKP <<- Object[[coreline]]
-     LL <- length(Object)
-     Object[[LL+1]] <<- Object[[coreline]]
-     Object@names[LL+1] <<- "VBt"
-     coreline <<- LL+1
      FitRes <- NULL
      tab1 <- as.numeric(tclvalue(tcl(nbMain, "index", "current")))+1  #retrieve  nbMain page index
      tab2 <- as.numeric(tclvalue(tcl(nbVBfit, "index", "current")))+1 #retrieve nbVBfit page index
@@ -689,7 +685,7 @@ XPSVBTop <- function() {
 #----Set Default Variable Values
 
   ResetVars <- function(){
-     Object[[coreline]] <<- XPSremove(Object[[coreline]],"all")
+     Object[[coreline]] <<- XPSremove(Object[[coreline]],"all")  #resets the original VB
 
      LL <- length(Object[[coreline]]@.Data[[1]])
      Object[[coreline]]@Boundaries$x <<- c(Object[[coreline]]@.Data[[1]][1], Object[[coreline]]@.Data[[1]][LL])
@@ -701,10 +697,11 @@ XPSVBTop <- function() {
      
      VBbkgOK <<- FALSE
      VBlimOK <<- FALSE
+     NewVB_CL <<- FALSE
      VBTop <<- FALSE
      VBtEstim <<- FALSE
+     NewVB_CL <<- FALSE
      BType <<- "Shirley"
-     LinFit <<- FALSE
      VBintg <<- NULL    #BKG subtracted VB integral
      CompNames <<- "   "
      compIndx <<- NULL
@@ -746,9 +743,9 @@ XPSVBTop <- function() {
   PlotType <- c("normal", "residual")
   VBbkgOK <- FALSE
   VBlimOK <- FALSE
+  NewVB_CL <- FALSE
   VBTop <- FALSE
   VBtEstim <- FALSE
-  LinFit <- FALSE
   VBintg <- NULL    #BKG subtracted VB integral
   FitFunct <- c("Gauss", "Voigt", "ExpDecay", "PowerDecay", "Sigmoid")
   CompNames <- "   "
@@ -946,6 +943,14 @@ XPSVBTop <- function() {
   tkgrid(Hlp21_btn1, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
   SetPts21_Btn1 <- tkbutton(T21Frame1, text=" Set Linear Region Edges ", width=40, command=function(){
+                      ObjectBKP <<- Object[[coreline]]
+                      if (NewVB_CL == FALSE){
+                          LL <- length(Object)
+                          Object[[LL+1]] <<- Object[[coreline]]
+                          Object@names[LL+1] <<- "VBt"
+                          coreline <<- LL+1
+                          NewVB_CL <<- TRUE
+                      }
                       GetCurPos(SingClick=FALSE)
          })
   tkgrid(SetPts21_Btn1, row = 2, column = 1, padx = 5, pady = 3, sticky="w")
@@ -969,6 +974,7 @@ XPSVBTop <- function() {
                       Object[[coreline]] <<- ObjectBKP
                       point.coords <<- list(x=NULL, y=NULL)
                       VBTop <<- FALSE
+                      VBtEstim <<- FALSE
                       MarkSym <<- 10
                       SymSiz <<- 1.8
                       tkconfigure(StatusBar, text= "Estimated position of VB top : ")
@@ -977,7 +983,23 @@ XPSVBTop <- function() {
   tkgrid(Reset21_Btn2, row = 6, column = 1, padx = 5, pady = 3, sticky="w")
 
   Reset21_btn3 <- tkbutton(T21Frame1, text=" Reset All ", width=40, command=function(){
+                      LL <- length(Object)
+                      Object[[LL]] <<- NULL #delete the added analyzed VB
+                      coreline <<- LL-1
                       ResetVars()
+                      Object[[LL]] <<- NULL #delete the added analyzed VB
+                      activeSpectName <<- tclvalue(CL)
+                      compIndx <<- grep(activeSpectName, SpectList)
+                      coreline <<- 0
+                      VBbkgOK <<- FALSE
+                      VBlimOK <<- FALSE
+                      BType <<- "Shirley"
+                      reset.baseline()
+                      set.coreline()
+                      WidgetState(T21Frame1, "disabled")
+                      WidgetState(T22Frame1, "disabled")
+                      WidgetState(T22Frame2, "disabled")
+                      WidgetState(T23Frame1, "disabled")
                       WidgetState(OK_btn1, "normal")
                       WidgetState(OK_btn2, "disabled")
                       replot()
@@ -1024,6 +1046,15 @@ XPSVBTop <- function() {
   tkgrid(T22Frame2, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
 
   add22_btn1 <- tkbutton(T22Frame2, text=" Add Fit Component ", width=40, command=function(){
+                      ObjectBKP <<- Object[[coreline]]
+                      if (NewVB_CL == FALSE){
+                          LL <- length(Object)
+                          Object[[LL+1]] <<- Object[[coreline]]
+                          Object@names[LL+1] <<- "VBt"
+                          coreline <<- LL+1
+                          NewVB_CL <<- TRUE
+
+                      }
                       GetCurPos(SingClick=FALSE)
          })
   tkgrid(add22_btn1, row = 1, column = 1, padx = 5, pady = 3, sticky="we")
@@ -1044,11 +1075,14 @@ XPSVBTop <- function() {
   tkgrid(Fit22_btn1, row = 3, column = 1, padx = 5, pady = 3, sticky="we")
 
   Reset22_btn1 <- tkbutton(T22Frame2, text=" Reset Fit ", command=function(){
-                      MakeFit()
-                      point.coords <<- list(x=NULL,y=NULL)
-                      reset.fit <<- TRUE
-                      MakeFit()
-                      tkconfigure(StatusBar, text="Estimated position of VB top : ")
+                      Object[[coreline]] <<- ObjectBKP
+                      point.coords <<- list(x=NULL, y=NULL)
+                      VBTop <<- FALSE
+                      VBtEstim <<- FALSE
+                      MarkSym <<- 10
+                      SymSiz <<- 1.8
+                      tkconfigure(StatusBar, text= "Estimated position of VB top : ")
+                      replot()      
          })
   tkgrid(Reset22_btn1, row = 4, column = 1, padx = 5, pady = 3, sticky="we")
 
@@ -1058,11 +1092,25 @@ XPSVBTop <- function() {
   tkgrid(VBTop22_btn1, row = 5, column = 1, padx = 5, pady = 3, sticky="we")
 
   Reset22_btn2 <- tkbutton(T22Frame2, text=" Reset All ", command=function(){
+                      LL <- length(Object)
+                      Object[[LL]] <<- NULL #delete the added analyzed VB
+                      coreline <<- LL-1
                       ResetVars()
+                      activeSpectName <<- tclvalue(CL)
+                      compIndx <<- grep(activeSpectName, SpectList)
+                      coreline <<- 0
+                      VBbkgOK <<- FALSE
+                      VBlimOK <<- FALSE
+                      BType <<- "Shirley"
+                      reset.baseline()
+                      set.coreline()
+                      WidgetState(T21Frame1, "disabled")
+                      WidgetState(T22Frame1, "disabled")
+                      WidgetState(T22Frame2, "disabled")
+                      WidgetState(T23Frame1, "disabled")
                       WidgetState(OK_btn1, "normal")
                       WidgetState(OK_btn2, "disabled")
                       replot()
-
          })
   tkgrid(Reset22_btn2, row = 6, column = 1, padx = 5, pady = 3, sticky="we")
 
@@ -1094,6 +1142,14 @@ XPSVBTop <- function() {
   tkgrid(Hlp23_btn1, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
   add23_btn1 <- tkbutton(T23Frame1, text=" Add Hill Sigmoid ", width=40, command=function(){
+                      ObjectBKP <<- Object[[coreline]]
+                      if (NewVB_CL == FALSE){
+                          LL <- length(Object)
+                          Object[[LL+1]] <<- Object[[coreline]]
+                          Object@names[LL+1] <<- "VBt"
+                          coreline <<- LL+1
+                          NewVB_CL <<- TRUE
+                      }
                       GetCurPos(SingClick=FALSE)
                       add.FitFunct()
          })
@@ -1105,10 +1161,14 @@ XPSVBTop <- function() {
   tkgrid(Fit22_btn1, row = 3, column = 1, padx = 5, pady = 3, sticky="w")
 
   Reset23_btn1 <- tkbutton(T23Frame1, text=" Reset Fit ", width=40, command=function(){
-                      point.coords <<- list(x=NULL,y=NULL)
-                      reset.fit <<- TRUE
-                      MakeFit()
-                      tkconfigure(StatusBar, text="Estimated position of VB top : ")
+                      Object[[coreline]] <<- ObjectBKP
+                      point.coords <<- list(x=NULL, y=NULL)
+                      VBTop <<- FALSE
+                      VBtEstim <<- FALSE
+                      MarkSym <<- 10
+                      SymSiz <<- 1.8
+                      tkconfigure(StatusBar, text= "Estimated position of VB top : ")
+                      replot()
          })
   tkgrid(Reset23_btn1, row = 4, column = 1, padx = 5, pady = 3, sticky="w")
 
@@ -1118,7 +1178,22 @@ XPSVBTop <- function() {
   tkgrid(VBTop23_btn1, row = 5, column = 1, padx = 5, pady = 3, sticky="w")
 
   VBTop23_btn1 <- tkbutton(T23Frame1, text=" Reset All ", width=40, command=function(){
+                      LL <- length(Object)
+                      Object[[LL]] <<- NULL #delete the added analyzed VB
+                      coreline <<- LL-1
                       ResetVars()
+                      activeSpectName <<- tclvalue(CL)
+                      compIndx <<- grep(activeSpectName, SpectList)
+                      coreline <<- 0
+                      VBbkgOK <<- FALSE
+                      VBlimOK <<- FALSE
+                      BType <<- "Shirley"
+                      reset.baseline()
+                      set.coreline()
+                      WidgetState(T21Frame1, "disabled")
+                      WidgetState(T22Frame1, "disabled")
+                      WidgetState(T22Frame2, "disabled")
+                      WidgetState(T23Frame1, "disabled")
                       WidgetState(OK_btn1, "normal")
                       WidgetState(OK_btn2, "disabled")
                       replot()

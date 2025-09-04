@@ -125,6 +125,7 @@ XPSMoveBaseLine <- function(){
                     XPSSample <<- get(activeFName,envir=.GlobalEnv)
                     SpectList <<- XPSSpectList(activeFName)
                     tkconfigure(SourceCoreline, values=SpectList)
+                    tclvalue(CL) <- ""
                     plot(XPSSample)
             })
    tkgrid(SourceFile, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -159,7 +160,7 @@ XPSMoveBaseLine <- function(){
    MBLFrame3 <- ttklabelframe(MBLgroup, text = "REFINE BASELINE EDGES", borderwidth=2)
    tkgrid(MBLFrame3, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
 
-   MBLbutton <- tkbutton(MBLFrame3, text="Set Baseline End Points", width=45, command=function(){
+   MBLbutton <- tkbutton(MBLFrame3, text="SET BASELINE END POINTS", width=45, command=function(){
                     BasLinType <<- XPSSample[[indx]]@Baseline$type[1]
                     if (BasLinType == "spline") {
                        txt <- "Spline background: \n ==> LEFT click to set spline points; RIGHT click to exit"
@@ -204,7 +205,7 @@ XPSMoveBaseLine <- function(){
             })
    tkgrid(MBLbutton, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   ADBLbutton <- tkbutton(MBLFrame3, text=" Refine Baseline  ", width=45, command=function(){
+   ADBLbutton <- tkbutton(MBLFrame3, text=" REFINE BASELINE  ", width=45, command=function(){
                     if (EndPts == FALSE) {
                         tkmessageBox(message="Please set the end-points before adjusting the BaseLine", title="WARNING", icon="warning")
                         return()
@@ -224,7 +225,7 @@ XPSMoveBaseLine <- function(){
             })
    tkgrid(ADBLbutton, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
-   SZAbutton <- tkbutton(MBLFrame3, text=" Set the Zoom Area ", width=20, command=function(){
+   SZAbutton <- tkbutton(MBLFrame3, text=" SET THE ZOOM AREA ", width=20, command=function(){
                     row1 <- " => Left click to define the 2 ZOOM REGION CORNERS (opposite in diagonal)"
                     row2 <- "\n => Click near corners to adjust Zoom Region Dimensions"
                     row3 <- "\n => Right click to Make Zoom when Zoom Region OK"
@@ -257,7 +258,6 @@ XPSMoveBaseLine <- function(){
                           if (pos$x > Xrange0[2]) {pos$x <- Xrange0[2]}
                           if (pos$y < Yrange0[1]) {pos$y <- Yrange0[1]}
                           if (pos$y > Yrange0[2]) {pos$y <- Yrange0[2]}
-
                           Dist <- NULL
                           Dmin <- ((pos$x-Corners$x[1])^2 + (pos$y-Corners$y[1])^2)^0.5  #valore di inizializzazione
                           for (ii in 1:4) {
@@ -284,22 +284,21 @@ XPSMoveBaseLine <- function(){
                           Yrange1 <<- sort(c(Corners$y[1], Corners$y[2]), decreasing=FALSE)  #modify only the Y range to give possibility to re-define the Baseline edges
                           ReDraw()
                     } ### while loop end
-                    plot(XPSSample[[indx]], xlim=Xrange1, ylim=Yrange1)
+                    EndPts <<- FALSE
+                    SetZoom <<- FALSE
+                    ReDraw()
+#                    plot(XPSSample[[indx]], xlim=Xrange1, ylim=Yrange1)
             })
    tkgrid(SZAbutton, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
 
-   RSTZMbutton <- tkbutton(MBLFrame3, text=" Reset Zoom ", width=20, command=function(){
-                    Xrange1 <<- range(XPSSample[[indx]]@RegionToFit$x) #if Baseline present limit the
-                    Yrange1 <<- range(XPSSample[[indx]]@RegionToFit$y) #plot limits to the RegionToFit
+   RSTZMbutton <- tkbutton(MBLFrame3, text=" RESET ZOOM ", width=20, command=function(){
+                    Xrange1 <<- range(XPSSample[[indx]]@.Data[[1]])
+                    Yrange1 <<- range(XPSSample[[indx]]@.Data[[2]])
                     XPSSample[[indx]]@Boundaries$x <<- Xrange1
                     XPSSample[[indx]]@Boundaries$y <<- Yrange1
-                    LL <- length(XPSSample[[indx]]@RegionToFit$x)
                     if (XPSSample[[indx]]@Flags[1]) { #Binding energy set
                         Xrange1 <<- sort(Xrange1, decreasing=TRUE)  #pos$x in decreasing order
-                    } else {
-                        Xrange1 <<- sort(Xrange1, decreasing=FALSE) #pos$x in increasing order
                     }
-                    Yrange1 <<- sort(Yrange1, decreasing=FALSE) #pos$ in increasing order
                     SetZoom <<- FALSE  #definition of zoom area disabled
                     ReDraw()
             })
@@ -309,17 +308,15 @@ XPSMoveBaseLine <- function(){
    tkgrid(MBLFrame4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
 
    RSTbutton <- tkbutton(MBLFrame4, text=" RESET ", width=45, command=function(){
-                    Yrange1 <<- range(XPSSample[[indx]]@.Data[[2]])
                     SetZoom <<- FALSE
-                    LL <- length(XPSSample[[indx]]@Components)
                     XPSSample[[indx]] <<- XPSSampleBkp[[indx]]
                     Xrange0 <<- range(XPSSample[[indx]]@.Data[[1]])
                     Yrange0 <<- range(XPSSample[[indx]]@.Data[[2]])
                     Xrange1 <<- range(XPSSample[[indx]]@.Data[[1]])
-                    if (XPSSample[[indx]]@Flags[1]) {   #reverse if BE scale
-                        Xrange1 <<- rev(Xrange1)
-                    }
                     Yrange1 <<- range(XPSSample[[indx]]@.Data[[2]])
+                    if (XPSSample[[indx]]@Flags[1]) {   #reverse if BE scale
+                        Xrange1 <<- sort(Xrange1, decreasing=TRUE)  #pos$x in decreasing order
+                    }
                     ReDraw()
             })
    tkgrid(RSTbutton, row = 1, column = 1, padx = 5, pady = 5, sticky="w")

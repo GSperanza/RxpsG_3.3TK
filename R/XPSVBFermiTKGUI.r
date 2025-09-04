@@ -408,12 +408,13 @@ XPSVBFermi <- function() {
   tkgrid(ButtGroup, row = 5, column = 1, padx = 0, pady = 0, sticky="w")
 
   SaveBtn <- tkbutton(ButtGroup, text="  SAVE  ", width=15, command=function(){
-                      activeSpecIndx <- coreline[1]
-                      assign(Object_name, Object, envir = .GlobalEnv)
-                      assign("activeSpectIndx", activeSpecIndx, envir = .GlobalEnv)
-                      assign("activeSpectName", coreline[2], envir = .GlobalEnv)
-                      plot(Object[[coreline]])
-                      XPSSaveRetrieveBkp("save")
+                     activeSpecIndx <- coreline[1]
+                     assign("activeFName", Object_name, envir = .GlobalEnv)
+                     assign(Object_name, Object, envir = .GlobalEnv)
+                     assign("activeSpectIndx", activeSpecIndx, envir = .GlobalEnv)
+                     assign("activeSpectName", coreline[2], envir = .GlobalEnv)
+                     plot(Object[[coreline]])
+                     XPSSaveRetrieveBkp("save")
                   })
   tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -423,12 +424,18 @@ XPSVBFermi <- function() {
                      XPSSample[[LL+1]]@Symbol <- "VBf"
                      XPSSample@names[LL+1] <- "VBf" #Object coreline was the initial VB possessing non-NULL name "VB"
                      activeSpecIndx <- coreline
+                     assign("activeFName", Object_name, envir = .GlobalEnv)
                      assign(Object_name, XPSSample, envir = .GlobalEnv)
                      assign("activeSpectIndx", activeSpecIndx, envir = .GlobalEnv)
                      assign("activeSpectName", coreline, envir = .GlobalEnv)
+                     idx <- which(XPSFNameList() == activeFName)      #index of the XPSSample_Name in tle FNameList
+                     idx <- paste("I00", idx, sep="")                 #build index compatible with the TCL
+                     XS_Tbl <- get("XS_Tbl", envir=.GlobalEnv)        #get the ttktreview ID
+                     tcl(XS_Tbl, "selection", "set", idx)             #set the actual XPSSample as selected in the MAIN-GUI
                      tkdestroy(VBwindow)
                      XPSSaveRetrieveBkp("save")
                      plot(XPSSample[[LL+1]])
+                     UpdateXS_Tbl()
                   })
   tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 

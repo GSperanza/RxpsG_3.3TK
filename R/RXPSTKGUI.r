@@ -440,8 +440,8 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                   O_Sys <- Sys.info()[1]
                   O_Sys <- tolower(O_Sys)
                   switch (O_Sys,
-                          "linux"   = {X11(type='cairo', xpos=700, ypos=20, title= ' ') },
-                          "windows" = {x11(xpos=700, ypos=20, title= ' ')},
+                          "linux"   = X11(type='cairo', xpos=700, ypos=20, title= ' '),
+                          "windows" = windows(xpos=700, ypos=20, title= ' '),
                           "darwin"  = {VerMajor <- as.numeric(version[6])
                                        VerMinor <- as.numeric(version[7])
                                        if (VerMajor < 3 || (VerMajor==3 && VerMinor < 6.2)) {
@@ -621,7 +621,6 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
              if (length(indx) == 0){
                 SpectName <- "survey"
                 indx <- grep(SpectName, SpectList, value=FALSE)
-                if (length(indx) > 0){ assign("activeSpectIndx", indx, envir=.GlobalEnv) }
              }
              if (length(indx) == 0){
                 answ <- tkmessageBox(message="Sorry, no survey in this XPSsample. Proceed anyway?", type="yesno", title="SPECTRUM ERROR", icon = "warning")
@@ -706,7 +705,19 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
       })
 
       tkadd(PlotMenu, "command", label = "Overlay Spectra", command = function() {
-             tkmessageBox(message="Wait a second...", title="INFO", icon="info")
+             InfoWindow <- tktoplevel()
+             tkwm.title(InfoWindow,"INFO MESSAGE")
+             tkwm.geometry(InfoWindow, "300x100")
+             tkwm.geometry(InfoWindow, "+170+100")   #position respect topleft screen corner
+             InfoFframe <- ttklabelframe(InfoWindow, text = " Info ", borderwidth=5)
+             tkgrid(InfoFframe, row = 0, column = 0, padx=7, pady=0, sticky="we")
+             tkgrid.rowconfigure(InfoWindow, 0, weight=1)
+             tkgrid.columnconfigure(InfoWindow, 0, weight=1)
+             InfoLabel <- ttklabel(InfoFframe, text="Wait a Moment Please...", font="Sans 10 bold")
+             tkgrid(InfoLabel, row = 1, column = 1, padx = 15, pady = 5, sticky="we")
+             tcl("update")
+             Sys.sleep(1.3)
+             tkdestroy(InfoWindow)
              XPSOverlay()
       })
 
@@ -833,14 +844,14 @@ sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if
                       })
 
    XPSSettings$General[6] <- Gdev
-
    if (length(XPSSettings$General[7]) == 0 || length(dir(XPSSettings$General[7])) == 0){
-      tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
-      XPSSetWD()
+       tkmessageBox(message="Working Dir NOT defined: please select your default Working Directory", title="SET THE WORKING DIR!", icon="error")
+       XPSSetWD()
    } else {
-      setwd(XPSSettings$General[7])
+       setwd(XPSSettings$General[7])
    }
    assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
+
 
 # Recover the R version used by Rstudio and save in .GlobalEnv
    RVersion <- R.Version()$version.string  #get the $version.string from the output list of R.Version()

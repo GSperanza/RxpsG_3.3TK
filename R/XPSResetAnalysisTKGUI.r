@@ -23,6 +23,7 @@
 
 XPSResetAnalysis <- function(){
 
+#----- Vars-----
    activeFName <- get("activeFName", envir = .GlobalEnv)
    if (length(activeFName)==0 || is.null(activeFName) || is.na(activeFName)){
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
@@ -39,7 +40,6 @@ XPSResetAnalysis <- function(){
    if (NComp > 0){
       FitComp <- names(FName[[SpectIndx]]@Components)  #Define a vector containing the Component names of the Active Coreline Fit
    }
-
 
 #===== NoteBook =====
    RstWin <- tktoplevel()
@@ -64,7 +64,10 @@ XPSResetAnalysis <- function(){
                     FName <<- get(activeFName, envir=.GlobalEnv)
                     SpectList <<- XPSSpectList(activeFName)
                     SpectList <<- c(SpectList, "All")
+                    tclvalue(CL) <- ""
                     tkconfigure(T1CoreLine, values=SpectList)
+                    tclvalue(FC) <- ""
+                    tkconfigure(T2obj1, values=" ")
                     plot(FName)
               })
    tkgrid(T1XPSSample, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
@@ -91,6 +94,7 @@ XPSResetAnalysis <- function(){
                         } else {
                             tkmessageBox(message="No Fit Found: Select Another Coreline Please!", title="WARNING", icon="warning")
                         }
+                        tclvalue(FC) <- ""
                         tkconfigure(T2obj1, values=FitComp)
                         plot(FName[[SpectIndx]])
                     }
@@ -204,6 +208,7 @@ XPSResetAnalysis <- function(){
    tkgrid(BtnGroup, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
 
    SaveBtn <- tkbutton(BtnGroup, text=" SAVE ", width=15, command=function(){
+                    assign("activeFName", activeFName, envir=.GlobalEnv)
                     assign(activeFName, FName, envir=.GlobalEnv)
                     XPSSaveRetrieveBkp("save")
               })
@@ -218,10 +223,11 @@ XPSResetAnalysis <- function(){
    tkgrid(RefreshBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
    SaveExitBtn <- tkbutton(BtnGroup, text=" SAVE and EXIT ", width=15, command=function(){
+                    assign("activeFName", activeFName, envir=.GlobalEnv)
                     assign(activeFName, FName, envir=.GlobalEnv)
                     tkdestroy(RstWin)
                     XPSSaveRetrieveBkp("save")
-
+                    UpdateXS_Tbl()
               })
    tkgrid(SaveExitBtn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 }

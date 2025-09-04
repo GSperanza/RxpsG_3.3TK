@@ -48,7 +48,7 @@ XPSQuant <- function(){
              info <- XPSSample[[ii]]@Info[1]   #retrieve info containing PE value
              xxx <- unlist(strsplit(info, "Pass energy"))[2]  #extract PE value
              PEnergy[ii] <- as.integer(gsub("\\D","", xxx)) # extract numeric characters from xxx = PE value
-             if(is.na(PEnergy[ii])){
+             if(is.na(PEnergy[ii]) && hasBaseline(XPSSample[[ii]])){
                 PEwin <- tktoplevel()
                 tkwm.title(PEwin,"INPUT CORE-LINE PASS ENERGY")
                 tkwm.geometry(PEwin, "+200+200")
@@ -368,7 +368,7 @@ XPSQuant <- function(){
          AreaCL[ii] <- 0
          indx <- CoreLineIndx[ii]
          if (CLCK[[ii]] == "TRUE") {   #if a coreline is selected
-            N_comp <- length(CoreLineComp[[ii]])   #this is the number of fit components
+            NFC <- length(CoreLineComp[[ii]])   #this is the number of fit components
             RSF <- XPSSample[[indx]]@RSF               #Sensitivity factor of the coreline
             E_stp <- abs(XPSSample[[indx]]@.Data[[1]][2]-XPSSample[[indx]]@.Data[[1]][1]) #energy step
             if (RSF != 0) {  #Sum is made only on components with RSF != 0 (Fit on Auger or VB not considered)
@@ -381,7 +381,7 @@ XPSQuant <- function(){
             txt <- as.character(round(AreaCL[ii], 2))
 
             if (hasComponents(XPSSample[[indx]])) {   #is fit present on the coreline?
-               for(jj in 1:N_comp){    #ii runs on CoreLines, jj runs on coreline fit components
+               for(jj in 1:NFC){    #ii runs on CoreLines, jj runs on coreline fit components
                   comp <- CoreLineComp[[ii]][jj]
                   RSF <- XPSSample[[indx]]@Components[[comp]]@rsf
                   if (RSF!=0) { #if the RSF is lacking(es. Auger, VB spectra...) : it is not possible to make correction for the RSF...
@@ -461,8 +461,8 @@ XPSQuant <- function(){
 
               #FIT COMPONENT's data
               if (hasComponents(XPSSample[[indx]])) {
-                 N_comp <- length(CoreLineComp[[ii]]) #number of fit components
-                 for(jj in 1:N_comp){ #ii runs on the corelines, jj runs on the fit components
+                 NFC <- length(CoreLineComp[[ii]]) #number of fit components
+                 for(jj in 1:NFC){ #ii runs on the corelines, jj runs on the fit components
                     Comp <- CoreLineComp[[ii]][jj]
                     Area <- sprintf("%1.2f",sumComp[ii,jj]) #area of component jj coreline ii
                     FWHM <- sprintf("%1.2f",XPSSample[[indx]]@Components[[Comp]]@param[3,1]) #FWHM component ii
@@ -687,7 +687,7 @@ XPSQuant <- function(){
 
                            #extract indexes of CoreLines selected for quantification
                            CheckedCL <- names(CoreLineComp)
-                           CheckedCL <- CheckedCL[which(CheckedCL != "")]
+                           CheckedCL <- CheckedCL[which(CLCK == TRUE)]
                            CheckedCL <- sapply(CheckedCL, function(x) { x <- unlist(strsplit(x, "\\."))
                                                   x <- unname(x)[1]
                                                   return(x)
@@ -695,7 +695,7 @@ XPSQuant <- function(){
                            CheckedCL <- as.integer(CheckedCL)
 
                            #Control on the Pass Energies
-                           CK.PassE <- PassE[CheckedCL] #extracts PE valued corresponding to the elements selected for quantification
+                           CK.PassE <- PassE[CheckedCL] #extracts PE values corresponding to the elements selected for quantification
                            idx <- unname(which(CK.PassE != CK.PassE[1])) #are the selected elements acquired at different PE?
                            is.NC <- TRUE #logic, TRUE if NormCoeff is already computed
                            idx <- CheckedCL[idx]  #now idx correctly indicates the corelines

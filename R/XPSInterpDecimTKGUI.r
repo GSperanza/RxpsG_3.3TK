@@ -343,9 +343,11 @@ XPSInterpDecim <- function() {
    tkgrid(ID.obj9, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
    ID.obj10 <- tkbutton(ID.frame8, text="SAVE", width=20, command=function(){
-                         assign(SelectedFName, XPSSample, envir=.GlobalEnv) #setto lo spettro attivo eguale ell'ultimo file caricato
+                         assign("activeFName", SelectedFName, envir=.GlobalEnv)
+                         assign(SelectedFName, XPSSample, envir=.GlobalEnv)
                          XPSSaveRetrieveBkp("save")
                          plot(XPSSample)
+                         UpdateXS_Tbl()
                   })
    tkgrid(ID.obj10, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 

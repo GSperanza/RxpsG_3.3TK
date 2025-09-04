@@ -33,7 +33,8 @@ ReadElmtList<-function(SpectrumType){
 peakDetection <- function(object, snmin , Ewin) {
  	 #- find peaks: DO NOT use baseline(object, method = "peakDetection")
  	 #- because it does not return the peaks index
-   baseline.PKG <- get("baseline.PKG", envir=.GlobalEnv)
+   Pkgs <- get("Pkgs", envir=.GlobalEnv)
+   baseline.PKG <- "baseline" %in% Pkgs
    if (baseline.PKG == FALSE){
        txt <- "Package 'baseline' is NOT installed. \nCannot Execute 'Element Detection' Option"
        tkmessageBox(message=txt, title="WARNING", icon="error")

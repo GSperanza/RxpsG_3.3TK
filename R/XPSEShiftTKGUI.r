@@ -201,7 +201,7 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     tkgrid(Eobj2, row=2, column=1, padx=5, pady=5)
 
     Frame3 <- ttklabelframe(ESGroup, text="Apply Shift", borderwidth=2, padding=c(5,5,5,5))
-    tkgrid(Frame3, row=3, column=1, padx = 5, pady=5, sticky="news")
+    tkgrid(Frame3, row = 3, column=1, padx = 5, pady=5, sticky="news")
 
     AllCL <- tclVar("All Core Lines")
     RadioAll <- ttkradiobutton(Frame3, text="All Core Lines", variable=AllCL, value="All Core Lines" )
@@ -210,7 +210,7 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     tkgrid(RadioSingle, row=3, column=2, padx=15, pady=5, sticky="w")
 
     Frame4 <- ttklabelframe(ESGroup, text = "Define the Zoom Region", borderwidth=2, padding=c(5,10,20,5) )
-    tkgrid(Frame4, row=4, column=1, padx = 5, pady=5, sticky="news")
+    tkgrid(Frame4, row = 4, column=1, padx = 5, pady=5, sticky="news")
     ZMButton <- tkbutton(Frame4, text="   Set the Zoom Region   ", command=function(){
                       SpectName <- tclvalue(CL)
                       if(length(SpectName)==0) {
@@ -227,7 +227,7 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     tkgrid(ZMButton, row=4, column=1)
 
     Frame5 <- ttklabelframe(ESGroup, text = "Peak Position", borderwidth=2, padding=c(5,5,20,5) )
-    tkgrid(Frame5, row=5, column=1, padx = 5, pady=5, sticky="news")
+    tkgrid(Frame5, row = 5, column=1, padx = 5, pady=5, sticky="news")
     CurButton <- tkbutton(Frame5, text="          Cursor          ", command=function(){
                       SpectName <- tclvalue(CL)
                       if(length(SpectName)==0) {
@@ -242,8 +242,8 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                       tkconfigure(Eobj5, textvariable=EE, foreground="black")  #update the Edit window with the componento position
                       plot(FName[[SpectIndx]], xlim=XYrange$x, ylim=XYrange$y)  #refresh graph
           })
-    tkgrid(CurButton, row=6, column=1, pady=5, sticky="w")
-    tkgrid(ttklabel(Frame5, text="Please Enter the New Energy Value:"), row=7, column=1, pady=5, sticky="w")
+    tkgrid(CurButton, row = 1, column=1, pady=5, sticky="w")
+    tkgrid(ttklabel(Frame5, text="Please Enter the New Energy Value:"), row=2, column=1, pady=5, sticky="w")
 
     NewE <- tclVar("E?")
     Eobj5 <- ttkentry(Frame5, textvariable=EE, foreground="grey")
@@ -275,6 +275,8 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                               Eshift <<- as.numeric(NewE-CompPos)
                           }
                           Escale <- FName[[SpectIndx]]@units[1]
+                          txt <- paste("Applied Energy Shift: ", round(Eshift, 3), "          ", sep="")
+                          tkgrid(ttklabel(Frame6, text=txt), row = 1, column=1, pady=5, sticky="w")
                           All_Sing <- tclvalue(AllCL)
                           if (All_Sing=="All Core Lines") {
                               NCoreLines <- length(FName)
@@ -282,7 +284,8 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                                    if (Escale == FName[[ii]]@units[1]) { #Eshift calculated on a BE scale and CoreLine[[ii]] sa same Energy Units
                                        FName[[ii]] <<- XPSapplyshift(FName[[ii]], Eshift)
                                    } else {
-                                       FName[[ii]] <<- XPSapplyshift(FName[[ii]], -Eshift)  # Eshift calculated on a BE scale while CoreLine[[ii]] is in Kinetic (or viceversa)
+                                       Eshift <<- -Eshift
+                                       FName[[ii]] <<- XPSapplyshift(FName[[ii]], Eshift)  # Eshift calculated on a BE scale while CoreLine[[ii]] is in Kinetic (or viceversa)
                                    }
                               }
                               plot(FName[[SpectIndx]])
@@ -290,39 +293,50 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                               if (Escale == FName[[SpectIndx]]@units[1]) {         #Eshift calculated on a BE scale and CoreLine[[ii]] sa same Energy Units
                                   FName[[SpectIndx]] <<- XPSapplyshift(FName[[SpectIndx]], Eshift)
                               } else {
-                                  FName[[SpectIndx]] <<- XPSapplyshift(FName[[SpectIndx]],-Eshift)  # Eshift calculated on a BE scale while CoreLine[[ii]] is in Kinetic (or viceversa)
+                                  Eshift <<- -Eshift
+                                  FName[[SpectIndx]] <<- XPSapplyshift(FName[[SpectIndx]], Eshift)  # Eshift calculated on a BE scale while CoreLine[[ii]] is in Kinetic (or viceversa)
                               }
                               plot(FName[[SpectIndx]])
- 		                      }
+ 		                       }
+
                    }
           })
-    tkgrid(Eobj5, row = 8, column = 1, pady=5, sticky = "w")
+    tkgrid(Eobj5, row = 3, column = 1, pady=5, sticky = "w")
 
-    Frame6 <- ttkframe(ESGroup,  borderwidth=0, padding=c(0,0,0,0) )
-    tkgrid(Frame6, row = 9, column = 1, padx = 5, pady = 5, sticky = "news")
-    tkgrid(tkbutton(Frame6, text="       RESET       ", command=function(){
-		                      FName <- XPSapplyshift(FName)
-		                      tkconfigure(Eobj2, textvariable="")
-		                      tkconfigure(Eobj5, textvariable="E?")
-                        if (length(FName[[SpectIndx]]@RegionToFit$x) > 0){
-                            XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
-                            XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
-                        } else {
-                            XYrange$x <<- range(FName[[SpectIndx]]@.Data[[1]])
-                            XYrange$y <<- range(FName[[SpectIndx]]@.Data[[2]])
-                        }
-                        plot(FName[[SpectIndx]], xlim=XYrange$x, ylim=XYrange$y)
-    	                   assign(activeFName, FName, envir=.GlobalEnv)
-          }),row = 9, column = 1, padx=1, pady=5, sticky="w")
+    Frame6 <- ttklabelframe(ESGroup, text = "Applied E-Shift", borderwidth=2, padding=c(5,5,20,5) )
+    tkgrid(Frame6, row = 6, column=1, padx = 5, pady=5, sticky="news")
+    txt <- paste("Applied Energy Shift: ", round(FName[[SpectIndx]]@Shift, 3), sep="")
+    tkgrid(ttklabel(Frame6, text=txt), row = 1, column=1, pady=5, sticky="w")
 
-    tkgrid(tkbutton(Frame6, text="        SAVE        ", command=function(){
+    tkgrid(tkbutton(Frame6, text=" RESET E-SHIFT ", command=function(){
+                    Eshift <<- FName[[SpectIndx]]@Shift
+		                  FName <<- XPSapplyshift(FName, shift = 0)
+                    txt <- paste("Applied Energy Shift: ", round(FName[[SpectIndx]]@Shift, 3), "          ", sep="")
+                    tkgrid(ttklabel(Frame6, text=txt), row = 1, column=1, pady=5, sticky="w")
+                    tkconfigure(Eobj2, textvariable="")
+                    tkconfigure(Eobj5, textvariable="E?")
+                    if (length(FName[[SpectIndx]]@RegionToFit$x) > 0){
+                        XYrange$x <<- range(FName[[SpectIndx]]@RegionToFit$x)
+                        XYrange$y <<- range(FName[[SpectIndx]]@RegionToFit$y)
+                    } else {
+                        XYrange$x <<- range(FName[[SpectIndx]]@.Data[[1]])
+                        XYrange$y <<- range(FName[[SpectIndx]]@.Data[[2]])
+                    }
+                    plot(FName[[SpectIndx]])
+          }),row = 2, column = 1, padx=1, pady=5, sticky="w")
+
+
+    Frame7 <- ttkframe(ESGroup,  borderwidth=0, padding=c(0,0,0,0) )
+    tkgrid(Frame7, row = 7, column = 1, padx = 5, pady = 5, sticky = "news")
+
+    tkgrid(tkbutton(Frame7, text="        SAVE        ", command=function(){
     	                   assign("activeFName", activeFName, envir=.GlobalEnv)
     	                   assign(activeFName, FName, envir=.GlobalEnv)
     	                   XPSSaveRetrieveBkp("save")
-          }),row = 9, column = 2, padx=8, pady=5, sticky="w")
+          }),row = 1, column = 1, padx=8, pady=5, sticky="w")
 
 
-    tkgrid(tkbutton(Frame6, text="      SAVE & EXIT     ", command=function(){
+    tkgrid(tkbutton(Frame7, text="      SAVE & EXIT     ", command=function(){
     	                   tkdestroy(ESWin)
     	                   assign("activeFName", activeFName, envir=.GlobalEnv)
     	                   assign(activeFName, FName, envir=.GlobalEnv)
@@ -330,5 +344,5 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     	                   XPSSaveRetrieveBkp("save")
     	                   plot(FName)
                         UpdateXS_Tbl()
-          }),row = 9, column=3, padx=1, pady=5, sticky="w")
+          }),row = 1, column = 2, padx=1, pady=5, sticky="w")
 }

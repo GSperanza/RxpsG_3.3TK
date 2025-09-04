@@ -181,9 +181,12 @@ XPSCompare <- function(){
 
    ChkCommCL <- function(){
        XpSamp <- get(FNamesCoreLines$XPSSample[1], envir=.GlobalEnv)
-#       CommonCL <- gsub("[\\.0-9]+", "", CLlist[[1]])  #set the CL of the first XPSSample as a reference (names without numbers and dots
-       CommonCL <- strsplit(CLlist[[1]], "\\.")         #splits CL_Symbol at the dot
-       CommonCL <- unlist(lapply(CommonCL, function(x) x <- x[2])) #takes the Symbol, remove the number
+       CommonCL <- sapply(CLlist[[1]], function(z) {
+                          y <- strsplit(z, "\\.")
+                          y <- unlist(y[[1]][2])
+                          return(y)
+                        })
+       CommonCL <- unname(CommonCL) #unlist(sapply(CommonCL, function(z) z <- z[2])) #takes the Symbol, remove the number
        N.CL <- length(CommonCL)                        #N. Corelines in the reference XPS-Sample (first selected sample)
        N.XS <- length(FNamesCoreLines$XPSSample)       #Number of N. XPSSpectra selected
        RngX <- RngY <- list(CLName=NULL, min=NULL, max=NULL)
@@ -200,9 +203,12 @@ XPSCompare <- function(){
        if (N.XS > 1) {
            for (ii in 2:N.XS){ #the first XPSSamp is compared starting from the second XPSSamp
                 XpSamp <- get(FNamesCoreLines$XPSSample[ii], envir=.GlobalEnv)
-#                CoreLines <- gsub("[\\.0-9]+", "", CLlist[[ii]]) #set the CL of the next XPSSample to intersect
-                CoreLines <- strsplit(CLlist[[ii]], "\\.")         #splits CL_Symbol at the dot
-                CoreLines <- unlist(lapply(CoreLines, function(x) x <- x[2])) #takes the Symbol, remove the number
+                CoreLines <- sapply(CLlist[[ii]], function(z) {
+                                   y <- strsplit(z, "\\.")
+                                   y <- unlist(y[[1]][2])
+                                   return(y)
+                                 })
+                CoreLines <- unname(CoreLines)
                 CommonCL <- intersect(CommonCL, CoreLines)
                 for (jj in N.CL:1){
                     #work out the X-range Y-range common to the selected Core Lines
@@ -222,44 +228,46 @@ XPSCompare <- function(){
        Ylim <<- RngY
    }
 
-   CtrlRepCL <- function(ii){    #CTRL for repeated CL: search for core-lines with same name
-       LL <- length(CLlist[[ii]])
-       jj <- 1
-       while(jj < LL){
-           SpectName <- CLlist[[ii]][jj]
-           SpectName <- unlist(strsplit(SpectName, "\\."))
-           SpectName <- SpectName[2]
-           Indx <- grep(SpectName, CLlist[[ii]])  #The selected CoreLine name could be in any position in the Destination XPSSample => source Samp Index could be different from Dest Samp index
-           if (length(Indx) > 1){                 #The same coreline is present more than one time
-               CLWindow <- tktoplevel()
-               tkwm.title(CLWindow,"CORE LINE SELECTION")
-               N.CL <- length(Indx)
-               msg <- paste(" Found ", N.CL," ",SpectName, "spectra.\n Please select the coreline to compare")
-               tkgrid(ttklabel(CLWindow, text=msg, font="Helvetica 12 normal"), row=1, column=1, padx=5, pady=5)
-               tkgrid(ttkseparator(CLWindow, orient="horizontal"), row=2, column=1, padx=5, pady=5)
-               CLGroup <- ttkframe(CLWindow, borderwidth=2, padding=c(5,5,5,5) )
-               tkgrid(CLGroup, row=3, column=1, sticky="w")
-               RCL <- tclVar()
-               CLRadio <- NULL
-               for(kk in Indx){
-                   CLRadio <- ttkradiobutton(CLGroup, text=CLlist[[ii]][kk], variable=RCL, value=CLlist[[ii]][kk],
-                              command=function(){
-                                  zz <- grep(tclvalue(RCL), CLlist[[ii]][Indx])
-                                  Indx <<- Indx[-zz] #in Indx remains the component to eliminiate
-                                  CLlist[[ii]] <<- CLlist[[ii]][-Indx] #eliminate the repeated spectra
-                                  LL <- length(CLlist[[ii]]) #update CLlist length
-                              })
-                   tkgrid(CLRadio, row=1, column=kk, padx=5, pady=5)
-               }
+   CtrlRepCL <- function(){    #CTRL for repeated CL: search for core-lines with same name
+       for(ii in seq_along(FNamesCoreLines$XPSSample)){
+           LL <- length(CLlist[[ii]])
+           jj <- 1
+           while(jj <= LL){
+                 SpectName <- CLlist[[ii]][jj]
+                 SpectName <- unlist(strsplit(SpectName, "\\."))
+                 SpectName <- SpectName[2]
+                 Indx <- grep(SpectName, CLlist[[ii]])  #The selected CoreLine name could be in any position in the Destination XPSSample => source Samp Index could be different from Dest Samp index
+                 if (length(Indx) > 1){                 #The same coreline is present more than one time
+                     CLWindow <- tktoplevel()
+                     tkwm.title(CLWindow,"CORE LINE SELECTION")
+                     N.CL <- length(Indx)
+                     msg <- paste(" Found ", N.CL," ",SpectName, "spectra.\n Please select the coreline to compare")
+                     tkgrid(ttklabel(CLWindow, text=msg, font="Helvetica 12 normal"), row=1, column=1, padx=5, pady=5)
+                     tkgrid(ttkseparator(CLWindow, orient="horizontal"), row=2, column=1, padx=5, pady=5)
+                     CLGroup <- ttkframe(CLWindow, borderwidth=2, padding=c(5,5,5,5) )
+                     tkgrid(CLGroup, row=3, column=1, sticky="w")
+                     RCL <- tclVar()
+                     CLRadio <- NULL
+                     for(kk in Indx){
+                         CLRadio <- ttkradiobutton(CLGroup, text=CLlist[[ii]][kk], variable=RCL, value=CLlist[[ii]][kk],
+                                         command=function(){
+                                            zz <- grep(tclvalue(RCL), CLlist[[ii]][Indx])
+                                            Indx <<- Indx[-zz] #in Indx remains the component to eliminiate
+                                            CLlist[[ii]] <<- CLlist[[ii]][-Indx] #eliminate the repeated spectra
+                                            LL <- length(CLlist[[ii]]) #update CLlist length
+                                         })
+                         tkgrid(CLRadio, row=1, column=kk, padx=5, pady=5)
+                     }
 
-               ExitBtn <- tkbutton(CLWindow, text="  OK  ", width=15, command=function(){
-                                  tkdestroy(CLWindow)
-                              })
-               tkgrid(ExitBtn, row=4, column=1, padx=5, pady=5)
+                     ExitBtn <- tkbutton(CLWindow, text="  OK  ", width=15, command=function(){
+                                            tkdestroy(CLWindow)
+                                         })
+                     tkgrid(ExitBtn, row=4, column=1, padx=5, pady=5)
 
-               tkwait.window(CLWindow)  #nothing else can be done while WinCL is active
-           }                     #to allow selection/eliminaiton of repeated CL
-           jj <- jj+1
+                     tkwait.window(CLWindow)  #nothing else can be done while WinCL is active
+                 }                     #to allow selection/eliminaiton of repeated CL
+                 jj <- jj+1
+           }
        }
    }
 
@@ -279,7 +287,6 @@ XPSCompare <- function(){
             }
             NamesList <<- list(XPSSample=NULL, CoreLines=NULL)
             FNamesCoreLines <<- list(XPSSample=NULL,CoreLines=NULL, Ampli=NULL)  #dummy lists to begin: NB each lcolumn contains 2 element otherwise error
-            updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
             tkconfigure (objCLineOff, values="")
             tkconfigure (objXSampAmpl, values="")
             tkconfigure (objCLineAmpl, values="")
@@ -527,7 +534,7 @@ XPSCompare <- function(){
    T1frameInfoT1 <- ttklabelframe(T1group1, text = "INFO", borderwidth=2)
    tkgrid(T1frameInfoT1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   txt <- paste(" (1) Select the XPS.Sample to compare \n",
+   txt <- paste(" (1) Select the XPS.Sample to compare and press OK \n",
                 "(2) Select the spectra to compare \n",
                 "(3) Press the PLOT button", collapse="")
    tkgrid( ttklabel(T1frameInfoT1, text=txt), row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -535,9 +542,87 @@ XPSCompare <- function(){
 
    T1frameSelect <- ttkframe(T1group1, borderwidth=0, padding=c(0,0,0,0))
    tkgrid(T1frameSelect, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
+
+   T1frameFName <- ttklabelframe(T1frameSelect, text = "SELECT XPS-SAMPLES", borderwidth=2)
+   tkgrid(T1frameFName, row = 1, column = 1, padx = 10, pady = 5, sticky="w")
+
+   btns <- NULL
+   for(ii in 1:length(FNameListTot)){
+       T1XSampListCK <- tkcheckbutton(T1frameFName, text=FNameListTot[ii], variable=FNameListTot[ii],
+                        onvalue = FNameListTot[ii], offvalue = 0)
+       tkgrid(T1XSampListCK, row = ii, column = 1, padx = 5, pady = 5, sticky="w")
+       tclvalue(FNameListTot[ii]) <- FALSE
+   }
    
-   T1frameButtT1 <- ttklabelframe(T1frameSelect, text = "PLOT", borderwidth=2)
-   tkgrid(T1frameButtT1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+   T1XSampListBtn <- tkbutton(T1frameFName, text=" OK ", width=15, command=function(){
+                           for(jj in length(FNameListTot):1){
+                               FNamesCoreLines$XPSSample[jj] <<- tclvalue(FNameListTot[jj])
+                               if (FNamesCoreLines$XPSSample[jj] == "0") { FNamesCoreLines$XPSSample <<- FNamesCoreLines$XPSSample[-jj] }
+                           }
+                           if (as.logical(length(FNamesCoreLines$XPSSample)) == FALSE || sum(is.na(FNamesCoreLines$XPSSample))){
+                               tkmessageBox(message="Please Control the Selected XPSSample List", title="WARNING", icon="warning")
+                               FNamesCoreLines$XPSSample <<- NULL
+                               FNamesCoreLines$CoreLines <<- NULL
+                               FNamesCoreLines$Ampli <<- NULL
+                               Plot_Args$PanelTitles <<- list()
+                               CLlist <<- list()
+                           } else {
+                               FNamesCoreLines$CoreLines <<- NULL
+                               LL <- length(FNamesCoreLines$XPSSample)
+                               if (LL > 3) {  #prepare for plotting the legends
+                                   Plot_Args$auto.key$columns <<- 3
+                                   AutoKey_Args$columns <<- 3
+                               }
+                               Plot_Args$auto.key$text <<- unlist(FNamesCoreLines$XPSSample)
+                               CLlist <<- list()
+                               #Define only the CLlist for the new selected XPSSample
+                               CLlist <<- lapply(FNamesCoreLines$XPSSample, function(z) XPSSpectList(z) )
+                               CtrlRepCL()   #controls if same spectra are repeated in CLlist[[LL]]
+                               ChkCommCL()   #check for corelines common to selected XPSSamples
+                           }
+                           tkconfigure(objXSampAmpl, values=FNamesCoreLines$XPSSample)
+                           childID <- tclvalue(tkwinfo("children", T1frameCLine)) #Remove CL_checkbox
+                           if (length(childID) > 0){
+                               sapply(unlist(strsplit(childID, " ")), function(x) {
+                                             tcl("grid", "remove", x)
+                                     })
+                           }
+                           CLines <- FNamesCoreLines$CoreLines
+                           if (length(CLines) > 0){
+                               ##Common Core-Line Checkbox
+                               for(jj in 1:length(CLines)){
+                                   T1CLineListCK <- tkcheckbutton(T1frameCLine, text=CLines[jj], variable=CLines[jj],
+                                                     onvalue = CLines[jj], offvalue = 0, command=function(){
+                                                        for(ll in length(CLines):1){
+                                                            FNamesCoreLines$CoreLines[ll] <<- tclvalue(CLines[ll])
+                                                            if (FNamesCoreLines$CoreLines[ll] == "0") {
+                                                                SelectedCL <<- FALSE
+                                                                FNamesCoreLines$CoreLines <<- FNamesCoreLines$CoreLines[-ll]
+                                                                if (length(FNamesCoreLines$CoreLines) > 0) { SelectedCL <<- TRUE }
+                                                            }
+                                                        }
+                                                        tkconfigure(objCLineOff, values=FNamesCoreLines$CoreLines)
+                                                        tkconfigure(objCLineAmpl, values=FNamesCoreLines$CoreLines)
+                                                        tkconfigure(CLineCustXY, values=FNamesCoreLines$CoreLines)
+                                                     })
+                                   tclvalue(CLines[jj]) <- FALSE
+                                   tkgrid(T1CLineListCK, row = jj, column = 1, padx = 5, pady = 5, sticky="w")
+                               }
+                           }
+                           tclvalue(SelXSampAmpl) <- ""
+                           tkconfigure(objXSampAmpl, values=FNamesCoreLines$XPSSample)
+
+                       })
+   tkgrid(T1XSampListBtn, row = ii+1, column = 1, padx = 10, pady = 5, sticky="w")
+
+   T1frameCLine <- ttklabelframe(T1frameSelect, text = "SELECT SPECTRA", borderwidth=2)
+   tkgrid(T1frameCLine, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+
+   T1CLineListCK <- ttklabel(T1frameCLine, text="      \n      ")
+   tkgrid(T1CLineListCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")  #just to add space into the T1frameCLine
+
+   T1frameButtT1 <- ttklabelframe(T1group1, text = "PLOT", borderwidth=2)
+   tkgrid(T1frameButtT1, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
 
    Button1 <- tkbutton(T1frameButtT1, text="PLOT", width=22, command=function(){
                            if (SelectedCL == FALSE){
@@ -552,9 +637,9 @@ XPSCompare <- function(){
    Button2 <- tkbutton(T1frameButtT1, text="RESET PLOT", width=22, command=function(){
                            ResetPlot()
                      })
-   tkgrid(Button2, row = 2, column = 1, padx = 10, pady = 5, sticky="w")
+   tkgrid(Button2, row = 1, column = 2, padx = 10, pady = 5, sticky="w")
 
-   Button3 <- tkbutton(T1frameButtT1, text="UPDATE XPSSAMPLE LIST", command=function(){
+   Button3 <- tkbutton(T1frameButtT1, text="UPDATE XPSSAMPLE LIST", width=22, command=function(){
                            #Remove XS_checkbox
                            childID <- tclvalue(tkwinfo("children", T1frameFName))
                            if (length(childID) > 0){
@@ -585,11 +670,8 @@ XPSCompare <- function(){
                                                               FNamesCoreLines$Ampli <<- NULL
                                                               Plot_Args$PanelTitles <<- list()
                                                               CLlist <<- list()
-                                                              updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
                                                           } else {
-
                                                               FNamesCoreLines$CoreLines <<- NULL
-                                                              updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
                                                               LL <- length(FNamesCoreLines$XPSSample)
                                                               if (LL > 3) {  #prepare for plotting the legends
                                                                   Plot_Args$auto.key$columns <<- 3
@@ -626,7 +708,6 @@ XPSCompare <- function(){
                                                                     tkconfigure(objCLineOff, values=FNamesCoreLines$CoreLines)
                                                                     tkconfigure(objCLineAmpl, values=FNamesCoreLines$CoreLines)
                                                                     tkconfigure(CLineCustXY, values=FNamesCoreLines$CoreLines)
-                                                                    updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
                                                                 })
                                                                 tclvalue(CLines[jj]) <- FALSE
                                                                 tkgrid(T1CLineListCK, row = jj, column = 1, padx = 5, pady = 5, sticky="w")                                                               
@@ -645,111 +726,13 @@ XPSCompare <- function(){
                            tkconfigure(CLineCustXY, values=" ")
                  })
 
-   tkgrid(Button3, row = 3, column = 1, padx = 10, pady = 5, sticky="w")
+   tkgrid(Button3, row = 2, column = 1, padx = 10, pady = 5, sticky="w")
 
    Button4 <- tkbutton(T1frameButtT1, text="EXIT", width=22, command=function(){
                            XPSSaveRetrieveBkp("save")
                            tkdestroy(CompareWindow)
                      })
-   tkgrid(Button4, row = 4, column = 1, padx = 10, pady = 5, sticky="w")
-
-
-   T1frameFName <- ttklabelframe(T1frameSelect, text = "SELECT XPS-SAMPLES", borderwidth=2)
-   tkgrid(T1frameFName, row = 1, column = 2, padx = 10, pady = 5, sticky="w")
-
-   btns <- NULL
-   for(ii in 1:length(FNameListTot)){
-       T1XSampListCK <- tkcheckbutton(T1frameFName, text=FNameListTot[ii], variable=FNameListTot[ii],
-                        onvalue = FNameListTot[ii], offvalue = 0, command=function(){
-                           for(jj in length(FNameListTot):1){
-                               FNamesCoreLines$XPSSample[jj] <<- tclvalue(FNameListTot[jj])
-                               if (FNamesCoreLines$XPSSample[jj] == "0") { FNamesCoreLines$XPSSample <<- FNamesCoreLines$XPSSample[-jj] }
-                           }
-                           if (length(FNamesCoreLines$XPSSample) == 0 || is.na(FNamesCoreLines$XPSSample)){
-                               FNamesCoreLines$XPSSample <<- NULL
-                               FNamesCoreLines$CoreLines <<- NULL
-                               FNamesCoreLines$Ampli <<- NULL
-                               Plot_Args$PanelTitles <<- list()
-                               CLlist <<- list()
-                               updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
-                           } else {
-                               FNamesCoreLines$CoreLines <<- NULL
-                               updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
-                               LL <- length(FNamesCoreLines$XPSSample)
-                               if (LL > 3) {  #prepare for plotting the legends
-                                   Plot_Args$auto.key$columns <<- 3
-                                   AutoKey_Args$columns <<- 3
-                               }
-                               Plot_Args$auto.key$text <<- unlist(FNamesCoreLines$XPSSample)
-                               #Define only the CLlist for the new selected XPSSample
-                               CLlist[[LL]] <<- XPSSpectList(FNamesCoreLines$XPSSample[LL])
-
-                               CtrlRepCL(LL)  #controls if same spectra are repeated in CLlist[[LL]]
-                               ChkCommCL()   #check for corelines common to selected XPSSamples
-                            }
-                            tkconfigure(objXSampAmpl, values=FNamesCoreLines$XPSSample)
-                            childID <- tclvalue(tkwinfo("children", T1frameCLine)) #Remove CL_checkbox
-                            if (length(childID) > 0){
-                                sapply(unlist(strsplit(childID, " ")), function(x) {
-                                              tcl("grid", "remove", x)
-                                      })
-                            }
-
-                            CLines <- FNamesCoreLines$CoreLines
-                            if (length(CLines) > 0){
-                               ##Common Core-Line Checkbox
-                               for(jj in 1:length(CLines)){
-                                   T1CLineListCK <- tkcheckbutton(T1frameCLine, text=CLines[jj], variable=CLines[jj],
-                                                     onvalue = CLines[jj], offvalue = 0, command=function(){
-                                                        for(ll in length(CLines):1){
-                                                            FNamesCoreLines$CoreLines[ll] <<- tclvalue(CLines[ll])
-                                                            if (FNamesCoreLines$CoreLines[ll] == "0") {
-                                                                SelectedCL <<- FALSE
-                                                                FNamesCoreLines$CoreLines <<- FNamesCoreLines$CoreLines[-ll]
-                                                                if (length(FNamesCoreLines$CoreLines) > 0) { SelectedCL <<- TRUE }
-                                                            }
-                                                        }
-                                                        tkconfigure(objCLineOff, values=FNamesCoreLines$CoreLines)
-                                                        tkconfigure(objCLineAmpl, values=FNamesCoreLines$CoreLines)
-                                                        tkconfigure(CLineCustXY, values=FNamesCoreLines$CoreLines)
-                                                        updateTable(widget=NameTable, items=list(FNamesCoreLines$XPSSample, FNamesCoreLines$CoreLines))
-                                                     })
-                                   tclvalue(CLines[jj]) <- FALSE
-                                   tkgrid(T1CLineListCK, row = jj, column = 1, padx = 5, pady = 5, sticky="w")
-                               }
-                            }
-                            tclvalue(SelXSampAmpl) <- ""
-                            tkconfigure(objXSampAmpl, values=FNamesCoreLines$XPSSample)
-
-                       })
-       tkgrid(T1XSampListCK, row = ii, column = 1, padx = 5, pady = 5, sticky="w")
-       tclvalue(FNameListTot[ii]) <- FALSE
-   }
-
-   T1frameCLine <- ttklabelframe(T1frameSelect, text = "SELECT SPECTRA", borderwidth=2)
-   tkgrid(T1frameCLine, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
-
-   T1CLineListCK <- ttklabel(T1frameCLine, text="      \n      ")
-   tkgrid(T1CLineListCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")  #just to add space into the T1frameCLine
-
-   T1frameTab <- ttklabelframe(T1group1, text = "SELECTED XPS-SAMPLES AND COMMON CORE LINES", borderwidth=2)
-   tkgrid(T1frameTab, row = 3, column = 1, padx = 5, pady = 5, sticky="w")
-
-   NameTable <- ttktreeview(T1frameTab,
-                           columns = c("XPS Samples", "Core Lines"),
-                           displaycolumns=c(0, 1),
-                           show = "headings",
-                           height = 5,
-                           selectmode = "browse"
-   )
-   tcl(NameTable, "heading", 0, text="XPS Samples")
-   tcl(NameTable, "column", 0, width=200)
-   tcl(NameTable, "heading", 1, text="Core Lines")
-   tcl(NameTable, "column", 1, width=200)
-   tkgrid(NameTable, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-   tkgrid.columnconfigure(T1frameTab, 1, weight=4)
-   addScrollbars(T1frameTab, NameTable, type="y", Row=1, Col=1, Px=0, Py=0)
-   updateTable(widget=NameTable, items=FNameListTot)
+   tkgrid(Button4, row = 2, column = 2, padx = 10, pady = 5, sticky="w")
 
 
 # --- TAB2 ---
@@ -1428,7 +1411,7 @@ XPSCompare <- function(){
    T4_YScale <- ttkcombobox(T4F_YScale, width = 15, textvariable = yScale, values = ScaleTypes)
    tkbind(T4_YScale, "<<ComboboxSelected>>", function(){
                              idx <- charmatch(tclvalue(yScale),ScaleTypes)
-cat("\n Scales", tclvalue(yScale), idx)
+   cat("\n Scales:", tclvalue(yScale), idx)
                              if (idx == 1) {
                                 Plot_Args$scales$y$log <<- FALSE
                                 Plot_Args$yscale.components <<- yscale.components.subticks

@@ -1,7 +1,7 @@
 # Convolution and Deconvolution of arrays carried out using FFT
 # routine written on the base of Matlab indications
 
-#' @title XPSCnvDcnv concolution, deconvolution functions
+#' @title XPSCnvDcnv for convolution, deconvolution functions
 #' @description XPSCnvDcnv() is used to calculate the convolution of 
 #'   the two X, Y input arrays or deconvolve Y from X.
 #'   deconvolution can be made using the fft and its inverse or the
@@ -469,7 +469,6 @@ XPSCnvDcnv <- function(x, y, deco=FALSE){
    DeNoise <- FALSE
    MuFact <- 0.3
 
-
 #--- GUI ---
    ConvWin <- tktoplevel()
    tkwm.title(ConvWin,"CONVOLUTION - DECONVOLUTION")
@@ -703,7 +702,7 @@ XPSCnvDcnv <- function(x, y, deco=FALSE){
                  })
    tkgrid(DCnvButt2, row = 8, column = 1, padx=5, pady = 5, sticky="w")
 
-#   WinButt <- tkgbutton(ConvGroup1, text=" Apply Hanning window to smooth spectrum edges ", command=function(){
+#   WinButt <- tkbutton(ConvGroup1, text=" Apply Hanning window to smooth spectrum edges ", command=function(){
 #                     HannWin <- tktoplevel()
 #                     tkwm.title(ConvWin,"HANNING WINDOW")
 #                     tkwm.geometry(ConvWin, "+150+100")   #SCREEN POSITION from top-left corner
@@ -773,10 +772,12 @@ XPSCnvDcnv <- function(x, y, deco=FALSE){
                                LL <- length(FName)+1
                                FName[[LL]] <<- CvDcv[[3]]
                                names(FName)[LL] <- CLName
+                               assign("activeFName", activeFName, envir=.GlobalEnv)
                                assign(activeFName, FName, envir=.GlobalEnv)
                            }
                            plot(FName)
                            tkdestroy(ConvWin)
+                           UpdateXS_Tbl()
                  })
    tkgrid(SavExitButt, row = 9, column = 1, padx=c(xx+10,0), pady = 5, sticky="w")
 

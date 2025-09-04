@@ -137,36 +137,43 @@ XPSDiff <- function(){
       Info <- XPSDiffted[[1]]@Info
       S3 <<- "\U0394."  #delta symbol
 #      S3 <<- "d."  #delta symbol
-      charPos <- FindPattern(XPSDiffted[[1]]@Info, "   ::: Max.Min. = ")[1]  #charPos[1] = row index of Info where "::: Max.Min.D = " is found
+      txt <- paste("   ::: Max.Min.", S3, " = ", sep="")
+      charPos <- FindPattern(XPSDiffted[[1]]@Info, txt)[1]  #charPos[1] = row index of Info where "::: Max.Min.D = " is found
       if(length(charPos) > 0){ #save the Max/Min difference in XPSSample Info
          XPSDiffted[[1]]@Info[charPos] <<- paste("   ::: Max.Min.", S3, " = ", MaxMinD, sep="") #overwrite previous MAx\Min Dist value
-      } else {
+      } else if (length(charPos) == 0 || is.null(charPos)){
          if (XPSDiffted[[1]]@Info == ""){
-             nI <- 1
+             nI <- length(XPSDiffted[[1]]@Info)
          } else {
              nI <- length(XPSDiffted[[1]]@Info)+1
          }
          txt <- paste("   ::: Max.Min.", S3, " = ", MaxMinD, sep="")
          XPSDiffted[[1]]@Info[nI] <<- txt
       }
-      Symbol <- paste(S3, S2, DiffDeg, S1, sep="", collapse="") #Symbol= "\U0394." "D."  CLname
-      #add a component to store derivative Max Min positions
-      XPSDiffted[[1]] <<- XPSaddComponent(XPSDiffted[[1]], type = "Derivative")
-      #Set the measured MaxMinD for the differeniated CoreLine
-      XPSDiffted[[1]]@Symbol <<- Symbol # delta = the MaxMin diff was measured
 
+      Symbol <- paste(S3, S2, DiffDeg, ".", S1, sep="", collapse="") #Symbol= "\U0394." "D."  CLname
+      #add a component to store derivative Max Min positions
+
+      if (length(XPSDiffted[[1]]@Components) == 0) {
+          XPSDiffted[[1]] <<- XPSaddComponent(XPSDiffted[[1]], type = "Derivative")
+          #Set the measured MaxMinD for the differeniated CoreLine
+          XPSDiffted[[1]]@Symbol <<- Symbol # delta = the MaxMin diff was measured
+      }
       idx <- findXIndex(XPSDiffted[[1]]@.Data[[1]], pos$x[1])         #finds index corresponding to Max/min positions
       pos$y[1] <- XPSDiffted[[1]]@.Data[[2]][idx]
       idx <- findXIndex(XPSDiffted[[1]]@.Data[[1]], pos$x[2])         #finds index corresponding to Max/min positions
       pos$y[2] <- XPSDiffted[[1]]@.Data[[2]][idx]
       idx <- which(pos$y < max(pos$y))
+
       XPSDiffted[[1]]@Components[[1]]@param["mu", "start"] <<- (pos$x[1] + pos$x[2])/2
       XPSDiffted[[1]]@Components[[1]]@param["mu", "min"] <<- pos$x[idx] #abscissa of min XPSDiffted
       XPSDiffted[[1]]@Components[[1]]@param["mu", "max"] <<- pos$x[-idx]
       XPSDiffted[[1]]@Components[[1]]@param["h", "start"] <<- (pos$y[1] + pos$y[2])/2
       XPSDiffted[[1]]@Components[[1]]@param["h", "min"] <<- pos$y[idx]  #ordinate of min XPSDiffted
       XPSDiffted[[1]]@Components[[1]]@param["h", "max"] <<- pos$y[-idx]
-      XPSDiffted[[1]]@Fit <<- MaxMinD
+      XPSDiffted[[1]]@Components[[1]]@param["sigma", "start"] <<- MaxMinD  #Distance of MaxMin Derivative
+      XPSDiffted[[1]]@Components[[1]]@param["sigma", "min"] <<- 0
+      XPSDiffted[[1]]@Components[[1]]@param["sigma", "max"] <<- 0
 #      assign(activeFName, XPSSample, envir=.GlobalEnv)
 #      assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
 #      cat("\n ==> Data saved")

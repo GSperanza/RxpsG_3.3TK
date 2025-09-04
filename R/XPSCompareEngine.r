@@ -50,7 +50,7 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
                        Plot_Args$auto.key$col[idx] <<- PlotParameters$Colors[jj] # palette[jj]
                    }
                    tmp1 <- c( tmp1, rep(ii, times=as.integer(Ylength[[idx]][1])) )  #tmp1 contains indexes associated to the Coreline (group of spectra)
-                   tmp2 <- c( tmp2, rep(idx, times=as.integer(Ylength[[idx]][1])) ) #tmp0 contains indexes associated to the XPSSamples... (distinguish different spectra inside the group)
+                   tmp2 <- c( tmp2, rep(idx, times=as.integer(Ylength[[idx]][1])) ) #tmp2 contains indexes associated to the XPSSamples... (distinguish different spectra inside the group)
                    Xrng[[ii]][[jj]] <- range(X[[idx]]) #range computed on CoreLine1 (CoreLine2...) of different XPSSamples
                    Yrng[[ii]][[jj]] <- range(Y[[idx]]) #range computed on CoreLine1 (CoreLine2...) of different XPSSamples
                    levx[[ii]] <<- tmp1 #required to distinguish multiple panels
@@ -145,9 +145,9 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
     Y <- NULL
 
     for (ii in 1:NSpect){
-        tmp <- as.matrix(asList(compareXPSSample[[ii]], select = select[[ii]]))
-        X <- c(X, tmp["x", ])   #X coords of the selected spectra
-        Y <- c(Y, tmp["y", ])   #Y coords of the selected spectra
+        tmp <- as.matrix(asList(compareXPSSample[[ii]], select = select[[ii]])) #Selected XPSSamples to compare
+        X <- c(X, tmp["x", ])   #X coords of ALL spectra of the selected XPSSamples
+        Y <- c(Y, tmp["y", ])   #Y coords of ALL spectra of the selected XPSSamples
     }
     Xlim0 <- range(sapply(X, sapply, range))
     Ylim0 <- range(sapply(Y, sapply, range))
@@ -156,11 +156,11 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 
 #--- X offset
     if (PlotParameters$XOffset$Shift != 0) {
-	       idx <- PlotParameters$XOffset$CL
+	     idx <- PlotParameters$XOffset$CL
         for(ii in 1:N.CL){
             jj <- ii+(N.XS*(idx-1))
-	           X[[jj]][[1]] <- X[[jj]][[1]]+ii*PlotParameters$XOffset$Shift
-			     }
+	         X[[jj]][[1]] <- X[[jj]][[1]]+ii*PlotParameters$XOffset$Shift
+        }
     }
 #--- set xlim, and reverseX if BE
     if (is.null(Plot_Args$xlim)) {  #non ho fissato xlim per fare lo zoom
@@ -227,22 +227,22 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 
 #--- Y offset
     if (PlotParameters$YOffset$Shift != 0) {
-	       idx <- PlotParameters$YOffset$CL
+	     idx <- PlotParameters$YOffset$CL
         for(ii in 1:N.CL){
-            jj <- ii+(N.XS*(idx-1))
-	           Y[[jj]][[1]] <- Y[[jj]][[1]]+ii*PlotParameters$YOffset$Shift
-			     }
+            jj <- ii+ (N.XS*(idx-1))
+	         Y[[jj]][[1]] <- Y[[jj]][[1]]+ii*PlotParameters$YOffset$Shift
+	     }
     }
 
 #--- Y ScaleFact
     if (PlotParameters$ScaleFact$ScFact != 0) {
-	       XSidx <- PlotParameters$ScaleFact$XS
-	       CLidx <- PlotParameters$ScaleFact$CL
-	       ScFact <- PlotParameters$ScaleFact$ScFact
+	     XSidx <- PlotParameters$ScaleFact$XS
+	     CLidx <- PlotParameters$ScaleFact$CL
+	     ScFact <- PlotParameters$ScaleFact$ScFact
         for(ii in 1:N.CL){
             jj <- XSidx +(CLidx-1)*N.XS
-	           Y[[jj]][[1]] <- Y[[jj]][[1]]*ScFact
-			     }
+	         Y[[jj]][[1]] <- Y[[jj]][[1]]*ScFact
+	     }
     }
 
 
@@ -404,7 +404,7 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
           Plot_Args$auto.key <- list()
           Plot_Args$auto.key <- FALSE
        }
-	      graph <- do.call(xyplot, args = Plot_Args)
+	    graph <- do.call(xyplot, args = Plot_Args)
        plot(graph)
     }
     return(c(Xlimits, Ylimits))

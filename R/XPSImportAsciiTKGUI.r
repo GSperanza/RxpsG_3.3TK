@@ -572,13 +572,13 @@ XPSImport.Ascii <- function() {
                          assign("activeSpectIndx", LL, envir=.GlobalEnv)   #set the activeSpectIndx to the last imported data
                          XPSSaveRetrieveBkp("save")
                          return(XPSSample)
+                         UpdateXS_Tbl()
                      })
        tkgrid(SaveExit_btn, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
 
        Exit_btn <- tkbutton(BtnFrame, text="EXIT", width=10, command=function(){
                          tkdestroy(ImportWin)
                          XPSSaveRetrieveBkp("save")
-print(str(XPSSample))
                          return(XPSSample)
                      })
        tkgrid(Exit_btn, row = 1, column = 4, padx = 5, pady = 5, sticky="w")

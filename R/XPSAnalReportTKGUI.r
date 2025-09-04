@@ -256,7 +256,7 @@ XPSAnalReport <- function(){
 #             idx <- which(idx > 0) #index of the component having 'VBtop' name
 #             TabTxt <<- c(TabTxt, paste("VBFermi:", XPSSample[[ii]]@Components[[idx]]@param["mu", "start"], sep=""), "\n")
 #          }
-#          if("d.D." %in% XPSSample[[ii]]@Symbol || "\U0394." %in% XPSSample[[ii]]@Symbol){ #MaxMinDistance
+#          if("\U0394." %in% XPSSample[[ii]]@Symbol){ #MaxMinDistance
 #             idx <- sapply(XPSSample[[ii]]@Components, function(x) which(x@funcName == "Derivative"))
 #             idx <- which(idx > 0) #index of the component having 'VBtop' name
 #             MaxMinD <- abs(XPSSample[[ii]]@Components[[idx]]@param["mu", "min"] -

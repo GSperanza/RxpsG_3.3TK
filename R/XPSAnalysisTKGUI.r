@@ -385,6 +385,9 @@ XPSAnalysis <- function() {
          tkmessageBox(message="Set BaseLine edges. Right button to stop selection", title="WARNING", icon="warning")
      }
      Reset.Baseline()
+     if (WarnMsg == "ON") {
+         tkmessageBox(message="\nLeft Define Button BKG_Edges. \nRight Button to Exit", title="WARNING", icon="warning")
+     }
 
      switch(BType,
 #--- BaseLine type 1
@@ -724,6 +727,7 @@ XPSAnalysis <- function() {
             Object <<- get(activeFName, envir=.GlobalEnv)
             SpectList <<- XPSSpectList(activeFName)
             SpectList <<- c("0.All spectra", SpectList)
+            tclvalue(CL) <- ""
             tkconfigure(Core.Lines, values=SpectList)
             coreline <<- 0
             replot()
@@ -975,12 +979,15 @@ XPSAnalysis <- function() {
                        tkconfigure(StatusBar, text=sprintf(" Selected Function %s", tclvalue(FF)))
                        txt <- paste("1) Select the fit function. \n",
                                 "2) Press 'Add' button to add the fit components. \n",
-                                "2) Left mouse button to enter the Fit component position \n",
-                                "3) Stop entering positions with rigth mouse button. \n",
+                                "3) Left mouse button to enter the Fit component position \n",
+                                "4) Stop entering positions with rigth mouse button. \n",
                                 "5) Change fit function and restart from point (2).", sep="")
                        tkmessageBox(message=txt, title="WARNING", icon="warning")
                        tcl("update", "idletasks") #closes the message window
                        return()
+                   }
+                   if (WarnMsg == "ON") {
+                       tkmessageBox(message="\nLeft Button Add/Place Component. \nRight Button to Exit", title="WARNING", icon="warning")
                    }
                    GetCurPos(SingClick=FALSE)
                 })
@@ -1125,8 +1132,6 @@ XPSAnalysis <- function() {
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0
   tcl("update", "idletasks") #Complete the idle tasks
   tkwait.window(MainWindow)
-
-
 }
 
 

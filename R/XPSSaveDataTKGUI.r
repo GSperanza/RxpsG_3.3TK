@@ -217,8 +217,11 @@ XPSSaveData <- function() {
                       saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
                       tclvalue(DFN) <<- saveFName
                       FilePath <<- FName@Sample
-                      if (FilePath == ""){
+                      if (FilePath == "" || FilePath == activeFName){
                           FilePath <<- getwd()
+                          PathName <<- FilePath
+                          FName@Filename <<- paste(FilePath, "/", activeFName, sep="")
+                          assign(activeFName, FName, envir=.GlobalEnv)
                       } else {
                           NC <- nchar(FilePath)
                           if (substr(FilePath, NC, NC) == "/") { #FilePath == Z:/X/LAVORI/R/Analysis/IPZS/
@@ -239,7 +242,7 @@ XPSSaveData <- function() {
                       if (PathName != "" && PathName != FilePath){
                           txt= paste("Warning: current and original directories are different. Do you want to save data in folder: \n", PathName, sep="")
                           answ <- tkmessageBox(message=txt, type="yesno", title="SET DESTINATION FOLDER", icon="warning")
-                          if (tclvalue(answ) == "yes") {
+                          if (tclvalue(answ) == "no") {
                              ChDir()
                           }
                       }

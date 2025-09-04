@@ -39,7 +39,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
                    }
                    if (attr(Ylength[[ii]][jj], "names") == "BASE"){
                        Plot_Args$col[idx] <<- FitStyle$BaseColor[BaseIdx]
-                       Plot_Args$lty[idx] <<- "dashed"
+                       Plot_Args$lty[idx] <<- FitStyle$BaseLty
                        Plot_Args$pch[idx] <<- 3 #"Cross"
                        Plot_Args$cex[idx] <<- 0.3*Plot_Args$cex
                        BaseIdx <- BaseIdx+1
@@ -100,13 +100,12 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
     XPSSettings <- get("XPSSettings", envir=.GlobalEnv)
     if (length(SelectedNames$XPSSample) == 0) { return() } #no selected XPSSamples to plot
     overlayXPSSample <- new("XPSSample")
-    LL <- length(SelectedNames$XPSSample)
+    NXPSSamp <- length(SelectedNames$XPSSample)
 
     SpectLengths <- NULL
-    idx <- 1
     select <- list()
     CLnames <- NULL
-    for(ii in 1:LL){
+    for(ii in 1:NXPSSamp){
         if (length(SelectedNames$XPSSample[ii]) > 0 && SelectedNames$XPSSample[ii] != "-----") { #Set XPSSample==FName only if SelectedNames$XPSSample != -----
             FName <- SelectedNames$XPSSample[ii]  #this is a string
             FName <- get(FName, envir=.GlobalEnv) #this is an XPSSample datafile
@@ -132,33 +131,34 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
         }
 
         SpectLengths[ii] <- length(FName[[SpectIdx]]@.Data[[2]]) #it is needed for 3Dplot
-        overlayXPSSample[[idx]] <- FName[[SpectIdx]]
-        names(overlayXPSSample)[idx] <- FName[[SpectIdx]]@Symbol
+        overlayXPSSample[[ii]] <- FName[[SpectIdx]]
+        names(overlayXPSSample)[ii] <- FName[[SpectIdx]]@Symbol
 
 #--- selection of corelines format: simple spectrum, spectrum+Baseline, spectrum+CompleteFit
-        if (PlotParameters$OverlayType == "Spectrum") select[[idx]] <- "MAIN"
+        if (PlotParameters$OverlayType == "Spectrum") select[[ii]] <- "MAIN"
         if (PlotParameters$OverlayType == "Spectrum+Baseline") {  # CTRL if baseline and fit components are present
            if (length(FName[[SpectIdx]]@RegionToFit) > 0) {       # if not only baseline or main spectrum are ploted
-              select[[idx]] <- c("RTF", "BASE")
+              select[[ii]] <- c("RTF", "BASE")
            } else {
-              select[[idx]] <- "MAIN"
+              select[[ii]] <- "MAIN"
            }
         }
         if (PlotParameters$RTFLtd == TRUE && length(FName[[SpectIdx]]@RegionToFit) > 0) {  # Plot limited to the RegionToFit
-            select[[idx]] <- "RTF"
+            select[[ii]] <- "RTF"
+            if (PlotParameters$OverlayType == "Spectrum+Baseline") {
+                select[[ii]] <- c("RTF", "BASE")
+            }
         }
         if (PlotParameters$OverlayType == "Spectrum+Fit") {
            if (length(FName[[SpectIdx]]@Components) > 0) {
-              select[[idx]] <- c("RTF", "BASE", "COMPONENTS", "FIT")
+              select[[ii]] <- c("RTF", "BASE", "COMPONENTS", "FIT")
            } else if (length(FName[[SpectIdx]]@RegionToFit) > 0) {
-              select[[idx]] <- c("RTF", "BASE")
+              select[[ii]] <- c("RTF", "BASE")
            } else {
-              select[[idx]] <- "MAIN"
+              select[[ii]] <- "MAIN"
            }
         }
-        idx <- idx+1
     }
-    NXPSSamp <- idx-1
 
 # set Titles and axis labels
     activeFName <- get("activeFName", envir=.GlobalEnv)       #load the active XPSSample
@@ -238,7 +238,12 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 			       minybkg <- sapply(Y, function(z) min(z$BASE))
 			       for (idx in 1:LL) {
 			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
-		       	}
+		       	 }
+       } else if(all( sapply(Y, function(z) !is.na(charmatch("RTF", names(z)))) )) {
+			       minybkg <- sapply(Y, function(z) min(z$RTF))
+			       for (idx in 1:LL) {
+			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
+		       	 }
        } else {
           minybkg <- sapply(Y, function(z){
                            LL1 <- length(z$MAIN)
@@ -249,8 +254,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
                            min(mean(z$MAIN[1:10]), mean(z$MAIN[(LL1-K):LL1]))
                        })
           for(idx in 1:LL) {
-			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
-		       	}
+			     Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
+		    }
        }
     }
 
@@ -301,9 +306,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 #------- APPLY GRAPHIC OPTION TO PLOTTING XYplot() ARGS -----------------
     Ylength <- lapply(Y, sapply, length)
     cx <- list()
-	   levx <- list()
-	   FitStyle <- list(Lty=NULL, BaseColor=NULL, CompColor=NULL, FitColor=NULL)
-	   panel <- sapply(Ylength, sum)
+    levx <- list()
+    FitStyle <- list(Lty=NULL, BaseColor=NULL, CompColor=NULL, FitColor=NULL)
+    panel <- sapply(Ylength, sum)
     PanelTitles <- NULL
     Xlimits <- list() # buld a list of limits to invert X axis if revers=TRUE
 
@@ -318,6 +323,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              SType <- rep(NA, 20)
              palette <-  rep(PlotParameters$Colors[1], 20)     # "Black","black","black",....
              FitStyle$Lty <- rep(PlotParameters$CompLty, 20)   # up to 20 fit components can be plotted
+             FitStyle$BaseLty <- rep(PlotParameters$BasLinLty, 20)
              FitStyle$BaseColor <- rep("black", 20)
              FitStyle$CompColor <- rep("grey45", 20)
              FitStyle$FitColor <- rep("black", 20)
@@ -331,6 +337,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              SType <- rep(NA, 20)
              palette <- PlotParameters$Colors      #"black", "red", "green"....
              FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
+             FitStyle$BaseLty <- rep(PlotParameters$BasLinLty, 20)
              FitStyle$BaseColor <- PlotParameters$FitCol$BaseColor
              FitStyle$CompColor <- PlotParameters$FitCol$CompColor   #Single or MultiColors
              FitStyle$FitColor <- PlotParameters$FitCol$FitColor
@@ -342,6 +349,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
              SType <- Plot_Args$pch                # VoidCircle", "VoidSquare", "VoidTriangleUp" ....
              palette <-  rep(PlotParameters$Colors[1], 20)          # "black","black","black",....
              FitStyle$Lty <- rep(PlotParameters$CompLty, 20)
+             FitStyle$BaseLty <- rep(PlotParameters$BasLinLty, 20)
              FitStyle$BaseColor <- rep("black", 20)
              FitStyle$CompColor <- rep("grey45", 20)
              FitStyle$FitColor <- rep("black", 20)
@@ -378,9 +386,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 
 ##--- SINGLE PANEL---
     if (PlotParameters$OverlayMode == "Single-Panel") {
-       if (length(Plot_Args$main$label) == 0) Plot_Args$main$label <- bquote(.(SpectName))
-   	   df <- data.frame(x = unname(unlist(X)), y = unname(unlist(Y)) )
-	      Plot_Args$x	<- formula("y ~ x")
+       if (length(Plot_Args$main$label) == 0) { Plot_Args$main$label <- bquote(.(SpectName)) }
+       df <- data.frame(x = unname(unlist(X)), y = unname(unlist(Y)) )
+       Plot_Args$x	<- formula("y ~ x")
        Plot_Args$data	<- df
        Plot_Args$groups	<- unlist(cx)
        graph <- do.call(xyplot, args = Plot_Args)

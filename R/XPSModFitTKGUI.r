@@ -27,7 +27,8 @@
 #'
 
 XPSModFit <- function(Object, plt=TRUE, ...) {
-       FME.PKG <- get("FME.PKG", envir=.GlobalEnv)
+       Pkgs <- get("Pkgs", envir=.GlobalEnv)
+       FME.PKG <- "FME" %in% Pkgs
        if (FME.PKG == FALSE){
            txt = "Package 'FME' not Installed. \nCannot Execute the 'Model Fitting' option"
            tkmessageBox(message=txt, title="ERROR", icon="error")

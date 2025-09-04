@@ -41,12 +41,13 @@ XPSSampleInfo <- function() {
          Bnd1 <- FName[[idx]]@.Data[[1]][1]
          Bnd2 <- FName[[idx]]@.Data[[1]][LL]
          CLtxt <<- paste(CLtxt, "Core Line : ", FName[[idx]]@Symbol, "\n", sep="")
-         CLtxt <<- paste(CLtxt, "E-range   : ",round(Bnd1, 2)," - ", round(Bnd2, 2),"\n", sep="")
-         CLtxt <<- paste(CLtxt, "N. data   : ",length(FName[[idx]]@.Data[[1]]), "\n", sep="")
-         CLtxt <<- paste(CLtxt, "E step    : ",round(abs(FName[[idx]]@.Data[[1]][2] - FName[[idx]]@.Data[[1]][1]), 2),"\n", sep="")
-         CLtxt <<- paste(CLtxt, "baseline  : ",ifelse(hasBaseline(FName[[idx]]),FName[[idx]]@Baseline$type[1], "NONE"),"\n", sep="")
-         CLtxt <<- paste(CLtxt, "fit       : ",ifelse(hasFit(FName[[idx]]),"YES", "NO"),"\n", sep="")
-         CLtxt <<- paste(CLtxt, "N. comp.  : ",ifelse(hasComponents(FName[[idx]]), length(FName[[idx]]@Components), "NONE"),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "E-range   : ", round(Bnd1, 2)," - ", round(Bnd2, 2),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "N. data   : ", length(FName[[idx]]@.Data[[1]]), "\n", sep="")
+         CLtxt <<- paste(CLtxt, "E step    : ", round(abs(FName[[idx]]@.Data[[1]][2] - FName[[idx]]@.Data[[1]][1]), 2),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "E shift   : ", round(FName[[idx]]@Shift, 3),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "baseline  : ", ifelse(hasBaseline(FName[[idx]]),FName[[idx]]@Baseline$type[1], "NONE"),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "fit       : ", ifelse(hasFit(FName[[idx]]),"YES", "NO"),"\n", sep="")
+         CLtxt <<- paste(CLtxt, "N. comp.  : ", ifelse(hasComponents(FName[[idx]]), length(FName[[idx]]@Components), "NONE"),"\n", sep="")
          CLtxt <<- paste(CLtxt, " *** Info:  \n", sep="")
          CLtxt <<- paste(CLtxt, paste(sapply(FName[[idx]]@Info, function(x){unlist(x)}), "\n", collapse=""), sep="")
          CLtxt <<- paste(CLtxt, collapse="") #merge the possible CLtxt components in just one string.
@@ -79,7 +80,7 @@ XPSSampleInfo <- function() {
 
 #--- GUI ---
       InfoWindow <- tktoplevel()
-      tkwm.title(InfoWindow,"XPS SPECTRUM INFO")
+      tkwm.title(InfoWindow,"XPS SAMPLE INFO")
       tkwm.geometry(InfoWindow, "+100+50")   #position respect topleft screen corner
       InfoGroup <- ttkframe(InfoWindow, borderwidth=0, padding=c(0,0,0,0) )
       tkgrid(InfoGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
