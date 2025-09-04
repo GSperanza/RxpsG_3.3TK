@@ -2,7 +2,7 @@
 % Please edit documentation in R/XPSCnvDcnvTKGUI.r
 \name{XPSCnvDcnv}
 \alias{XPSCnvDcnv}
-\title{XPSCnvDcnv concolution, deconvolution functions}
+\title{XPSCnvDcnv for convolution, deconvolution functions}
 \usage{
 XPSCnvDcnv(x, y, deco = FALSE)
 }

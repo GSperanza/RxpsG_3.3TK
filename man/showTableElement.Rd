@@ -16,6 +16,6 @@ Return values named by \code{what}.
 }
 \description{
 showTableElement() function extract the values of
- BE, KE, RSF for all the orbitals of a given chemical element
- showTableElement is internal not intended for the user.
+  BE, KE, RSF for all the orbitals of a given chemical element
+  showTableElement is internal not intended for the user.
 }
