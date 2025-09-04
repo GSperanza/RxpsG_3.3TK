@@ -36,12 +36,18 @@ RxpsG installation:
     install.packages(c("digest", "import", "latticeExtra", "minpack.lm", "signal", "SparseM"), repos = "https://cloud.r-project.org", dependencies=TRUE)
 
     Control that installation proceeds correctly without errors;
+    
+    Some options (Automatic Element recognition, Wavelets filtering, Model Fitting) require the installation of 
+    the additional packges: baseline, FME, rootSolve, wavelets. If interested copy and paste the following command:
+    
+    install.packages(c("baseline", "FME", "rootSolve", "wavelets", repos = "https://cloud.r-project.org", dependencies=TRUE)
 
-    To INSTALL RxpsG_3.2 copy and paste the following command:
 
-    install.packages("C:/Path-To-Tar.Gz/RxpsG_3.2.tar.gz", type = "source", dependencies=TRUE)
+    To INSTALL RxpsG_3.3 copy and paste the following command:
 
-    where Path-To-Tar.Gz is the path to the dowloaded RxpsG_3.2.tar.gz file.
+    install.packages("C:/Path-To-Tar.Gz/RxpsG_3.3.tar.gz", type = "source", dependencies=TRUE)
+
+    where Path-To-Tar.Gz is the path to the dowloaded RxpsG_3.3.tar.gz file.
 
     N.B. if installation blocks at level:
          '** testing if installed package can be loaded from temporary location '
