@@ -1,6 +1,6 @@
 [,XPSSample-method
                     get subset of XPSSample
-asList              asList function for XPSCoreLine
+asList              asList Method for XPSCoreLine
 asList,XPSCoreLine-method
                     asList
 AsymmGauss          AsymmGauss function
@@ -63,6 +63,8 @@ hasRegionToFit,XPSCoreLine-method
 HillSigmoid         HillSigmoid function
 IniElement          IniElement
 Initialize          Initialize
+initialize,XPSSample-method
+                    initialize
 Linear              linear function
 Lorentz             Lorentz function
 LPShirley           LPShirley combination of a Shirley and
@@ -83,13 +85,6 @@ read.scienta        read.scienta function reads file data
 read.vamas          read.vamas
 readGenplot         readGenplot
 Sech2               Sech2 function
-setAsData.Frame     setAsData.Frame function for
-                    XPSCoreLine
-setAsData.Frame,XPSCoreLine-method
-                    setAsData.Frame
-setAsMatrix         setAsMatrix function for XPSCoreLine
-setAsMatrix,XPSCoreLine-method
-                    setAsMatrix
 setParam            setParam
 setParam,fitComponents-method
                     setParam
@@ -190,7 +185,7 @@ XPSImport.Ascii     XPSImport.Ascii function
 XPSInterpDecim      XPSInterpDecim function to interpolate
                     or decimate spectral data
 XPSLattAnnotate     XPSLattAnnotate
-XPSModFit           XPSModFit performs the fit of a Core
+XPSmodFit           XPSmodFit performs the fit of a Core
                     Line
 XPSMoveBaseLine     XPSMoveBaseLine
 XPSMoveComp         XPSMoveComp
