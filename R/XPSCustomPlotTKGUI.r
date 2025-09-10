@@ -13,6 +13,7 @@
 #' @export
 #'
 
+
 XPSCustomPlot <- function(){
 
    CtrlPlot <- function(){
@@ -62,7 +63,8 @@ XPSCustomPlot <- function(){
                 LL <- length(FName[[SpectIndx]]@Components)
                 RngX <- range(FName[[SpectIndx]]@RegionToFit$x)
                 RngY <- range(FName[[SpectIndx]]@RegionToFit$y)
-                yspan <- max(RngY)/20
+                LBLsize <- as.numeric(tclvalue(FCLBLSIZE))
+                yspan <- max(RngY)/20*as.numeric(tclvalue(FCLBLOFST))
                 LabPosX <- LabPosY <- CompLbl <- NULL
                 for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
                     LabPosX <- c(LabPosX, FName[[SpectIndx]]@Components[[ii]]@param["mu", "start"])
@@ -71,16 +73,19 @@ XPSCustomPlot <- function(){
                     if (is.na(LabPosX)==FALSE){   #in VBtop Lin Fit there is not a value for mu
                         if (LabPosX <= max(RngX) && LabPosX >= min(RngX)){   #Lab only if inside X-range
                             if (FName[[SpectIndx]]@Components[[ii]]@param["h", "start"] > BaseLevl) {
-                                LabPosY <- c(LabPosY, FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+yspan)
+                                LabPosY <- c(LabPosY, abs(FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]-yspan+BaseLevl))
+                            } else {
+                                LabPosY <- c(LabPosY, abs(FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+yspan+BaseLevl))
                             }
                             if (max(FName[[SpectIndx]]@Components[[ii]]@ycoor) < BaseLevl) {
-                                LabPosY <- c(LabPosY, FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+1.5*yspan)
+                                LabPosY <- c(LabPosY, abs(FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]+1.5*yspan))
                             }
                         }
                     }
                 }
+
                 graph <<- graph + update(graph, panel=function(...){
-                                               panel.text(x=LabPosX,y=LabPosY, labels=CompLbl, col="black") #draws component labels
+                                               panel.text(x=LabPosX,y=LabPosY, labels=CompLbl, cex=LBLsize, col="black") #draws component labels
                                             })
                 plot(graph)
             }
@@ -536,7 +541,6 @@ XPSCustomPlot <- function(){
                    Plot_Args$ylim <<- c(Ylim[1]-(Ylim[2]-Ylim[1])/10, Ylim[2]+(Ylim[2]-Ylim[1])/10)
                }
 
-
                if (tclvalue(NORM) == "1"){
                    if (length(grep("[cps]", FName[[SpectIndx]]@units[2], fixed=TRUE)) > 0) {  #if original Ylab="Intensity [cps]"
                        Plot_Args$ylab$label <<- "Intensity [a.u.]"
@@ -869,6 +873,8 @@ XPSCustomPlot <- function(){
    BLSYMSIZE <- NULL
    FCOMPONOFF <- NULL
    FCLBLONOFF <- NULL
+   FCLBLSIZE <- NULL
+   FCLBLOFST <- NULL
    FCOMPLTY <- NULL
    FCOMPLWD <- NULL
    FCOMPSYM <- NULL
@@ -1584,7 +1590,7 @@ XPSCustomPlot <- function(){
        tkadd(NoteBk, T4group1, text="FIT COMPONENT OPTIONS")
 
        FitCompGroup1 <- ttkframe(T4group1, borderwidth=0, padding=c(0,0,0,0) )
-       tkgrid(FitCompGroup1, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+       tkgrid(FitCompGroup1, row = 1, column = 1, padx = 0, pady = 0, sticky="wn")
 
        T4FitCmpOKframe <- ttklabelframe(FitCompGroup1, text = "Set Components", borderwidth=3)
        tkgrid(T4FitCmpOKframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -1610,6 +1616,7 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
        tkgrid(ComponentCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       WW1 <- as.numeric(tkwinfo("reqwidth", ComponentCK))
 
        T4FCColframe <- ttklabelframe(FitCompGroup1, text = "Fit Comp. Color", borderwidth=3)
        tkgrid(T4FCColframe, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
@@ -1620,14 +1627,14 @@ XPSCustomPlot <- function(){
                                FCompCol <<- rep("blue", NComp)
                                SetXYplotData()
                                tkdestroy(T4frame1)
-                               T4frame1 <<- ttklabelframe(FitCompGroup2, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
-                               tkgrid(T4frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+                               T4frame1 <<- ttklabelframe(T4group1, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
+                               tkgrid(T4frame1, row = 1, column = 1, padx = 0, pady = HH-20, sticky="w")
 
                                tkgrid( ttklabel(T4frame1, text="Double click to change colors"),
                                        row = 1, column = 1, padx = 5, pady = 5)
                                #building the widget to change CL colors
                                FitCmpClr[[1]] <- ttklabel(T4frame1, text="1", width=6, font="Serif 8", background="blue")
-                               tkgrid(FitCmpClr[[1]], row = 2, column = 1, padx = c(5,0), pady = 1, sticky="w")
+                               tkgrid(FitCmpClr[[1]], row = 2, column = 1, padx = 80, pady = 5, sticky="w")
                                tkbind(FitCmpClr[[1]], "<Double-1>", function( ){
                                                      X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                                                      Y <- as.numeric(tkwinfo("pointery", CustomWindow))
@@ -1643,8 +1650,10 @@ XPSCustomPlot <- function(){
                                FCompCol <<- XPSSettings$ComponentsColor
                                SetXYplotData()
                                tkdestroy(T4frame1)
-                               T4frame1 <<- ttklabelframe(FitCompGroup2, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
-                               tkgrid(T4frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+                               T4frame1 <<- ttklabelframe(T4group1, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
+                               tkgrid(T4frame1, row = 1, column = 1, padx = 0, pady = HH-20, sticky="w")
+#                               T4frame1 <<- ttklabelframe(FitCompGroup2, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
+#                               tkgrid(T4frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
                                tkgrid( ttklabel(T4frame1, text="Double click to change colors"),
                                        row = 1, column = 1, padx = 5, pady = 5)
@@ -1653,7 +1662,7 @@ XPSCustomPlot <- function(){
                                SetXYplotData()
                                for(ii in 1:10){ #column1 colors 1 - 20
                                    FitCmpClr[[ii]] <- ttklabel(T4frame1, text=as.character(ii), width=6, font="Serif 8", background=FCompCol[ii])
-                                   tkgrid(FitCmpClr[[ii]], row = (ii+1), column = 1, padx = c(5,0), pady = 1, sticky="w")
+                                   tkgrid(FitCmpClr[[ii]], row = (ii+1), column = 1, padx = c(40,0), pady = 1, sticky="w")
                                    tkbind(FitCmpClr[[ii]], "<Double-1>", function( ){
                                                      X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                                                      Y <- as.numeric(tkwinfo("pointery", CustomWindow))
@@ -1670,7 +1679,7 @@ XPSCustomPlot <- function(){
                                }
                                for(ii in 1:10){ #column1 colors 1 - 20
                                    FitCmpClr[[(ii+10)]] <- ttklabel(T4frame1, text=as.character(ii+10), width=6, font="Serif 8", background=FCompCol[(ii+10)])
-                                   tkgrid(FitCmpClr[[(ii+10)]], row = (ii+1), column = 1, padx = c(80,0), pady = 1, sticky="w")
+                                   tkgrid(FitCmpClr[[(ii+10)]], row = (ii+1), column = 1, padx = c(120,0), pady = 1, sticky="w")
                                    tkbind(FitCmpClr[[(ii+10)]], "<Double-1>", function( ){
                                                      X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                                                      Y <- as.numeric(tkwinfo("pointery", CustomWindow))
@@ -1685,11 +1694,15 @@ XPSCustomPlot <- function(){
                                                      SetXYplotData()
                                          })
                                }
+                               T4Spacerframe <- ttkframe(T4frame1, height=3, width=100) #void space at bottom of the frame
+                               tkgrid(T4Spacerframe, row = 12, column = 1, padx = 5, pady = 2, sticky="w")
+
                             }                     })
        tkgrid(T4_MonoPoly_Col, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       WW1 <- as.numeric(tkwinfo("reqwidth", T4_MonoPoly_Col))+WW1+60
 
-       T4Lblframe <- ttklabelframe(FitCompGroup1, text = "Component Labels", borderwidth=3)
-       tkgrid(T4Lblframe, row = 1, column = 3, padx = 5, pady = 5, sticky="w")
+       T4Lblframe <- ttklabelframe(T4group1, text = "Component Labels", borderwidth=3)
+       tkgrid(T4Lblframe, row = 1, column = 1, padx = c(WW1,5), pady = 5, sticky="wn")
        FCLBLONOFF <- tclVar(FALSE)
        LabelCK <- tkcheckbutton(T4Lblframe, text="Labels ON/OFF", variable=FCLBLONOFF, onvalue = 1, offvalue = 0,
                                command=function(){
@@ -1699,21 +1712,41 @@ XPSCustomPlot <- function(){
                                   }
                                   SetXYplotData()
                      })
-       tkgrid(LabelCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       tkgrid(LabelCK, row = 1, column = 1, padx = 5, pady = c(5,2), sticky="w")
+       HH <- as.numeric(tkwinfo("reqheight", LabelCK))+10
 
-       FitCompGroup2 <- ttkframe(T4group1, borderwidth=0, padding=c(0,0,0,0) )
-       tkgrid(FitCompGroup2, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
+       FCLBLSIZE  <- tclVar("1")
+       CompLblSize <- c(0.6,0.8,1,1.2,1.4,1.6, 1.8, 2)
+       T4_CompLbl_Size <- ttkcombobox(T4Lblframe, width = 8, textvariable = FCLBLSIZE, values = CompLblSize)
+       tkbind(T4_CompLbl_Size, "<<ComboboxSelected>>", function(){
+                                  SetXYplotData()
+                     })
+       tkgrid(T4_CompLbl_Size, row = 2, column = 1, padx = 5, pady = 2, sticky="w")
+       HH <- HH+as.numeric(tkwinfo("reqheight", T4_CompLbl_Size))+10
+       WW2 <- as.numeric(tkwinfo("reqwidth", T4_CompLbl_Size))
+       tkgrid( ttklabel(T4Lblframe, text="Size"),
+          row = 2, column = 1, padx = c(WW2+7, 5), pady = 2, sticky="w")
 
-       T4frame1 <- ttklabelframe(FitCompGroup2, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
-       tkgrid(T4frame1, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+       FCLBLOFST  <- tclVar("1")
+       LblOffset <- c(0.6,0.8,1,1.2,1.4,1.6, 1.8, 2)
+       T4_CompLbl_Offset <- ttkcombobox(T4Lblframe, width = 8, textvariable = FCLBLOFST, values = LblOffset)
+       tkbind(T4_CompLbl_Offset, "<<ComboboxSelected>>", function(){
+                                  SetXYplotData()
+                     })
+       tkgrid(T4_CompLbl_Offset, row = 3, column = 1, padx = 5, pady = c(2,5), sticky="w")
+       HH <- HH+as.numeric(tkwinfo("reqheight", T4_CompLbl_Size))+10
+       tkgrid( ttklabel(T4Lblframe, text="Offset"),
+               row = 3, column = 1, padx = c(WW2+7, 5), pady = 5, sticky="w")
 
+       T4frame1 <- ttklabelframe(T4group1, text = "SET FIT COOMPONENT PALETTE", borderwidth=3)
+       tkgrid(T4frame1, row = 1, column = 1, padx = 0, pady = HH-20, sticky="w")
        tkgrid( ttklabel(T4frame1, text="Double click to change colors"),
-             row = 1, column = 1, padx = 5, pady = 5)
+               row = 1, column = 1, padx = 5, pady = 5)
 
        #building the widget to change CL colors
        for(ii in 1:10){ #column1 colors 1 - 20
            FitCmpClr[[ii]] <- ttklabel(T4frame1, text=as.character(ii), width=6, font="Serif 8", background=FCompCol[ii])
-           tkgrid(FitCmpClr[[ii]], row = (ii+1), column = 1, padx = c(5,0), pady = 1, sticky="w")
+           tkgrid(FitCmpClr[[ii]], row = (ii+1), column = 1, padx = c(40,0), pady = 1, sticky="w")
            tkbind(FitCmpClr[[ii]], "<Double-1>", function(){
                              X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                              Y <- as.numeric(tkwinfo("pointery", CustomWindow))
@@ -1730,7 +1763,7 @@ XPSCustomPlot <- function(){
        }
        for(ii in 1:10){ #column1 colors 1 - 20
            FitCmpClr[[(ii+10)]] <- ttklabel(T4frame1, text=as.character(ii+10), width=6, font="Serif 8", background=FCompCol[(ii+10)])
-           tkgrid(FitCmpClr[[(ii+10)]], row = (ii+1), column = 1, padx = c(80,0), pady = 1, sticky="w")
+           tkgrid(FitCmpClr[[(ii+10)]], row = (ii+1), column = 1, padx = c(120,0), pady = 1, sticky="w")
            tkbind(FitCmpClr[[(ii+10)]], "<Double-1>", function( ){
                              X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                              Y <- as.numeric(tkwinfo("pointery", CustomWindow))
@@ -1745,11 +1778,13 @@ XPSCustomPlot <- function(){
                              SetXYplotData()
                      })
        }
+       T4Spacerframe <- ttkframe(T4frame1, height=3, width=100) #void space at bottom of the frame
+       tkgrid(T4Spacerframe, row = 12, column = 1, padx = 5, pady = 2, sticky="w")
 
-       T4LynSymframe <- ttkframe(FitCompGroup2, borderwidth=0, padding=c(0,0,0,0) )
-       tkgrid(T4LynSymframe, row = 1, column = 1, padx = c(230, 0), pady = 0, sticky="w")
+       T4LynSymgroup <- ttkframe(T4group1, borderwidth=0, padding=c(0,0,0,0) )
+       tkgrid(T4LynSymgroup, row = 1, column = 1, padx = c(230, 0), pady = HH+40, sticky="w")
 
-       T4frame2 <- ttklabelframe(T4LynSymframe, text = "LINE TYPE", borderwidth=3)
+       T4frame2 <- ttklabelframe(T4LynSymgroup, text = "LINE TYPE", borderwidth=3)
        tkgrid(T4frame2, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        FCOMPLTY <- tclVar("Solid")
        T4obj2 <- ttkcombobox(T4frame2, width = 15, textvariable = FCOMPLTY, values = LineTypes)
@@ -1759,7 +1794,7 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
 
-       T4frame3 <- ttklabelframe(T4LynSymframe, text = "LINE WIDTH", borderwidth=3)
+       T4frame3 <- ttklabelframe(T4LynSymgroup, text = "LINE WIDTH", borderwidth=3)
        tkgrid(T4frame3, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
        FCOMPLWD <- tclVar("1")
        T4obj3 <- ttkcombobox(T4frame3, width = 15, textvariable = FCOMPLWD, values = LWidth)
@@ -1768,7 +1803,7 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
 
-       T4frame4 <- ttklabelframe(T4LynSymframe, text = "SYMBOL", borderwidth=3)
+       T4frame4 <- ttklabelframe(T4LynSymgroup, text = "SYMBOL", borderwidth=3)
        tkgrid(T4frame4, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
        FCOMPSYM <- tclVar("VoidCircle")
        T4obj4 <- ttkcombobox(T4frame4, width = 15, textvariable = FCOMPSYM, values = SType)
@@ -1778,7 +1813,7 @@ XPSCustomPlot <- function(){
                                   SetXYplotData()
                      })
 
-       T4frame5 <- ttklabelframe(T4LynSymframe, text = "SYMSIZE", borderwidth=3)
+       T4frame5 <- ttklabelframe(T4LynSymgroup, text = "SYMSIZE", borderwidth=3)
        tkgrid(T4frame5, row = 2, column = 2, padx = 5, pady = 5, sticky="w")
        FCSYMSIZE <- tclVar("0.8")
        T4obj5 <- ttkcombobox(T4frame5, width = 15, textvariable = FCSYMSIZE, values = SymSize)
