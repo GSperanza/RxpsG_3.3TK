@@ -1179,12 +1179,11 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
 #           YY <- YY[,1:2]  #selects original and Baseline data
            xlim <- range(XX)
            ylim <- range(YY)
-#print((YY[1:5, ]))
 
-           if (is.null(ylim) == TRUE || is.na(ylim) == TRUE){ ylim <- range(X[,2]) }
+           if (is.null(ylim) == TRUE || as.logical(prod(is.na(ylim))) == TRUE){ ylim <- range(X[,2]) }
            if (x@Flags[1]) { xlim <- rev(xlim) } ## reverse x-axis
            if (NComp > 0) {
-               color <- c("black", "sienna", rep("blue", NComp), "red", "green")   #Spectrum in black, background in sienna, FitComponents in blue, EnvelopComponents in red
+               color <- c("black", "sienna", rep("blue", NComp), "red", "green")   #Spectrum in black, background in sienna, FitComponents in blue, Fit in red
            } else {
                color <- c("black", "sienna", "red", "green", "blue")
            }
@@ -1314,7 +1313,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                   lwd=1, bty="n", col=Color, border=Color, text.col=XPSSettings$Colors, text.font=2)
 
        } else if (x@Symbol == "ARXPS.Prof"){ #special plot for AR_XPS plot trend OverlayerElmnt, BulkElmnt
-#--- plot Concentration Depth Profile
+#--- plot Concentration ARXPS Profile
            if ( is.null(ylim) ) {
               ylim <- range(X[,3:4])         #range on all the Y data
            }
