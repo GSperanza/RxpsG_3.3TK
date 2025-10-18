@@ -77,7 +77,7 @@ XPSVBTop <- function() {
      if (coreline != 0 && tab1 == 1) { #coreline != "All Spectra" and tab Baseline
         xx <- coords[1]
         yy <- coords[2]
-        if (! is.na(point.coords$x[1]) ) {
+        if (! any(is.na(point.coords$x[1])) ) {
 # Crtl which marker position at VB ends has to be changed
            tol.x <- abs(diff(point.coords$x)) / 25
            tol.y <- abs(diff(point.coords$y)) / 25

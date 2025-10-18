@@ -151,7 +151,7 @@ XPSAnnotate <- function(){
      TSIZE <- tclVar("1")
      AnnoteSize <- ttkcombobox(Anframe3, width = 15, textvariable = TSIZE, values = FontSize)
      tkbind(AnnoteSize, "<<ComboboxSelected>>", function(){
-                            if (is.na(TextParam$TxtPos$x[idx]) || TextParam$Txt[idx]=="" ) {
+                            if (any(is.na(TextParam$TxtPos$x[idx])) || TextParam$Txt[idx]=="" ) {
                                 tkmessageBox(message="Please set the Label Text and Position first!", title="WARNING: position lacking", icon="warning")
                             } else {
                                 TextParam$TxtSize[idx] <<- as.numeric(tclvalue(TSIZE)) #each of the TextParam$Txt[idx] has its Size
@@ -164,7 +164,7 @@ XPSAnnotate <- function(){
      TCOLOR <- tclVar("black")
      AnnoteColor <- ttkcombobox(Anframe3, width = 15, textvariable = TCOLOR, values = FontColor)
      tkbind(AnnoteColor, "<<ComboboxSelected>>", function(){
-                            if (is.na(TextParam$TxtPos$x[idx]) || TextParam$Txt[idx]=="") {
+                            if (any(is.na(TextParam$TxtPos$x[idx])) || TextParam$Txt[idx]=="") {
                                 tkmessageBox(message="Please set the Label Text and Position first!", title="WARNING: position lacking", icon="warning")
                             } else {
                                 TextParam$TxtSize[idx] <<- as.numeric(tclvalue(TSIZE)) #each of the TextParam$Txt[idx] has its Size

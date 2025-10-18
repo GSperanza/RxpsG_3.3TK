@@ -51,7 +51,7 @@ Pkgs <- utils::installed.packages(lib.loc=.libPaths())  #matrix of installed pac
 Pkgs <- unname(Pkgs[, 1])                  #retain only the pakage names
 assign("Pkgs", Pkgs, envir=.GlobalEnv)     #save the list of installed Packages
 NeededPckgs <- c("RxpsG", "import", "latticeExtra", "minpack.lm", "SparseM", "signal")
-sapply(NeededPckgs, function(x) { if(is.na(match(x, Pkgs)) == TRUE ){  #check if the package 'RxpsG' is correctly installed
+sapply(NeededPckgs, function(x) { if (is.na(match(x, Pkgs)) == TRUE){  #check if the package 'RxpsG' is correctly installed
                           cat("\n ERROR Package", x, " not installed!")
                           cat("\n Please control correct installation of required packages:")
                           cat("\n import

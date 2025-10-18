@@ -29,7 +29,7 @@ XPSSampleInfo <- function() {
          Data[[5]] <<- paste(FName@names, collapse=" ")
          CLineList <<- FName@names
          for(ii in 1:5){
-            if ( is.na(Data[[ii]]) || is.null(Data[[ii]])) { Data[[ii]] <- "---" }
+            if ( any(is.na(Data[[ii]])) || is.null(Data[[ii]])) { Data[[ii]] <- "---" }
          }
          Data[[6]] <<- "                                                       "  #add a row of 50 spaces to expand the GDF()
 

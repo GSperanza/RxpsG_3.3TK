@@ -70,7 +70,7 @@ XPSCustomPlot <- function(){
                     LabPosX <- c(LabPosX, FName[[SpectIndx]]@Components[[ii]]@param["mu", "start"])
                     CompLbl <- c(CompLbl, as.character(ii))
                     BaseLevl <- findY(FName[[SpectIndx]]@Baseline, LabPosX)
-                    if (is.na(LabPosX)==FALSE){   #in VBtop Lin Fit there is not a value for mu
+                    if (any(is.na(LabPosX))==FALSE){   #in VBtop Lin Fit there is not a value for mu
                         if (LabPosX <= max(RngX) && LabPosX >= min(RngX)){   #Lab only if inside X-range
                             if (FName[[SpectIndx]]@Components[[ii]]@param["h", "start"] > BaseLevl) {
                                 LabPosY <- c(LabPosY, abs(FName[[SpectIndx]]@Components[[ii]]@param["h", "start"]-yspan+BaseLevl))
@@ -110,17 +110,17 @@ XPSCustomPlot <- function(){
             MinY <- MinY - (MaxY-MinY)/15
             Ylim <<- c(MinY, MaxY)
 
-            if (is.na(x1) && is.na(x2) && is.na(y1) && is.na(y2)){
+            if ( any(is.na(x1)) && any(is.na(x2)) && any(is.na(y1)) && any(is.na(y2)) ){
                 Plot_Args$ylim <<- Ylim  <<- c(MinY, MaxY)
             } else {
-                if (!is.na(x1) && !is.na(x2)){ # --- Set X Range
+                if (!any(is.na(x1)) && !any(is.na(x2)) ){ # --- Set X Range
                     if (tclvalue(REVAX) == "1") { #Binding energy set
                         Plot_Args$xlim  <<- Xlim <<- sort(c(x1, x2), decreasing=TRUE)
                     } else {
                         Plot_Args$xlim  <<- Xlim <<- sort(c(x1, x2))
                     }
                 }
-                if (!is.na(y1) && !is.na(y2)){ # --- Set Y Range
+                if (!any(is.na(y1)) && !any(is.na(y2)) ){ # --- Set Y Range
                     Plot_Args$ylim  <<- Ylim <<- sort(c(y1, y2))
                 }
             }
@@ -305,9 +305,9 @@ XPSCustomPlot <- function(){
                                return()
                             }
                             TextSize <<- as.numeric(tclvalue(TXTSIZE))
-                            if (is.na(TextSize)) {TextSize <<- 1}
+                            if (any(is.na(TextSize))) {TextSize <<- 1}
                             TextColor <<- tclvalue(TCOLOR)
-                            if (is.na(TextColor)) {TextColor <<- "black"}
+                            if (any(is.na(TextColor))) {TextColor <<- "black"}
 
                             tkdestroy(AnnotePosition)
                             txt <- paste("Text Position: X = ", round(TextPosition$x, 1), "  Y = ", round(TextPosition$y, 1), sep="")
@@ -426,7 +426,7 @@ XPSCustomPlot <- function(){
                x2 <- as.numeric(tclvalue(XMAX))
                y2 <- as.numeric(tclvalue(YMAX))
 
-               if (!is.na(x1) && !is.na(x2)){
+               if (!any(is.na(x1)) && !any(is.na(x2))) {
                    if (tclvalue(REVAX ) == "1") { #Binding energy set
                        Xlim <<- sort(c(x1, x2), decreasing=TRUE)
                    } else {
@@ -481,14 +481,14 @@ XPSCustomPlot <- function(){
                                        Width=c(20, 10), Modify=TRUE, Env=environment())
                AxisData <- as.numeric(unlist(AxisData[[2]]))
 
-               if (AxisData[1]=="?" || AxisData[1]=="" || AxisData[1]==" " || is.na(AxisData[1])){
+               if (AxisData[1]=="?" || AxisData[1]=="" || AxisData[1]==" " || any(is.na(AxisData[1])) ){
                    tkmessageBox(message="Please Start value required!", title="WARNING", icon="warning")
                    return()
                }
-               if (AxisData[2]=="?" || AxisData[2]=="" || AxisData[2]==" " || is.na(AxisData[2])){
+               if (AxisData[2]=="?" || AxisData[2]=="" || AxisData[2]==" " || any(is.na(AxisData[2]))){
                    tkmessageBox(message="Please Step value required!", title="WARNING", icon="warning")
                    return()
-               if (AxisData[3]=="?" || AxisData[3]=="" || AxisData[3]==" " || is.na(AxisData[3])){
+               if (AxisData[3]=="?" || AxisData[3]=="" || AxisData[3]==" " || any(is.na(AxisData[3])) ){
                    tkmessageBox(message="Please N. Major Ticks  required!", title="WARNING", icon="warning")
                    return()
                }

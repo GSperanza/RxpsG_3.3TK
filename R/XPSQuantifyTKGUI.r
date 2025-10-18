@@ -48,7 +48,7 @@ XPSQuant <- function(){
              info <- XPSSample[[ii]]@Info[1]   #retrieve info containing PE value
              xxx <- unlist(strsplit(info, "Pass energy"))[2]  #extract PE value
              PEnergy[ii] <- as.integer(gsub("\\D","", xxx)) # extract numeric characters from xxx = PE value
-             if(is.na(PEnergy[ii]) && hasBaseline(XPSSample[[ii]])){
+             if(any(is.na(PEnergy[ii])) && hasBaseline(XPSSample[[ii]])){
                 PEwin <- tktoplevel()
                 tkwm.title(PEwin,"INPUT CORE-LINE PASS ENERGY")
                 tkwm.geometry(PEwin, "+200+200")
@@ -770,7 +770,7 @@ XPSQuant <- function(){
                            for(ii in 1:length(CBrd2)){
                                NChr <- max(nchar(CBrd2[[ii]]))
                                CBrd2[[ii]] <<- encodeString(CBrd2[[ii]], width=NChr, quote="", justify=c("right"))
-                               if (NChr < 6 || is.na(NChr)) { #NChr <- 5 }
+                               if (NChr < 6 || any(is.na(NChr))) { #NChr <- 5 }
                                    CBrd2[[ii]] <<- paste(CBrd2[[ii]],"", sep="\t")
                                }
                            }

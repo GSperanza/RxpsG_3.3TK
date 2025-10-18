@@ -454,7 +454,7 @@ plotPeaks <- function(object, peaks=NULL, type = c("normal","corrected"), ...) {
 		    points(peaks$table$BE, peaks$table$corr, col=3, cex=1.0) ## peaks
 	  }
 	  ## Peaks Label
-	  if ( ! all(is.na(names(peaks$table$BE)) ) ) {
+	  if ( ! all(any(is.na(names(peaks$table$BE))) ) ) {
 		    for (PeakBEIndx in seq_along(peaks$table$BE)) {
 		 	     if (type == "normal") {
 		 		       DispLab(list(x=peaks$table$BE[PeakBEIndx],

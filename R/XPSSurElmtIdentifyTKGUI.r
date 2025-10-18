@@ -285,7 +285,7 @@ reset.boundaries <- function(h, ...) {
                     replot()
                     energy <- as.numeric(tclvalue(EE))
                     precision <- as.numeric(tclvalue(PE2))
-		                  if (is.na(energy) == FALSE && is.na(precision) == FALSE) {
+		                  if (any(is.na(energy)) == FALSE && any(is.na(precision)) == FALSE) {
 			                     IdPeaks <<- NearerElement(energy, precision, newcoreline, ElmtList)
 			                     if (length(IdPeaks) > 0){
    		                       ShowTablePeaks(IdPeaks, tclvalue(ST2))
@@ -300,7 +300,7 @@ reset.boundaries <- function(h, ...) {
                     replot()
                     energy <- as.numeric(tclvalue(EE))
                     precision <- as.numeric(tclvalue(PE2))
-		                  if (is.na(energy) == FALSE && is.na(precision) == FALSE) {
+		                  if (any(is.na(energy)) == FALSE && any(is.na(precision)) == FALSE) {
 			                     IdPeaks <<- CoreLinesMaxRSF(energy, precision, newcoreline, ElmtList)
 			                     if (length(IdPeaks) > 0){
    		                      ShowTablePeaks(IdPeaks, tclvalue(ST2))
@@ -315,7 +315,7 @@ reset.boundaries <- function(h, ...) {
                     replot()
                     energy <- as.numeric(tclvalue(EE))
                     precision <- as.numeric(tclvalue(PE2))
-		                  if (is.na(energy) == FALSE && is.na(precision) == FALSE) {
+		                  if (any(is.na(energy)) == FALSE && any(is.na(precision)) == FALSE) {
 			                     IdPeaks <<- AllElements(energy, precision, newcoreline, ElmtList)
 			                     if (length(IdPeaks) > 0){
    		                      ShowTablePeaks(IdPeaks, tclvalue(ST2))

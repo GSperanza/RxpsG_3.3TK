@@ -17,16 +17,16 @@
 
 XPSAnalysis <- function() {
 
-  WidgetState <- function(widget, value) {
-       childID <- tclvalue(tkwinfo("children", widget))
-       selected <- sapply(unlist(strsplit(childID, " ")), function(x) {
-                             Optn <- tkconfigure(x)  #get child options
-                             if (length(grep("state", Optn)) > 0){ #controls if 'state' option is present
-                                 tkconfigure(x, state=value)  #set child 'disabled' or 'normal'
-                             }
-                          })
-       Done <- tcl("update", "idletasks")   #conclude pending event before exiting function
-  }
+#  WidgetState <- function(widget, value) {
+#       childID <- tclvalue(tkwinfo("children", widget))
+#       selected <- sapply(unlist(strsplit(childID, " ")), function(x) {
+#                             Optn <- tkconfigure(x)  #get child options
+#                             if (length(grep("state", Optn)) > 0){ #controls if 'state' option is present
+#                                 tkconfigure(x, state=value)  #set child 'disabled' or 'normal'
+#                             }
+#                          })
+#       Done <- tcl("update", "idletasks")   #conclude pending event before exiting function
+#  }
 
   GetCurPos <- function(SingClick){
        tabMain <- as.numeric(tcl(NB, "index", "current"))+1 #Notebook pages start from 0
@@ -40,7 +40,7 @@ XPSAnalysis <- function() {
        WidgetState(T2Frame3, "disabled")
        WidgetState(T2Frame4, "disabled")
        WidgetState(T2Frame5, "disabled")
-       WidgetState(ButtFrame, "disabled")
+       WidgetState(BtnFrame, "disabled")
 
        EXIT <<- FALSE
        while(EXIT == FALSE){
@@ -55,7 +55,7 @@ XPSAnalysis <- function() {
                 WidgetState(T2Frame3, "normal")
                 WidgetState(T2Frame4, "normal")
                 WidgetState(T2Frame5, "normal")
-                WidgetState(ButtFrame, "normal")
+                WidgetState(BtnFrame, "normal")
                 EXIT <<- TRUE
             } else {
                 if (SingClick == TRUE ){
@@ -68,7 +68,7 @@ XPSAnalysis <- function() {
                     WidgetState(T2Frame3, "normal")
                     WidgetState(T2Frame4, "normal")
                     WidgetState(T2Frame5, "normal")
-                    WidgetState(ButtFrame, "normal")
+                    WidgetState(BtnFrame, "normal")
                     EXIT <<- TRUE
                 }
                 if (tabMain == 1 && SetZoom == TRUE) {
@@ -271,7 +271,7 @@ XPSAnalysis <- function() {
      WidgetState(T2Frame3, "normal")
      WidgetState(T2Frame4, "normal")
      WidgetState(T2Frame5, "normal")
-     WidgetState(ButtFrame, "normal")
+     WidgetState(BtnFrame, "normal")
 
      tclvalue(BL) <<- ""  #reset baseline selection
      coreline <<- tclvalue(CL)
@@ -695,8 +695,22 @@ XPSAnalysis <- function() {
   Ylimits <- NULL
   EXIT <- NULL
 
-  BLgroup <- list()
   BLvalue <- list()
+  BLgroup <- list()
+  T2group1 <- list()
+  MainFrame1 <- list()
+  T1Frame1 <- list()
+  T1Frame2 <- list()
+  T1Frame3 <- list()
+  T2Frame1 <- list()
+  T2Frame2 <- list()
+  T2Frame3 <- list()
+  T2Frame4 <- list()
+  T2Frame5 <- list()
+  BtnFrame <- list()
+  MZbutton <- list()
+  ZObutton <- list()
+  ZRbutton <- list()
 
   WinPointers <- NULL
   WinSize <- XPSSettings$General[4]
@@ -746,7 +760,7 @@ XPSAnalysis <- function() {
         coreline <<- tclvalue(CL)
         coreline <<- unlist(strsplit(coreline, "\\."))   #split string in correspondence of the point: coreline[1]=index, coreline[2]=spect name
         coreline <<- as.numeric(coreline[1])             #this is the coreline index
-        if (is.na(coreline)) { return() } #CoreLine still not selected
+        if (any(is.na(coreline))) { return() } #CoreLine still not selected
         if (nbPage > 1) {
             #Resets the Baseline Radio_Panel in the initial form
             if(tclvalue(tkwinfo("exists", BLParam)) == "1") {  #reset BL panel to the original form
@@ -1042,10 +1056,10 @@ XPSAnalysis <- function() {
   tclvalue(PS) <- "Normal"
 
 #----- SAVE&CLOSE buttons -----
-  ButtFrame <- ttklabelframe(MainGroup, text = " Save & Exit ", borderwidth=2)
-  tkgrid(ButtFrame, row = 5, column = 1, padx=5, pady=5, sticky="w")
+  BtnFrame <- ttklabelframe(MainGroup, text = " Save & Exit ", borderwidth=2)
+  tkgrid(BtnFrame, row = 5, column = 1, padx=5, pady=5, sticky="w")
 
-  resetBtn <- tkbutton(ButtFrame, text="         RESET        ", command=function(){
+  resetBtn <- tkbutton(BtnFrame, text="         RESET        ", command=function(){
                   tclvalue(BL) <- ""
                   tkconfigure(T1Lab1, text="               ") #add an empty rows
                   tkconfigure(T1Lab2, text="               ") #add a second empty row
@@ -1070,7 +1084,7 @@ XPSAnalysis <- function() {
               })
   tkgrid(resetBtn, row = 1, column = 1, padx=5, pady=5, sticky="w")
 
-  saveBtn <- tkbutton(ButtFrame, text="         SAVE         ", command=function(){
+  saveBtn <- tkbutton(BtnFrame, text="         SAVE         ", command=function(){
                   coreline <<- tclvalue(CL)
                   coreline <<- unlist(strsplit(coreline, "\\."))
                   assign("activeFName", activeFName, envir = .GlobalEnv)
@@ -1083,7 +1097,7 @@ XPSAnalysis <- function() {
               })
   tkgrid(saveBtn, row = 1, column = 2, padx=5, pady=5, sticky="w")
 
-  savexitBtn <- tkbutton(ButtFrame, text="    SAVE & EXIT    ", command=function(){
+  savexitBtn <- tkbutton(BtnFrame, text="    SAVE & EXIT    ", command=function(){
                   EXIT <<- TRUE
                   coreline <<- tclvalue(CL)
                   coreline <<- unlist(strsplit(coreline, "\\."))
@@ -1101,7 +1115,7 @@ XPSAnalysis <- function() {
               })
   tkgrid(savexitBtn, row = 2, column = 1, padx=5, pady=5, sticky="w")
 
-  exitBtn <- tkbutton(ButtFrame, text="         EXIT          ", command=function(){
+  exitBtn <- tkbutton(BtnFrame, text="         EXIT          ", command=function(){
                   EXIT <<- TRUE
                   XPSSettings$General[4] <<- 7      #Reset to normal graphic win dimension
                   assign("XPSSettings", XPSSettings, envir=.GlobalEnv)
@@ -1126,7 +1140,7 @@ XPSAnalysis <- function() {
   WidgetState(T2Frame3, "disabled")
   WidgetState(T2Frame4, "disabled")
   WidgetState(T2Frame5, "disabled")
-  WidgetState(ButtFrame, "disabled")
+  WidgetState(BtnFrame, "disabled")
 
   tcl(nbComponents,"select", 0)  #Set NB page=1, Select works on base 0
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0

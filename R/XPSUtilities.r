@@ -23,7 +23,7 @@
 #'
 
 findXIndex <- function(X, Value) {
-   if (is.na(Value)){
+   if (any(is.na(Value))){
        tkmessageBox(message="WARNING: value to search for index == NA", title="BAD SEARCH VALUE", icon="error")
        return()
    }
@@ -59,7 +59,7 @@ findXIndex <- function(X, Value) {
 
 findYIndex <- function(Y, Value, tolerance=0.01) {
 
-   if (is.na(Value)){
+   if (any(is.na(Value))){
        tkmessageBox(message="WARNING: value to search for index == NA", title="BAD SEARCH VALUE", icon="error")
        return()
    }

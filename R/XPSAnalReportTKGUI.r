@@ -643,7 +643,7 @@ XPSAnalReport <- function(){
                          filename <- tclvalue(tkgetSaveFile(initialdir = getwd(),
                                           initialfile = "", title = "SAVE FILE"))
                          filename <- unlist(strsplit(filename, "\\."))
-                         if( is.na(filename[2])) {        #if extension not given, .txt by default
+                         if( any(is.na(filename[2])) ) {        #if extension not given, .txt by default
                             filename[2] <- ".txt"
                          } else {
                             filename[2] <- paste(".", filename[2], sep="")

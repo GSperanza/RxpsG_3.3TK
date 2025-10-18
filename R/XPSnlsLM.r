@@ -195,7 +195,7 @@ XPSnlsLM <- function (formula, data = parent.frame(), start, jac = NULL,
 
   env <- environment(formula)
   if (is.null(env)) env <- parent.frame()
-  if (length(pnames)) varNames <- varNames[is.na(match(varNames, pnames))]
+  if (length(pnames)){ varNames <- varNames[is.na(match(varNames, pnames))] }
   lenVar <- function(var) tryCatch(length(eval(as.name(var), data, env)), error = function(e) -1)
 
   if (length(varNames)) {

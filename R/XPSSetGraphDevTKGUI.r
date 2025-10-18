@@ -218,8 +218,6 @@ XPSSetGraphDev <- function() {
 
    SaveExitBtn <- tkbutton(frame2, text=" SAVE SETTINGS & EXIT ", width=25, command=function(){
    #--- get System info and apply correspondent XPS Settings ---
-                        graphics.off()
-                        plot.new()
                         Ini.pthName <- system.file("extdata/XPSSettings.ini", package="RxpsG")
                         if (file.exists(Ini.pthName)) {
                             ColNames <- names(XPSSettings)
@@ -238,8 +236,6 @@ XPSSetGraphDev <- function() {
    ww <- as.numeric(tkwinfo("reqwidth", SaveExitBtn))
 
    ExitBtn <- tkbutton(frame2, text=" EXIT ", width=10, command=function(){
-                        graphics.off()
-                        plot.new()
                         tkdestroy(GDwin)
           })
    tkgrid(ExitBtn, row = 4, column = 1, padx = c(ww+15, 5), pady = 5, sticky="w")

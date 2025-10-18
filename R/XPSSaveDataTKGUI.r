@@ -129,7 +129,7 @@ XPSSaveData <- function() {
              return()
           }
           PathName <<- tcl(DestFolder, "cget", "-text")
-          if (is.na(PathName) || nchar(PathName) == 0 ) {
+          if (any(is.na(PathName)) || nchar(PathName) == 0 ) {
               PathName <<- getwd()
           }
           txt <- paste("SAVE DATA IN ", PathName, " ?", sep="")

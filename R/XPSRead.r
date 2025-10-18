@@ -47,7 +47,7 @@ XPSread <- function( file=NULL, Genplot=TRUE, ... )
 	  extension <- unlist(strsplit(FName, "\\."))[2]
 	  f.idx <- as.numeric(grep(pattern=extension, x=c("pxt", "PXT", "vms", "VMS")))
 
-   if (is.na(f.idx) || length(f.idx)==0) { #any extension different from pxt or vms => old scienta file
+   if (any(is.na(f.idx)) || length(f.idx)==0) { #any extension different from pxt or vms => old scienta file
 	      object <- XPSRead.Oldscienta(file, ...)
    } else if ( f.idx == 1 || f.idx == 2 ) {  # pxt or PXT  extension
 	     	object <- read.scienta(file, ...)

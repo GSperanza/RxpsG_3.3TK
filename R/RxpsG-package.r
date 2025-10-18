@@ -13,7 +13,7 @@
 #'
 #' @importFrom grDevices dev.copy dev.cur dev.next dev.prev dev.print dev.set dev.size
 #' @importFrom grDevices graphics.off bmp jpeg pdf png postscript tiff 
-#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11 quartz 
+#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11  
 #'
 #' @importFrom lattice cloud panel.arrows panel.identify panel.points panel.segments panel.superpose
 #' @importFrom lattice panel.text panel.xyplot xyplot xscale.components.default yscale.components.default

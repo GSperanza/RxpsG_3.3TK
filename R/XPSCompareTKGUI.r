@@ -65,7 +65,7 @@ XPSCompare <- function(){
                axMax <- axParam[2]     #X or Y scale max value
                NTicks <- axParam[3]
 
-               if (is.na(axMin*axMax)) {
+               if (any(is.na(axMin*axMax))) {
                    tkmessageBox(message="ATTENTION: plase set all the min, max values!", title = "CHANGE X Y RANGE", icon = "error")
                }
                if (is.null(NTicks)){
@@ -559,7 +559,7 @@ XPSCompare <- function(){
                                FNamesCoreLines$XPSSample[jj] <<- tclvalue(FNameListTot[jj])
                                if (FNamesCoreLines$XPSSample[jj] == "0") { FNamesCoreLines$XPSSample <<- FNamesCoreLines$XPSSample[-jj] }
                            }
-                           if (as.logical(length(FNamesCoreLines$XPSSample)) == FALSE || sum(is.na(FNamesCoreLines$XPSSample))){
+                           if (as.logical(length(FNamesCoreLines$XPSSample)) == FALSE || any(is.na(FNamesCoreLines$XPSSample))){
                                tkmessageBox(message="Please Control the Selected XPSSample List", title="WARNING", icon="warning")
                                FNamesCoreLines$XPSSample <<- NULL
                                FNamesCoreLines$CoreLines <<- NULL
@@ -664,7 +664,7 @@ XPSCompare <- function(){
                                                               FNamesCoreLines$XPSSample[jj] <<- tclvalue(FNameListTot[jj])
                                                               if (FNamesCoreLines$XPSSample[jj] == "0") { FNamesCoreLines$XPSSample <<- FNamesCoreLines$XPSSample[-jj] }
                                                           }
-                                                          if (length(FNamesCoreLines$XPSSample) == 0 || is.na(FNamesCoreLines$XPSSample)){
+                                                          if (length(FNamesCoreLines$XPSSample) == 0 || any(is.na(FNamesCoreLines$XPSSample))){
                                                               FNamesCoreLines$XPSSample <<- NULL
                                                               FNamesCoreLines$CoreLines <<- NULL
                                                               FNamesCoreLines$Ampli <<- NULL
@@ -863,7 +863,7 @@ XPSCompare <- function(){
                            }
                            PlotParameters$XOffset$CL <<- as.integer(CL)
                            PlotParameters$XOffset$Shift <<- as.numeric(tclvalue(XOff))
-                           if (is.na(PlotParameters$XOffset)){
+                           if (any(is.na(PlotParameters$XOffset))){
                                tkmessageBox(message="Please enter a numeric value for the X-shift", title="WARNING", icon="warning")
                                PlotParameters$XOffset$Shift <<- 0
                                return()
@@ -891,9 +891,9 @@ XPSCompare <- function(){
                            }
                            PlotParameters$YOffset$CL <<- as.integer(CL) 
                            PlotParameters$YOffset$Shift <<- as.numeric(tclvalue(YOff)) 
-                           if (is.na(PlotParameters$YOffset)){
+                           if (any(is.na(PlotParameters$YOffset))){
                                tkmessageBox(message="Please enter a numeric value for the Y-shift", 
-                                            title="WARNING", icon="warning") 
+                                            title="WARNING", icon="warning")
                                PlotParameters$YOffset$Shift <<- 0
                                return() 
                            }
@@ -1456,7 +1456,7 @@ XPSCompare <- function(){
                              x_at <- list()
                              x_labels <- list()
                              for(ii in 1:NCL){
-                                 if (is.na(Tick.Increment[ii])){
+                                 if (any(is.na(Tick.Increment[ii]))){
                                     tkmessageBox(message="Missing Major-Tick Step. Please Enter Values for all Spectra", title="ERROR", icon="error")
                                     return()
                                  }
@@ -1520,7 +1520,7 @@ XPSCompare <- function(){
                              y_at <- list()
                              y_labels <- list()
                              for(ii in 1:NCL){  #reshape the Y limits using rounded values
-                                 if (is.na(Tick.Increment[ii])){
+                                 if (any(is.na(Tick.Increment[ii]))){
                                     tkmessageBox(message="Missing Major-Tick Step. Please Enter Values for all Spectra", title="ERROR", icon="error")
                                     return()
                                  }

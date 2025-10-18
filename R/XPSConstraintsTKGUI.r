@@ -34,7 +34,7 @@ XPSConstraints <- function(){
            },
            "link" = {
               FuncName2 <- FName[[SpectIndx]]@Components[[Nc2]]@funcName
-              if (is.null(Nc1) || is.na(Nc1) || length(Nc1) == 0) {
+              if (is.null(Nc1) || any(is.na(Nc1)) || length(Nc1) == 0) {
                   tkmessageBox(message="\n Please Diefine the Link Components!\n", title="WARNING", icon="warning")
                   return()
               }
@@ -77,7 +77,7 @@ XPSConstraints <- function(){
               }
            },
            "remove" = {
-              if (is.null(Nc1) || is.na(Nc1) || length(Nc1) == 0) {
+              if (is.null(Nc1) || any(is.na(Nc1)) || length(Nc1) == 0) {
                   tkmessageBox(message="\n Please Diefine the Fit Component!\n", title="WARNING", icon="warning")
                   return()
               }
@@ -132,7 +132,7 @@ XPSConstraints <- function(){
                   value <- NULL
                   Nc1 <- SigmaCtrl$CompLnkd[ii]
                   Nc2 <- SigmaCtrl$ToComp[ii]
-                  if (! is.na(Nc1)){
+                  if (! any(is.na(Nc1))){
                       linkExpr <- SigmaCtrl$Expression[ii]
                       linkExpr <- paste("sigma",Nc2,linkExpr,sep="") #there is also an operation on the linked component
 
@@ -179,7 +179,7 @@ XPSConstraints <- function(){
          RefComp <- NULL   #RefComp is a vector of the indexes of Reference components
          jj=1
          for(ii in 1:NComp){
-            if(is.na(SigmaCtrl$CompLnkd[ii])) {
+            if(any(is.na(SigmaCtrl$CompLnkd[ii]))) {
                RefComp[jj] <- ii  #RefComp non linked components => SigmaCtrl$CompLnkd[ii]=NA
                jj=jj+1
             }
@@ -216,7 +216,7 @@ XPSConstraints <- function(){
                    idx1 <- WrongLnks[ii,3]                       #position of WrongLnk in SigmaCtrl
                    idx2 <- LinkedComp[jj,3]
                    SigmaCtrl$ToComp[idx1] <- LinkedComp[jj,2]    #change the link to the correct FitComponent
-                   if (nchar(SigmaCtrl$Expression[idx2])>0 && is.na(SigmaCtrl$Expression[idx2])==FALSE){
+                   if (nchar(SigmaCtrl$Expression[idx2])>0 && any(is.na(SigmaCtrl$Expression[idx2]))==FALSE){
                       SigmaCtrl$Expression[idx1] <- SigmaCtrl$Expression[idx2]  #copy the operation present on the reference FitComponent to the linked component
                    }
                 }
@@ -641,7 +641,7 @@ XPSConstraints <- function(){
           for (jj in 1:NfitC){
               for (ii in 1:NfitP){  #check if one parameter was selected for the jj_FitComponent          
                    PList <- rownames(FName[[SpectIndx]]@Components[[jj]]@param) #load the parameter dataframe of the selected component
-                   if (! is.na(T3LinkParam[[ii]][[jj]][1])) { #consider only the element of the LiknTable for which a checkbox is defined
+                   if (! any(is.na(T3LinkParam[[ii]][[jj]][1]))) { #consider only the element of the LiknTable for which a checkbox is defined
                       if (tclvalue(chckd[ii,jj]) == "1" && is.null(LinkIndx[["P"]])){
                          LinkIndx[["P"]] <<- ii   #save the Param index of the first selection
                          LinkIndx[["C"]] <<- jj   #save the FitComp index of the first selection
@@ -899,7 +899,7 @@ XPSConstraints <- function(){
 #                                          #if link was set, the operation is blocked and an error message raised
 #                                          FitFnct1 <- FName[[SpectIndx]]@Components[[component2]]@funcName
 #                                          for(ii in 1:NfitP){
-#                                              if (is.na(PList[ii])==FALSE && PList[ii] == "sigma"){
+#                                              if (any(is.na(PList[ii]))==FALSE && PList[ii] == "sigma"){
 #                                                  for(jj in 1:NfitC){
 #                                                      Chkd <- svalue(T3LinkParam[[ii]][[jj]])
 #                                                      FitFnct2 <- FName[[SpectIndx]]@Components[[jj]]@funcName
@@ -990,7 +990,7 @@ XPSConstraints <- function(){
       CLframe <- ttklabelframe(Optframe, text = "SELECT CORELINE", borderwidth=2)
       tkgrid(CLframe, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-      CL <- tclVar("")
+      CL <- tclVar(activeSpectName)
       CLobj1 <- ttkcombobox(CLframe, width = 15, textvariable = CL, values = SpectList)
       tkbind(CLobj1, "<<ComboboxSelected>>", function(){
                            Saved <<- FALSE
@@ -1049,7 +1049,7 @@ XPSConstraints <- function(){
       tkgrid(FitButtLM, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
       FitButtMod <- tkbutton(Optframe, text="FIT ModFit", width=20, command=function(){
-                           if(is.na(match("FME", Pkgs)) == TRUE ){   #check if the package 'FME' is installed
+                           if(any(is.na(match("FME", Pkgs))) == TRUE ){   #check if the package 'FME' is installed
                               txt <- "Package 'FME' not installed. \nOption 'ModFit' not available"
                               tkmessageBox(message=txt, title="WARNING", icon="error")
                               return()

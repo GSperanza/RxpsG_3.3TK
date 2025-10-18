@@ -88,11 +88,11 @@ getElementValue <- function(element, orbital, analyzer=c("scienta", "kratos"), w
    } else {
        tmp <- tmp[idx, ]             #select the desired orbital among the other of the chosen element
        if (analyzer == "scienta") {  #in the CoreLine Table select the line corresponding to Scienta
-           idx<-which(is.na(tmp[,"RSF_S"])==TRUE)
+           idx<-which(any(is.na(tmp[,"RSF_S"]))==TRUE)
            if (length(idx) > 0 ){tmp <- tmp[-idx ,]}  #drop rows with NotAssigned Scienta RSF (in this line Kratos values are set)
            tmp <- tmp[,-5]           #drop the column with Kratos RSF_K
        } else if (analyzer == "kratos") {   #in the CoreLine Table select the line corresponding to Kratos
-           idx<-which(is.na(tmp[,"RSF_K"])==TRUE)
+           idx <- which(any(is.na(tmp[,"RSF_K"]))==TRUE)
            if (length(idx) > 0 ){tmp <- tmp[-idx ,]}  #drop rows with NotAssigned Kratos RSF  in this line Scienta values are set)
            tmp <- tmp[,-6]           #drop the column with Scienta RSF_S
        }
@@ -278,7 +278,7 @@ XPSDefineRSF <- function(Object=NULL, Symbol=NULL){
          ElmtRSF <- Element$RSF_S
      }
      ElmtRSF <- sapply(ElmtRSF, function(z){
-                                  if(is.na(z)) z <- 0
+                                  if(any(is.na(z))) z <- 0
                                   return(z)
                                 })
      idx <- grep(Orbital, Element$Orbital)

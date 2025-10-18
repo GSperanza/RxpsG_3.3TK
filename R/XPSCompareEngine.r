@@ -200,7 +200,7 @@ XPScompEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim)
 #--- Here Y alignment
     if (PlotParameters$Align) {
        LL <- length(Y)
-       if ( all(sapply(Y, function(x) !is.na(charmatch("BASE", names(x))))) ) {
+       if ( all(sapply(Y, function(x) !any(is.na(charmatch("BASE", names(x)))) )) ) {
 		       	minybase <- sapply(Y, function(x) min(x$BASE))
 		       	for (idx in c(1:LL)) {
 		          		Y[[idx]] <- lapply(Y[[idx]], "-", minybase[idx])

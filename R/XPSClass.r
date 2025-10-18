@@ -888,7 +888,7 @@ setMethod("XPSsetRSF", signature(object="XPSCoreLine"),
 #               rsf <- getElementValue(element, orbital, analyzer, what="RSF") #vedi XPSElement.r
 #               LL <- length(unique(rsf)) # removes equal values: if LL > 1 multiple RSF value associated to the same coreline
 ##------ Check
-#               if ( is.null(rsf) || is.na(prod(rsf)) || prod(rsf)==0 || LL > 1 ) { #prod() needed when length(rsf) > 1
+#               if ( is.null(rsf) || any(is.na(rsf)) || prod(rsf)==0 || LL > 1 ) { #prod() needed when length(rsf) > 1
 #                  rsf <- NA
 #
 #                  RSFwin <- tktoplevel()
@@ -1180,7 +1180,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            xlim <- range(XX)
            ylim <- range(YY)
 
-           if (is.null(ylim) == TRUE || as.logical(prod(is.na(ylim))) == TRUE){ ylim <- range(X[,2]) }
+           if (is.null(ylim) == TRUE || any(is.na(ylim)) == TRUE){ ylim <- range(X[,2]) }
            if (x@Flags[1]) { xlim <- rev(xlim) } ## reverse x-axis
            if (NComp > 0) {
                color <- c("black", "sienna", rep("blue", NComp), "red", "green")   #Spectrum in black, background in sienna, FitComponents in blue, Fit in red
@@ -1390,7 +1390,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
               RngX <- range(x@RegionToFit$x)
               for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
                  position$x <- x@Components[[ii]]@param["mu", "start"]
-                 if (is.na(position$x)==FALSE){   #in VBtop Lin Fit there is not a value for mu
+                 if (any(is.na(position$x))==FALSE){   #in VBtop Lin Fit there is not a value for mu
                     if (position$x <= max(RngX) && position$x >= min(RngX)){   #Lab only if inside X-range
                        position$y <- findY(x@RegionToFit, position$x)
                        #labformula defined in XPSUtilities.r

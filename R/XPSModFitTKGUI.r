@@ -21,7 +21,7 @@
 #' @seealso \link{nlsLM}
 #' @examples
 #' \dontrun{
-#' 	SampData[["C1s"]] <- XPSmodFit(SampData[["C1s"]])
+#'    SampData[["C1s"]] <- XPSmodFit(SampData[["C1s"]])
 #' }
 #' @export
 #'
@@ -80,38 +80,38 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
    XPSmakeFit <- function(Object, method, ...) {
 #--- data to fit: curve - baseline
- 	     datafit <- data.frame(x = Object@RegionToFit$x,
- 				  y = Object@RegionToFit$y - Object@Baseline$y)
+       datafit <- data.frame(x = Object@RegionToFit$x,
+                              y = Object@RegionToFit$y - Object@Baseline$y)
 #--- FitExpr generates the fit expression for each of the fitting components
 #--- generates the fitting parameters
-	      FitExpr <- sapply(names(Object@Components), function(x) {
-		           number <- unlist(strsplit(x, "C"))[2]
-		           FuncName <- slot(Object@Components[[x]],"funcName")
-		           Fargs <- formalArgs(FuncName)
-		           lenvar <- length(Fargs)-1
+       FitExpr <- sapply(names(Object@Components), function(x) {
+                 number <- unlist(strsplit(x, "C"))[2]
+                 FuncName <- slot(Object@Components[[x]],"funcName")
+                 Fargs <- formalArgs(FuncName)
+                 lenvar <- length(Fargs)-1
 #--- add index to each of the fitting parameters
-		           VarNames <- c("", rep.int(number, lenvar))
-		           Fparm <- paste(Fargs,VarNames, sep="")
+                 VarNames <- c("", rep.int(number, lenvar))
+                 Fparm <- paste(Fargs,VarNames, sep="")
 #--- fitting formula is the ensamble of the fitting component functions
-		           funct <- paste(paste(FuncName, "(", sep=""), paste(Fparm, collapse=","),")", sep="")
+                 funct <- paste(paste(FuncName, "(", sep=""), paste(Fparm, collapse=","),")", sep="")
 
 #--- modify fitting functions if links on fitting parameters are present
-		           if (length(Object@Components[[x]]@link) ) {
+                 if (length(Object@Components[[x]]@link) ) {
                     for (idx in seq_along(slot(Object@Components[[x]],"link"))) {
-   			                  funct <- sub(Object@Components[[x]]@link[[idx]]$variable, Object@Components[[x]]@link[[idx]]$expr, funct)
+                              funct <- sub(Object@Components[[x]]@link[[idx]]$variable, Object@Components[[x]]@link[[idx]]$expr, funct)
                     }
-   		        }
-		           return(funct)
-	      })
+                 }
+                 return(funct)
+       })
 
        FitExpr <- paste(FitExpr, collapse= "+")
 
 #--- parameters values
-	      Parms <- lapply(Object@Components, function(x) getParam(x, parameter="start"))
-	      Ubounds <- lapply(Object@Components, function(x) getParam(x, parameter="max"))
-	      Lbounds <- lapply(Object@Components, function(x) getParam(x, parameter="min"))
+       Parms <- lapply(Object@Components, function(x) getParam(x, parameter="start"))
+       Ubounds <- lapply(Object@Components, function(x) getParam(x, parameter="max"))
+       Lbounds <- lapply(Object@Components, function(x) getParam(x, parameter="min"))
 #--- extract names of the fitting parameters
-	      ParamNames <- lapply(seq_along(Object@Components), function(x,y) paste(rownames(y[[x]]@param),x,sep=""), y = Object@Components )
+       ParamNames <- lapply(seq_along(Object@Components), function(x,y) paste(rownames(y[[x]]@param),x,sep=""), y = Object@Components )
 
        cat("\n-------------------------------------------------")
        cat("\n\n START:")
@@ -126,14 +126,14 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 #--- #controls if a FIX constraint is set on fitting parameters
        Ncomp <- length(Object@Components)
        for(ii in 1:Ncomp){
-   	      Npar <- length(Parms[[ii]])  #Componants may have different fitting functions with different number of parameters
-          for(jj in 1:Npar){
+           Npar <- length(Parms[[ii]])  #Componants may have different fitting functions with different number of parameters
+           for(jj in 1:Npar){
               #if FIX present => Ubound==Lbound but in modFit this does not work
-              if ((Ubounds[[ii]][jj] == Lbounds[[ii]][jj]) && (jj != 3)) { #here we run on all the parameters except sigma (jj=3)
-                  Ubounds[[ii]][jj] <- Parms[[ii]][jj]+Parms[[ii]][jj]/10000 #Ubound~=LBound
-                  Lbounds[[ii]][jj] <- Parms[[ii]][jj]-Parms[[ii]][jj]/10000
-              }
-          }
+               if ((Ubounds[[ii]][jj] == Lbounds[[ii]][jj]) && (jj != 3)) { #here we run on all the parameters except sigma (jj=3)
+                   Ubounds[[ii]][jj] <- Parms[[ii]][jj]+Parms[[ii]][jj]/10000 #Ubound~=LBound
+                   Lbounds[[ii]][jj] <- Parms[[ii]][jj]-Parms[[ii]][jj]/10000
+               }
+           }
        }
 
 #--- create a sequence containing all the fitting parameters
@@ -142,32 +142,32 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
        Lbounds <- unlist(Lbounds)
 #--- associate the correspondent parameter names
        ParamNames <- unlist(ParamNames)
-	      names(Parms) <- ParamNames
-	      names(Ubounds) <- ParamNames
-	      names(Lbounds) <- ParamNames
+       names(Parms) <- ParamNames
+       names(Ubounds) <- ParamNames
+       names(Lbounds) <- ParamNames
 #--- create a backup of the initial parameter values valori di start: questo vettore viene poi riempito
 #--- start values of parameters are updated during fitting procedure
-	      tmpfit <- Parms
+       tmpfit <- Parms
 
 #--- index = vector identifying the components where a link is present on a fit paramenetr
-	      index <- NULL
-	      for(number in seq_along(Object@Components)) {
-	          if (length(Object@Components[[number]]@link)) {
-	        	     for(idx in seq_along(slot(Object@Components[[number]],"link"))) {
-		                index <- c(index,Object@Components[[number]]@link[[idx]]$position)
-	        	     }
-	          }
-	      }
+       index <- NULL
+       for(number in seq_along(Object@Components)) {
+           if (length(Object@Components[[number]]@link)) {
+               for(idx in seq_along(slot(Object@Components[[number]],"link"))) {
+                   index <- c(index,Object@Components[[number]]@link[[idx]]$position)
+               }
+           }
+       }
 #--- eliminates the parameters which are linked
-	      if (! is.null(index) ) {
-		        Parms <- Parms[-c(index)]
-		        Ubounds <- Ubounds[-c(index)]
-		        Lbounds <- Lbounds[-c(index)]
-	      }
+       if (! is.null(index) ) {
+           Parms <- Parms[-c(index)]
+           Ubounds <- Ubounds[-c(index)]
+           Lbounds <- Lbounds[-c(index)]
+       }
 
 #--- ParamName: mu1 = mu of FitComp 1,   sigma3 = sigma of FitComp 3,  h5 = h of FitComp 5.
 #--- generates a string of type: mu1 <- 285.34;   sigma3 <- 1.4    ecc..
-	     Param <- paste(ParamNames, " <- ", Parms, " ;", sep="")
+      Param <- paste(ParamNames, " <- ", Parms, " ;", sep="")
 
       LL <- length(datafit$x)
 #spectral data decimation: extract indexes of original data to use for fitting. If mesh=2 one value is taken one is drop
@@ -194,49 +194,49 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
 
 #--- FITTING ALGORITHMS
      if (method=="Marq") {
-        if (is.na(MaxIter)) MaxIter <<- 10000
+        if (any(is.na(MaxIter))){ MaxIter <<- 10000 }
         ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Marq", control=ctrl)
      }
      if (method=="Newton") {
-        if (is.na(MaxIter)) MaxIter <<- 10000
+        if (any(is.na(MaxIter))){ MaxIter <<- 10000 }
         ctrl <- list(ptol= Tolerance, maxiter=MaxIter, nprint=traceFit)
         cat("\n Iterations are starting please wait")
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Newton", control=ctrl)
      }
      if (method=="Port") {
-        if (is.na(MaxIter)) MaxIter <<- 200
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
         ctrl <- list(rel.tol=Tolerance, eval.max=200, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Port", hessian=TRUE, control=ctrl)
      }
      if (method=="Nelder-Mead") {
-        if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
+        ctrl <- list(reltol=Tolerance, maxit=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Nelder-Mead", control=ctrl)
      }
      if (method=="CG") {
-        if (is.na(MaxIter)) MaxIter <<- 200
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
         ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="CG", control=ctrl)
      }
      if (method=="BFGS") {
-        if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
+        ctrl <- list(reltol=Tolerance, maxit=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="BFGS", control=ctrl)
      }
      if (method=="L-BFGS-B") {
-        if (is.na(MaxIter)) MaxIter <<- 200
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
+        ctrl <- list(reltol=Tolerance, maxit=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="L-BFGS-B", control=ctrl)
      }
      if (method=="SANN") {
-        if (is.na(MaxIter)) MaxIter <<- 200
+        if (any(is.na(MaxIter))){ MaxIter <<- 200 }
         if (Verbose) traceFit=1
-        ctrl <- list(reltol=Tolerance, iter.max=MaxIter, trace=traceFit)
+        ctrl <- list(reltol=Tolerance, maxit=MaxIter, trace=traceFit)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="SANN", control=ctrl)
      }
      if (method=="Pseudo") {
-        if (is.na(MaxIter)) MaxIter <<- 5000
+        if (any(is.na(MaxIter))){ MaxIter <<- 5000 }
         ctrl <- list(varleft=Tolerance, numiter=MaxIter, verbose=Verbose)
         FitEstimation <- FME::modFit(f = FitResiduals, p = Parms, lower=Lbounds, upper=Ubounds, method="Pseudo", control=ctrl)
      }
@@ -249,34 +249,34 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
      Param <- paste(names(FitEstimation$par), " <- ", FitEstimation$par, " ;", sep="") # qui metto i parametri in una stringa che valutero' in fitFunct
      Fit <- FitFunct(datafit$x, Param, FitExpr)
 
-	    FitParam <- FitEstimation$par
+     FitParam <- FitEstimation$par
 #--- Update the FitParam values in the tmpfit vector
-	    for (nomi in names(FitParam) ){
-		       num <- grep(nomi, ParamNames)
-		       tmpfit[num] <- FitParam[nomi]
-	    }
+     for (nomi in names(FitParam) ){
+          num <- grep(nomi, ParamNames)
+          tmpfit[num] <- FitParam[nomi]
+     }
 #--- if there are links modify correspondent values
-	    for (idx in seq_along(Object@Components) ) {
-	       for ( jj in seq_along(Object@Components[[idx]]@link) ) {
-		         FUN <- Object@Components[[idx]]@link[[jj]]$FUN
-		         if ( ! is.na(FUN) ) {
-		            origname <- Object@Components[[idx]]@link[[jj]]$newvar # mu1
-		            num <- grep(origname, names(FitParam))
-		            origvalue <- FitParam[num]
-		            newvalue <- Object@Components[[idx]]@link[[jj]]$value
-		            value <- sapply(origvalue,FUN,newvalue)
-		            names(value) <- Object@Components[[idx]]@link[[jj]]$variable
-		         } else {
-		            origname <- Object@Components[[idx]]@link[[jj]]$expr # sigma1
-  		          num <- grep(origname, names(FitParam))
-              value <- FitParam[num]
-		            names(value) <- Object@Components[[idx]]@link[[jj]]$variable
-		         }
+     for (idx in seq_along(Object@Components) ) {
+        for ( jj in seq_along(Object@Components[[idx]]@link) ) {
+            FUN <- Object@Components[[idx]]@link[[jj]]$FUN
+            if ( ! any(is.na(FUN)) ) {
+               origname <- Object@Components[[idx]]@link[[jj]]$newvar # mu1
+               num <- grep(origname, names(FitParam))
+               origvalue <- FitParam[num]
+               newvalue <- Object@Components[[idx]]@link[[jj]]$value
+               value <- sapply(origvalue,FUN,newvalue)
+               names(value) <- Object@Components[[idx]]@link[[jj]]$variable
+            } else {
+               origname <- Object@Components[[idx]]@link[[jj]]$expr # sigma1
+               num <- grep(origname, names(FitParam))
+               value <- FitParam[num]
+               names(value) <- Object@Components[[idx]]@link[[jj]]$variable
+            }
 #--- link[[jj]]$position indicates the position of the actual parameter in FitParam
-           index <- Object@Components[[idx]]@link[[jj]]$position
-           tmpfit[index] <- value
-	       }
-	    }
+            index <- Object@Components[[idx]]@link[[jj]]$position
+            tmpfit[index] <- value
+        }
+     }
      for ( idx in seq_along(Object@Components) ) {
         num1 <- grep(idx, names(tmpfit)) # Attention: this greep for idx=1 gets h1, mu1, sigma1... but also: h10, mu10, sigma10..., h11, mu11, sigma11... ecc.
         LL=length(num1)
@@ -290,8 +290,8 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
                                              parameter="start",
                                              value=tmpfit[num1]) # start
 #--- Fit components computation
-	       Object@Components[[idx]] <- Ycomponent(Object@Components[[idx]], x=Object@RegionToFit$x, y=Object@Baseline$y)
-	  }
+          Object@Components[[idx]] <- Ycomponent(Object@Components[[idx]], x=Object@RegionToFit$x, y=Object@Baseline$y)
+     }
 #--- update slot Fit
         Object@Fit$y <- Fit
         Object@Fit$fit <- FitEstimation
@@ -389,7 +389,7 @@ XPSModFit <- function(Object, plt=TRUE, ...) {
                 "MaxIter: 10000 for classic Algorithms; \n",
                 "         150 for Nelder-Mead and CG, 500 for the other Conjugate-gradient Algorithms; \n",
                 "         500 for SANN, 10000 for Pseudo Algorithm; \n",
-                "Tolerance: 1e-8 is the default;", collapse="")
+                "Tolerance: 1e-9 is the default;", collapse="")
    tkgrid( ttklabel(MFmainGroup, text=txt), row = 2, column = 1, padx = 5, pady = 10, sticky="w")
 #---
    MFFframe5 <- ttklabelframe(MFmainGroup, text = "Classic Algorithms", borderwidth=2)

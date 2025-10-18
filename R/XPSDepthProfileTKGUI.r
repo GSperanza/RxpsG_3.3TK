@@ -144,7 +144,7 @@ XPSDepthProfile <- function() {
                 XPSSample[[idx]]@.Data[[2]] <<- c(XPSSample[[idx]]@.Data[[2]], tmpY)
             }
             sapply(XPSSample[[idx]]@.Data[[1]], function(z) {
-                         if(is.na(z)){
+                         if(any(is.na(z))){
                             cat("\n IS.NA_X()", idx)
                             print(XPSSample[[idx]]@.Data[[1]])
                             cat("\n Error: Core.Line Edges Control Failed: NA data found!\n Analysis Stops...")
@@ -152,7 +152,7 @@ XPSDepthProfile <- function() {
                          }
                   })
             sapply(XPSSample[[idx]]@.Data[[2]], function(z) {
-                         if(is.na(z)){
+                         if(any(is.na(z))){
                             cat("\n IS.NA_Y()", idx)
                             print(XPSSample[[idx]]@.Data[[2]])
                             cat("\n Error: Core.Line Edges Control Failed: NA data found!\n Analysis Stops...")
@@ -720,7 +720,7 @@ XPSDepthProfile <- function() {
                                                tkmessageBox(message=txt, title="ERROR", icon="error")
                                                return()
                                         }
-                                        if(!is.na(CoreLineList[[ii]][jj])){
+                                        if(!any(is.na(CoreLineList[[ii]][jj]))){
                                            kk <- kk+1
                                            PE <- Get_PE(XPSSample[[idx]])
                                            if (PE != ReferencePE){
@@ -740,7 +740,7 @@ XPSDepthProfile <- function() {
                                     TotQ <- sum(unlist(sapply(tmp, function(x) x$quant)))
                                     kk <- 0
                                     for(ii in Matched){
-                                        if(!is.na(CoreLineList[[ii]][jj])){
+                                        if(!any(is.na(CoreLineList[[ii]][jj]))){
                                             kk <- kk+1
                                             QntMat[jj,kk] <- sum(unlist(tmp[[kk]]$quant))/TotQ #load quantification data into the QntMat matrix
                                         }
@@ -895,7 +895,6 @@ XPSDepthProfile <- function() {
 
                                           Plot_Args$data <<- data.frame(x = X, y = Y)
                                 }
-
 
                                 Cycl <- as.numeric(tclvalue(SLD))
                                 X <- Y <- NULL

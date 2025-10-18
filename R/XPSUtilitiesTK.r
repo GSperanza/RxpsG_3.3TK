@@ -222,7 +222,7 @@ updateTable <- function(widget, items) {
        LLmax <- max(sapply(items, function(x) length(x)))
        for(ii in 1:LL){
            for(jj in 1:LLmax){
-               if(is.null(items[[ii]][jj]) || is.na(items[[ii]][jj]) || items[[ii]][jj]=="") { items[[ii]][jj] <- "   " }
+               if(is.null(items[[ii]][jj]) || any(is.na(items[[ii]][jj])) || items[[ii]][jj]=="") { items[[ii]][jj] <- "   " }
            }
        }
     }
@@ -249,7 +249,7 @@ XPSTable <- function(parent, items, NRows=0, ColNames, Width) {
        Nitems <- max(sapply(items, function(x) length(x)))
        for(ii in 1:Ncol){
            for(jj in 1:Nitems){
-               if(is.null(items[[ii]][jj]) || is.na(items[[ii]][jj]) || items[[ii]][jj]=="") {
+               if(is.null(items[[ii]][jj]) || any(is.na(items[[ii]][jj])) || items[[ii]][jj]=="") {
                   items[[ii]][jj] <- "   "
                }
            }
@@ -565,7 +565,7 @@ is.notempty <- function(x) {
    # missing(x) ||
    #   is.null(x) ||
    #   length(x) == 0 ||
-   #   (is.atomic(x) && length(x) == 1 && is.na(x))
+   #   (is.atomic(x) && length(x) == 1 && any(is.na(x)) )
 }
 
 #' @title switch_tcl_widget

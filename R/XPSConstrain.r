@@ -41,7 +41,7 @@ XPSConstrain <- function(Object,         # XPSSample[[CoreLine]]
       action <- match.arg(action)
       switch(action,
           "show" = {
-             if ( is.na(ncomponent)) ncomponent <- seq_along(Object@Components)
+             if ( any(is.na(ncomponent))) ncomponent <- seq_along(Object@Components)
              for (n in ncomponent ) {
                   cat("\n ----------------------------------------------------\n")
                   cat(" Component : ", slot(Object@Components[[n]],"label")," ", slot(Object@Components[[n]],"funcName"),"\n" )
@@ -55,7 +55,7 @@ XPSConstrain <- function(Object,         # XPSSample[[CoreLine]]
           "link" = {
 		           ## requires: variable, expr., FUN, value
 		           # increase the number of components link
-	            if ( is.na(ncomponent) || is.null(variable) ) {
+	            if ( any(is.na(ncomponent)) || is.null(variable) ) {
 		               stop(" the component number 'ncomponent' as well as 'variable' are required.\n")
         	       }
 
@@ -85,14 +85,14 @@ XPSConstrain <- function(Object,         # XPSSample[[CoreLine]]
 		           }
 		        },
 		        "fix" = {
-		  	        if ( is.na(ncomponent) ) {
+		  	        if ( any(is.na(ncomponent)) ) {
                 stop(" the component number 'ncomponent' is required.\n")
              }
 			          if ( is.null(variable) ) {
                 stop(" 'variable' is required.\n")
              }
              # variable <- match.arg(variable, rownames(slot(Object@Components[[ncomponent]],"param")))
-			          if ( is.na(value) ) {
+			          if ( any(is.na(value)) ) {
 			             value <- getParam(Object@Components[[ncomponent]],"start", variable)
              }
    			       ## now set c("start","min", "max") at the same value
@@ -104,7 +104,7 @@ XPSConstrain <- function(Object,         # XPSSample[[CoreLine]]
 		           },
 		        "set" = {
 		           if ( length(ncomponent)==0 ) stop(" the component number 'ncomponent' is required.\n")
-		           if ( is.null(variable) || is.na(value) ) {
+		           if ( is.null(variable) || any(is.na(value)) ) {
                      stop(" 'variable to set' and 'value' are required.\n")
                  }
 			          Object@Components[[ncomponent]] <- setParam(Object@Components[[ncomponent]],

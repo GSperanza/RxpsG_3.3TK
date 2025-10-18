@@ -121,7 +121,7 @@ XPSChiSquare <- function(){
                          cat("\n -------------------------------------------------------------")
                      } else if(tclvalue(MTD) == "Reduced Chi^2"){
                          if (length(FName[[SpectIndx]]@Fit$fit) == 0 ||
-                             is.na(FName[[SpectIndx]]@Fit$fit[1]) ||
+                             any(is.na(FName[[SpectIndx]]@Fit$fit[1])) ||
                              is.null(FName[[SpectIndx]]@Fit$fit)){
                              tkmessageBox(message=txt, title="WARNING", icon="warning")
                              return()
@@ -143,7 +143,7 @@ XPSChiSquare <- function(){
                          cat("\n -------------------------------------------------------------")
                      } else if(tclvalue(MTD) == "Param_STD_ERR"){
                          if (length(FName[[SpectIndx]]@Fit$fit) == 0 ||
-                             is.na(FName[[SpectIndx]]@Fit$fit[1]) ||
+                             any(is.na(FName[[SpectIndx]]@Fit$fit[1])) ||
                              is.null(FName[[SpectIndx]]@Fit$fit)){
                              tkmessageBox(message=txt, title="WARNING", icon="warning")
                              return()
@@ -163,7 +163,7 @@ XPSChiSquare <- function(){
                          cat("\n -------------------------------------------------------------")
                      } else if(tclvalue(MTD) == "All"){
                          if (length(FName[[SpectIndx]]@Fit$fit) == 0 ||
-                             is.na(FName[[SpectIndx]]@Fit$fit[1]) ||
+                             any(is.na(FName[[SpectIndx]]@Fit$fit[1])) ||
                              is.null(FName[[SpectIndx]]@Fit$fit)){
                              tkmessageBox(message=txt, title="WARNING", icon="warning")
                              return()

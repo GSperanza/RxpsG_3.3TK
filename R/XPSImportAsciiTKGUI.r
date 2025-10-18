@@ -51,7 +51,7 @@ XPSImport.Ascii <- function() {
                  tmp <- scan(fp, what="character", n=Ncol, quiet=TRUE)
                  tmp <- sub(", ", "  ", tmp)   #changes separation "," with " ": for data  1, 2,143, 5,723  generates  1  2,143  5,723
                  tmp <- sub(",", ".", tmp)     #changes decimal "," with ".": for data  1  2,143  5,723  generates  1  2.143  5.723
-                 if (is.na(as.numeric(tmp))) break #stop reading if there are characters which cannot translated in numbers
+                 if (any(is.na(as.numeric(tmp))) ) break #stop reading if there are characters which cannot translated in numbers
                  Data <<-  rbind(Data, as.numeric(tmp))
              }
 
@@ -114,13 +114,28 @@ XPSImport.Ascii <- function() {
               Xidx <- as.numeric(tclvalue(XC))
               Yidx <- as.numeric(tclvalue(YC))
               XX <- YY <- NULL
-              XX <- na.omit(Data[[Xidx]])  #if present remove NA from read data
-              YY <- na.omit(Data[[Yidx]])
+              XX <- Data[[Xidx]]
+              YY <- Data[[Yidx]]
+              LL <- length(XX)
+              if (any(is.na(Data[[Xidx]])) || any(is.na(Data[[Yidx]]))){
+                  tkmessageBox(message="Warning: 'NA' Data Will Be Skipped", title="WARNING", icon="warning")
+                  for (ii in 1:LL){
+                       if(any(is.na(Data[[Xidx]][ii]))){
+                          XX <- XX[-ii]
+                          YY <- YY[-ii]
+                       }
+                       if(any(is.na(Data[[Yidx]][ii]))){
+                          XX <- XX[-ii]
+                          YY <- YY[-ii]
+                       }
+                  }
+              }
               LL <- length(XX)
               LLy <- length(YY)
+
               if (tclvalue(RevYN) == "1" && XX[1] < XX[LL]) { #reverse X axis selected but X is ascending ordered
-                 answ <- tkmessageBox(message="X is in ascending order. Do you want to reverse X axis? ", 
-                                      type="yesno", title="CONFIRM REVERSE AXIS", AICON="WARNING")
+                 answ <- tkmessageBox(message="X is in ascending order. Do you want to reverse X axis? ",
+                                      type="yesno", title="CONFIRM REVERSE AXIS", icon="warning")
                  if (tclvalue(answ) == "yes" ){
                     XX <- rev(XX) #reverse X in descending order
                     YY <- rev(YY) #reverse Y in descending order
