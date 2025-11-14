@@ -467,7 +467,7 @@ XPSDepthProfile <- function() {
      CoreLineCK <- ttklabel(T1frameCoreLines, text="            ")
      tkgrid(CoreLineCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-     T1frameAnalysis <- ttklabelframe(DPGroup1, text = "Fit done on ALL Core Lines?", borderwidth=5)
+     T1frameAnalysis <- ttklabelframe(DPGroup1, text = "Baseline defined on ALL Core Lines?", borderwidth=5)
      tkgrid(T1frameAnalysis, row = 4, column = 1, padx = 5, pady = 5, sticky="we")
      BLDONE <- tclVar(FALSE)
      AnalCK <- tkcheckbutton(T1frameAnalysis, text="Baseline Defined", variable=BLDONE, onvalue=1, offvalue=0,
@@ -476,11 +476,32 @@ XPSDepthProfile <- function() {
                                        BLDone <<- TRUE
                                        WidgetState(T1frameBaseline, "disabled")
                                        WidgetState(BLGroup, "disabled")
+                                       WidgetState(T1frameProf, "normal")
+                                       XSampTmp <- NULL
+                                       for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
+                                           XSampTmp <- new("XPSSample")  #generate a temporary XPSSample
+                                           Matched <<- match(SelectedCL, CL.Sym) #index of the selected CL among the acquired CL
+                                           for(ii in Matched){         #for now runs only on the selected CL
+                                               idx <- CoreLineList[[ii]][jj]
+                                               Y <- cbind(Y, XPSSample[[idx]]@Baseline$y)
+                                               Colr <- c(Colr, 584)  #Sienna color for the Baselines
+                                           }
+                                           X <- cbind(X, XPSSample[[idx]]@Baseline$x)
+                                           Colr <- c(Colr, MatCol[1:N.Cycles])
+                                           xrange <- range(XPSSample[[idx]]@RegionToFit$x)
+                                           if (XPSSample[[idx]]@Flags[1]) xrange <- sort(xrange, decreasing=TRUE)
+                                           matplot(X, Y, xlim=xrange, type="l", lty=1, col=Colr, main=CL.Sym[ii], cex.axis=1.25,
+                                                   cex.lab=1.3, xlab=XPSSample[[idx]]@units[1], ylab=XPSSample[[idx]]@units[2])
+                                           tkmessageBox(message="Press OK to continue", title="WARNING", icon="warning")
+
+
+                                       }
                                    } else {
                                        BLDone <<- FALSE
                                        WidgetState(T1frameBaseline, "normal")
                                        WidgetState(BLGroup, "normal")
                                    }
+
                                 })
      tkgrid(AnalCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -982,7 +1003,7 @@ XPSDepthProfile <- function() {
                                        })
                                 tkgrid(DestFName, row = 1, column = 1, padx = 5, pady = 3)
 
-                                StoreDataBtn <- tkbutton(SaveGroup, text="STORE SPECTRA in MEMORY", width=31, command=function(){
+                                StoreDataBtn <- tkbutton(SaveGroup, text="STORE SPECTRA", width=31, command=function(){
                                                  saveFName <<- unlist(strsplit(saveFName, "\\."))
                                                  saveFName <<- paste(saveFName[1],".RData", sep="")  #Define the Filename to be used to save the XPSSample
 
@@ -1029,7 +1050,19 @@ XPSDepthProfile <- function() {
      tkgrid(SaveSpectButt, row = 2, column = 2, padx = 5, pady = 5, sticky="we")
 
 
-     ResButt <- tkbutton(DPGroup1, text="  RESET ANALYSIS  ", command=function(){
+     DPGroup2 <- ttkframe(MainGroup, borderwidth=0, padding=c(0,0,0,0) )
+     tkgrid(DPGroup2, row = 1, column = 2, padx = 0, pady = 0, sticky="w")
+
+     ResFrame <- ttklabelframe(DPGroup2, text = "CONCENTRATION PROFILE", borderwidth=2)
+     tkgrid(ResFrame, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+     Results <- tktext(ResFrame, width=35, height=27)
+     tkgrid(Results, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+     tkgrid.rowconfigure(ResFrame, 1, weight=4)
+     addScrollbars(ResFrame, Results, type="x", Row = 1, Col = 1, Px=0, Py=0)
+     addScrollbars(ResFrame, Results, type="y", Row = 1, Col = 1, Px=0, Py=0)
+
+
+     ResButt <- tkbutton(DPGroup2, text="  RESET ANALYSIS  ", command=function(){
                                 ResetVars()
                                 tclvalue(BL) <- FALSE
                                 tclvalue(DP) <- FALSE
@@ -1038,19 +1071,18 @@ XPSDepthProfile <- function() {
                                 }
                                 WidgetState(SelectButt, "disabled")
                                 WidgetState(ConcButt, "disabled")
-                                WidgetState(PlotButt, "disabled")
+                                WidgetState(PlotButt, "normal")
                                 WidgetState(SliderS, "disabled")
                            })
-     tkgrid(ResButt, row = 8, column = 1, padx = 5, pady = 5,  sticky="we")
+     tkgrid(ResButt, row = 2, column = 1, padx = 5, pady = 5,  sticky="we")
 
-     SaveExitButt <- tkbutton(DPGroup1, text=" SAVE & EXIT ", command=function(){
-     	                          tkdestroy(DPwin)
+     SaveExitButt <- tkbutton(DPGroup2, text=" SAVE & EXIT ", command=function(){
                                 for(jj in 1:N.Cycles){
                                     for(ii in Matched){
                                         if(DPrflType == "ARXPS"){
                                            Info <- paste("   ::: ARXPS Take-off Angle (deg.): ", TkoffAngles[jj], sep="")
                                         }
-                                        if(DPrflType == "Sputt. Dpth-Prf."){
+                                        if(DPrflType == "Sputt. Dpth-Prof."){
                                            Info <- paste("   ::: Sputter Depth-Profile Cycle N.", jj, sep="")
                                         }
                                         idx <- CoreLineList[[ii]][jj]
@@ -1060,23 +1092,17 @@ XPSDepthProfile <- function() {
                                 assign(activeFName, XPSSample, envir = .GlobalEnv)
                                 XPSSaveRetrieveBkp("save")
                                 options(warn = 0)
+#     	                          tkdestroy(DPwin)
                            })
-     tkgrid(SaveExitButt, row = 9, column = 1, padx = 5, pady = 5,  sticky="we")
+     tkgrid(SaveExitButt, row = 3, column = 1, padx = 5, pady = 5,  sticky="we")
 
-     ExitButt <- tkbutton(DPGroup1, text=" EXIT ", command=function(){
+     ExitButt <- tkbutton(DPGroup2, text=" EXIT ", command=function(){
      	                          tkdestroy(DPwin)
                                 assign("activeFName", SelectedXPSSamp[1], envir = .GlobalEnv)
                                 XPSSaveRetrieveBkp("save")
                                 options(warn = 0)
                            })
-     tkgrid(ExitButt, row = 10, column = 1, padx = 5, pady = 5,  sticky="we")
-
-     ResFrame <- ttklabelframe(MainGroup, text = "CONCENTRATION PROFILE", borderwidth=2)
-     tkgrid(ResFrame, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
-     Results <- tktext(ResFrame, width=35, height=27)
-     tkgrid(Results, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
-     tkgrid.rowconfigure(ResFrame, 1, weight=4)
-     addScrollbars(ResFrame, Results, type="x", Row = 1, Col = 1, Px=0, Py=0)
+     tkgrid(ExitButt, row = 4, column = 1, padx = 5, pady = 5,  sticky="we")
 
 #     tkwait.window(DPwin)
 

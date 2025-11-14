@@ -1066,11 +1066,12 @@ XPSCompare <- function(){
        tkgrid(CLcolor[[ii]], row = ii, column=1, padx = c(10,0), pady = 1, sticky="w")
        tkbind(CLcolor[[ii]], "<Double-1>", function( ){
                     X <- as.numeric(tkwinfo("pointerx", CompareWindow)) #coordinates of the mouse pointer referred to the root window
-                    Y <- tkwinfo("pointery", CompareWindow)
-                    WW <- Y <- tkwinfo("containing", X, Y) #WW is the widget containinf the X,Y coords
-                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                    colIdx <- grep(BKGcolor, Colors) #retrieve the index of the clicked tktext()
+                    Y <- as.numeric(tkwinfo("pointery", CompareWindow))
+                    WW <- tkwinfo("containing", X, Y) #WW is the widget containinf the X,Y coords
+                    colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                    colIdx <- grep(BKGcolor, Colors) #retrieve the index of the clicked tktext()
                     BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                     Colors[colIdx] <<- BKGcolor
                     tkconfigure(CLcolor[[colIdx]], background=Colors[colIdx])
@@ -1082,11 +1083,12 @@ XPSCompare <- function(){
        tkgrid(CLcolor[[jj]], row = ii, column=2, padx = 15, pady = 1, sticky="w")
        tkbind(CLcolor[[jj]], "<Double-1>", function(){
                     X <- as.numeric(tkwinfo("pointerx", CompareWindow))
-                    Y <- tkwinfo("pointery", CompareWindow)
+                    Y <- as.numeric(tkwinfo("pointery", CompareWindow))
                     WW <- tkwinfo("containing", X, Y)
-                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                    colIdx <- grep(BKGcolor, Colors) #
+                    colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                    colIdx <- grep(BKGcolor, Colors) #
                     BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                     Colors[colIdx] <<- BKGcolor
                     tkconfigure(CLcolor[[colIdx]], background=Colors[colIdx])

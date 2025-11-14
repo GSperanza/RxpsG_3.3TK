@@ -1667,9 +1667,10 @@ XPSCustomPlot <- function(){
                                                      X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                                                      Y <- as.numeric(tkwinfo("pointery", CustomWindow))
                                                      WW <- tkwinfo("containing", X, Y)
-                                                     BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                                     BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                                     colIdx <- grep(BKGcolor, FCompCol) #
+                                                     colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                                                     BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                                                     BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                                                     colIdx <- grep(BKGcolor, FCompCol) #
                                                      BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                                      tkconfigure(FitCmpClr[[colIdx]], background=BKGcolor)
                                                      FCompCol[colIdx] <<- BKGcolor
@@ -1684,9 +1685,10 @@ XPSCustomPlot <- function(){
                                                      X <- as.numeric(tkwinfo("pointerx", CustomWindow))
                                                      Y <- as.numeric(tkwinfo("pointery", CustomWindow))
                                                      WW <- tkwinfo("containing", X, Y)
-                                                     BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                                     BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                                     colIdx <- grep(BKGcolor, FCompCol) #
+                                                     colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                                                     BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                                                     BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                                                     colIdx <- grep(BKGcolor, FCompCol) #
                                                      BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                                      tkconfigure(FitCmpClr[[colIdx]], background=BKGcolor)
                                                      FCompCol[colIdx] <<- BKGcolor

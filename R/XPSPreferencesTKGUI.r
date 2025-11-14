@@ -303,11 +303,12 @@ XPSPreferences <- function() {
        tkgrid(CLcolor[[ii]], row = ii, column = 1, padx = c(5,0), pady = 1, sticky="w")
        tkbind(CLcolor[[ii]], "<Double-1>", function(){
                     X <- as.numeric(tkwinfo("pointerx", PrefWindow))
-                    Y <- tkwinfo("pointery", PrefWindow)
+                    Y <- as.numeric(tkwinfo("pointery", PrefWindow))
                     WW <- tkwinfo("containing", X, Y)
-                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                    colIdx <- grep(BKGcolor, Colors) #
+                    colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                    BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                    BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                    colIdx <- grep(BKGcolor, Colors) #
                     BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                     Colors[colIdx] <<- BKGcolor
                     tkconfigure(CLcolor[[colIdx]], background=Colors[colIdx])
@@ -329,11 +330,12 @@ XPSPreferences <- function() {
            tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
            tkbind(FCcolor[[ii]], "<Double-1>", function(){
                         X <- as.numeric(tkwinfo("pointerx", PrefWindow))
-                        Y <- tkwinfo("pointery", PrefWindow)
+                        Y <- as.numeric(tkwinfo("pointery", PrefWindow))
                         WW <- tkwinfo("containing", X, Y)
-                        BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                        BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                        colIdx <- grep(BKGcolor, ComponentsColor) #index of the selected color
+                        colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                        BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                        BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                        colIdx <- grep(BKGcolor, ComponentsColor) #index of the selected color
                         BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                         ComponentsColor[colIdx] <<- BKGcolor
                         tkconfigure(FCcolor[[colIdx]], background=ComponentsColor[colIdx])
@@ -383,9 +385,10 @@ XPSPreferences <- function() {
                                       X <- as.numeric(tkwinfo("pointerx", PrefWindow))
                                       Y <- tkwinfo("pointery", PrefWindow)
                                       WW <- tkwinfo("containing", X, Y)
-                                      BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word corresponding to the BKGcolor
-                                      colIdx <- grep(BKGcolor, ComponentsColor) #to get the index of the selected BKGcolor
+                                      colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                                      BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word corresponding to the BKGcolor
+#                                      colIdx <- grep(BKGcolor, ComponentsColor) #to get the index of the selected BKGcolor
                                       BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                       ComponentsColor[colIdx] <<- BKGcolor
                                       tkconfigure(FCcolor[[colIdx]], background=ComponentsColor[colIdx])

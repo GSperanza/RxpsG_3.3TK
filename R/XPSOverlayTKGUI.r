@@ -47,7 +47,7 @@ XPSOverlay <- function(){
                NTicks <- axParam[3]
                rm(axParam)
                axRange <- sort(c(axMin, axMax))          #X or R scale range
-               if (is.na(axMin*axMax)) {
+               if (any(is.na(axMin*axMax))) {
                    tkmessageBox(message="ATTENTION: plase set all the min, max values!", title = "CHANGE X Y RANGE", icon = "error")
                }
                if (is.null(NTicks)){
@@ -298,10 +298,11 @@ XPSOverlay <- function(){
 
    SetBWCol <- function(){
             CLPalette <<- data.frame(Colors=rep(Colors[1], 20), stringsAsFactors=FALSE)
-            FitColors <<- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=rep(XPSSettings$ComponentsColor[1],20),
-                                                      FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
-            CLPalette$Colors <<- "black"
-            PlotParameters$Colors <<- "black"
+            PlotParameters$Colors <<- Colors
+            PlotParameters$FitCol$BaseColor <<- rep("black", 20)
+            PlotParameters$FitCol$CompColor <<- rep("grey45", 20)
+            PlotParameters$FitCol$FitColor <<- rep("grey60", 20)
+
             Plot_Args$par.settings$superpose.symbol$col <<- "black"
             Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
             Plot_Args$par.settings$superpose.line$col <<- "black"
@@ -314,12 +315,7 @@ XPSOverlay <- function(){
 #            Plot_Args$par.settings$superpose.line$lty <<- LType
 #            AutoKey_Args$col <<- "gray45"
 
-            #Fit Color
-            FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
-            tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
-            tkconfigure(FTColor, background="black")
-            FitColors$FitColor <<- "black"
-            PlotParameters$FitCol <<- "black"
+            tkconfigure(FTColor, background=FitColors$FitColor[1])
             Plot_Args$lty <<- LType
             Plot_Args$pch <<- STypeIndx
             tclvalue(LEGTXTCOLOR) <- "MonoChrome"
@@ -328,16 +324,13 @@ XPSOverlay <- function(){
    }
 
    SetRainbowCol <- function(){
-#            CLPalette <<- data.frame(Colors=Colors, stringsAsFactors=FALSE)
+
+            CLPalette <<- data.frame(Colors=Colors, stringsAsFactors=FALSE)  #$$$ era cancellata
             PlotParameters$Colors <<- Colors
             PlotParameters$FitCol$BaseColor <<- FitColors$BaseColor
+            PlotParameters$FitCol$CompColor <<- FitColors$CompColor
             PlotParameters$FitCol$FitColor <<- FitColors$FitColor
 
-            T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
-            tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
-
-            PlotParameters$Colors <<- Colors
-            PlotParameters$FitCol$BaseColor <<- 
             Plot_Args$par.settings$strip.background$col <<- "lightskyblue1"
             AutoKey_Args$col <<- Colors
             tclvalue(LINETYPE) <- "solid"
@@ -361,6 +354,50 @@ XPSOverlay <- function(){
             }
             tclvalue(LEGTXTCOLOR) <- "RainBow"
    }
+
+   SetGrayColor <- function(idx){
+
+         SelColor <- list()
+         GrayColor[idx] <<- "black"
+
+         GTWindow <- tktoplevel()
+         tkwm.title(GTWindow,"SELECT GRAY COLOR")
+         tkwm.geometry(GTWindow, "+50+50")   #position respect topleft screen corner
+
+         AddFrame1 <- ttklabelframe(GTWindow, text = "Change Gray Intensity", borderwidth=2)
+         tkgrid(AddFrame1, row = 1, column = 1, padx = 5, pady = 3, sticky="we")
+
+         BlackColor <- ttklabel(AddFrame1, text="", width=7, font="Serif 8", background="black")
+         tkgrid(BlackColor, row = 1, column = 1, padx = c(5,0), pady = 1, sticky="w")
+
+         GT <- tclVar(0)
+         GT_Slider <- tkscale(AddFrame1, from=0, to=100, tickinterval=10, variable=GT, orient="horizontal", showvalue=FALSE, length=280)
+         tkbind(GT_Slider, "<ButtonRelease>", function(K){
+                               GrayColor[idx] <<- paste("gray", tclvalue(GT), sep="")
+                               tkconfigure(SelColor, background=GrayColor[idx])
+                            })
+         tkgrid(GT_Slider, row = 1, column = 2, padx = 0, pady = 1, sticky="w")
+
+         WhiteColor <- ttklabel(AddFrame1, text="", width=7, font="Serif 8", background="white")
+         tkgrid(WhiteColor, row = 1, column = 3, padx = c(0,5), pady = 1, sticky="w")
+
+         GTGroup <- ttkframe(GTWindow, borderwidth=2)
+         tkgrid(GTGroup, row = 2, column = 1, padx = 5, pady = 3, sticky="we")
+
+         tkgrid( ttklabel(GTGroup, text="Selected Gray:", font="Serif 10"),
+                 row = 1, column = 1, padx=5, pady = 1, sticky="w")
+
+         SelColor <- ttklabel(GTGroup, text="", width=30, font="Serif 8", background="black")
+         tkgrid(SelColor, row = 1, column = 2, padx = 5, pady = 1, sticky="w")
+
+         exitBtn <- tkbutton(GTGroup, text=" OK ", width=10, command=function(){
+                   tkdestroy(GTWindow)
+                })
+         tkgrid(exitBtn, row = 1, column = 3, padx = 5, pady = 1, sticky="w")
+         
+         tkwait.window(GTWindow)
+   }
+
 
 
 #----- reset parameters to the initial values -----
@@ -559,6 +596,7 @@ XPSOverlay <- function(){
    LegTxtSize <- c(0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2,2.2,2.4,2.6,2.8,3)
    LegDist <- c(0,0.01,0.02,0.04,0.08,0.1,0.12,0.14,0.16,0.18,0.2)
    ColorList <- NULL
+   GrayColor <- c("black", "black", "grey45", "grey60")
    exit <- NULL
    Xlim <- NULL
    Ylim <- NULL
@@ -695,13 +733,15 @@ XPSOverlay <- function(){
                               tkmessageBox(message="3d plot active: only SPECTRUM mode allowed", title = "Warning 3D active", icon = "warning")
                            } else {
                               if(tclvalue(BWCOL) == "Black/White") {
-                                 CLPalette$Colors <<- rep("black", 20)
                                  Plot_Args$par.settings$superpose.symbol$col <<- "black"
                                  Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
                                  Plot_Args$par.settings$superpose.line$col <<- "black"
                                  Plot_Args$par.settings$superpose.line$lty <<- LType
+                                 CLPalette$Colors <<- rep("black", 20)
                                  PlotParameters$Colors <<- rep("black", 20)
+                                 FitColors$BaseColor <<- rep("black", 20)
                                  FitColors$CompColor <<- rep("gray45", 20)
+                                 FitColors$FitColor <<- rep("gray60", 20)
                                  Plot_Args$par.settings$superpose.symbol$col <<- "gray45"
                                  Plot_Args$par.settings$superpose.symbol$pch <<- STypeIndx
                                  Plot_Args$par.settings$superpose.line$col <<- "gray45"
@@ -744,7 +784,9 @@ XPSOverlay <- function(){
                                      Plot_Args$par.settings$strip.background$col <<- "grey90"
                                      AutoKey_Args$col <<- rep("black", 20)
                                  } else if (XPSSettings$General[8] == "PolyChromeFC"){
-                                     FitColors$CompColor <<- rep("gray45", 20)
+                                     FitColors$BaseColor <<- XPSSettings$BaseColor
+                                     FitColors$CompColor <<- XPSSettings$ComponentsColor
+                                     FitColors$FitColor <<- XPSSettings$FitColor
                                      Plot_Args$par.settings$superpose.symbol$col <<- Colors
                                      Plot_Args$par.settings$superpose.symbol$pch <<- rep(1, 20)
                                      Plot_Args$par.settings$superpose.line$col <<- Colors
@@ -1061,7 +1103,7 @@ XPSOverlay <- function(){
                            PlotParameters$Normalize <<- TRUE
                            tkconfigure(objFunctNormPeak, foreground="black")
                            PlotParameters$NormPeak <<- as.numeric(tclvalue(EE))
-                           if ( is.na(PlotParameters$NormPeak) ) PlotParameters$NormPeak <<- 0
+                           if ( any(is.na(PlotParameters$NormPeak)) ) PlotParameters$NormPeak <<- 0
                            FName <- get(SelectedNames$XPSSample[1], envir=.GlobalEnv) #retrieve a generic XPSSample from the selected ones
                            SpectName <- unlist(strsplit(SelectedNames$CoreLines[1], "\\."))  #retrieve a generic coreline from the list of selected ones
                            indx <- as.numeric(SpectName[1])
@@ -1506,9 +1548,10 @@ XPSOverlay <- function(){
                          X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
                          Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                          WW <- tkwinfo("containing", X, Y)
-                         BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                         BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                         colIdx <- grep(BKGcolor, Colors) #
+                         colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                         BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                         BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                         colIdx <- grep(BKGcolor, Colors) #
                          BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                          Colors[colIdx] <<- BKGcolor
                          tkconfigure(CLcolor[[colIdx]], background=Colors[colIdx])
@@ -1536,9 +1579,10 @@ XPSOverlay <- function(){
                           X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
                           Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                           WW <- tkwinfo("containing", X, Y)
-                          BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                          BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                          colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
+                          colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                          BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                          BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                          colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
                           BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                           tkconfigure(FCcolor[[colIdx]], background=BKGcolor)
                           FitColors$CompColor[colIdx] <<- BKGcolor
@@ -1578,25 +1622,54 @@ XPSOverlay <- function(){
      tkbind(T3_BW_Col, "<<ComboboxSelected>>", function(){
                            if(tclvalue(BWCOL) == "Black/White") {
                               tclvalue(LINETYPE) <<- "Patterns"
+
                               ClearWidget(T3F_Palette)
                               #now generate MonoChrome palette
                               T3F_Colors <- ttklabelframe(T3F_Palette, text="C.Lines  Baseline  FitComp   Fit", borderwidth=2, padding=c(5,5,5,5))
                               tkgrid(T3F_Colors, row = 1, column = 1, padx = 5, pady = 0, sticky="w")
 
-                              CLcolor[[1]] <<- ttklabel(T3F_Colors, text=" ", width=6, font="Serif 8") #Column of empty cells
+                              CLcolor[[1]] <<- ttklabel(T3F_Colors, text="", width=6, font="Serif 8", background=GrayColor[1]) #Column of empty cells
                               tkgrid(CLcolor[[1]], row = 1, column = 1, padx = 5, pady = 1, sticky="w")
-                              tkconfigure(CLcolor[[1]], background="black")
+                              tkbind(CLcolor[[1]], "<Double-1>", function( ){
+                                              SetGrayColor(idx=1)
+                                              tkconfigure(CLcolor[[1]], background=GrayColor[1])
+                                              CLPalette$Colors <<- rep(GrayColor[1], 20)
+                                              PlotParameters$Colors <<- CLPalette$Colors
+                                              CtrlPlot()
+                                         })
 
-                              BLColor <<- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background="black")
+                              BLColor <<- ttklabel(T3F_Colors, text="", width=6, font="Serif 8", background=GrayColor[2])
                               tkgrid(BLColor, row = 1, column = 2, padx = c(12, 0), pady = 1, sticky="w")
-                              tkconfigure(BLColor, background="black")
-                              FitColors$BaseColor <<- rep("black", 20)
+                              tkbind(BLColor, "<Double-1>", function( ){
+                                              SetGrayColor(idx=2)
+                                              tkconfigure(BLColor, background=GrayColor[2])
+                                              FitColors$BaseColor  <<- rep(GrayColor[2], 20)
+                                              PlotParameters$FitCol$BaseColor <<- FitColors$BaseColor
+                                              CtrlPlot()
+                                         })
 
-                              FCcolor[[1]] <<- ttklabel(T3F_Colors, text=" ", width=6, font="Serif 8", background="black")
+                              FCcolor[[1]] <<- ttklabel(T3F_Colors, text="", width=6, font="Serif 8", background=GrayColor[3])
                               tkgrid(FCcolor[[1]], row = 1, column = 3, padx = c(12, 0), pady = 1, sticky="w")
-                              tkconfigure(FCcolor[[1]], background="gray45")
-                              FitColors$CompColor <<- rep("gray45", 20)
+                              tkbind(FCcolor[[1]], "<Double-1>", function( ){
+                                              SetGrayColor(idx=3)
+                                              tkconfigure(FCcolor[[1]], background=GrayColor[3])
+                                              FitColors$CompColor <<- rep(GrayColor[3], 20)
+                                              PlotParameters$FitCol$CompColor <<- FitColors$CompColor
+                                              CtrlPlot()
+                                         })
+
+                              FTColor <- ttklabel(T3F_Colors, text="", width=6, font="Serif 8", background=GrayColor[4])
+                              tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
+                              tkbind(FTColor, "<Double-1>", function( ){
+                                              SetGrayColor(idx=4)
+                                              tkconfigure(FTColor, background=GrayColor[4])
+                                              FitColors$FitColor  <<- rep(GrayColor[4], 20)
+                                              PlotParameters$FitCol$FitColor <<- FitColors$FitColor
+                                              CtrlPlot()
+                                         })
+
                               SetBWCol()
+
                            } else if (tclvalue(BWCOL) == "RainBow"){
                               ClearWidget(T3F_Palette)
                               #now generate MonoChrome palette
@@ -1609,9 +1682,10 @@ XPSOverlay <- function(){
                                                       X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
                                                       Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                                                       WW <- tkwinfo("containing", X, Y)
-                                                      BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                                      colIdx <- grep(BKGcolor, Colors) #
+                                                      colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                                                      BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                                                      BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                                                      colIdx <- grep(BKGcolor, Colors) #
                                                       BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                                       tkconfigure(CLcolor[[colIdx]], background=BKGcolor)
                                                       Colors[colIdx] <<- BKGcolor
@@ -1645,6 +1719,8 @@ XPSOverlay <- function(){
                                               BaseLinColors <- as.character(.Tcl('tk_chooseColor'))
                                               tkconfigure(BLColor, background=BaseLinColors)
                                               FitColors$BaseColor <<- rep(BaseLinColors, 20)
+                                              PlotParameters$FitCol <<- FitColors
+                                              CtrlPlot()
                                          })
 
                               if (XPSSettings$General[8] == "MonoChromeFC"){
@@ -1652,11 +1728,17 @@ XPSOverlay <- function(){
                                   tkgrid(FCcolor, row = 1, column = 3, padx = c(12,0), pady = 1, sticky="w")
                                   tkbind(FCcolor, "<Double-1>", function( ){
                                              FitColors$CompColor[1] <<- as.character(.Tcl('tk_chooseColor'))
+                                             tkconfigure(BLColor, background=FitColors$BaseColor[1])
                                              tkconfigure(FCcolor, background=FitColors$CompColor[1])
+                                             tkconfigure(FTColor, background=FitColors$FitColor[1])
+                                             FitColors$BaseColor <<- rep(FitColors$BaseColor[1], 20)
                                              FitColors$CompColor <<- rep(FitColors$CompColor[1], 20)
+                                             FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
                                              PlotParameters$FitCol <<- FitColors
+                                             CtrlPlot()
                                          })
-                              } else if (XPSSettings$General[8] == "PolyChromeFC")
+                              } else if (XPSSettings$General[8] == "PolyChromeFC"){
+                                 FitColors$CompColor <<- XPSSettings$ComponentsColor
                                  for(ii in 1:20){
                                      FCcolor[[ii]] <- ttklabel(T3F_Colors, text=as.character(ii), width=6, font="Serif 8", background=FitColors$CompColor[ii])
                                      tkgrid(FCcolor[[ii]], row = ii, column = 3, padx = c(12,0), pady = 1, sticky="w")
@@ -1664,23 +1746,27 @@ XPSOverlay <- function(){
                                                          X <- as.numeric(tkwinfo("pointerx", OverlayWindow))
                                                          Y <- as.numeric(tkwinfo("pointery", OverlayWindow))
                                                          WW <- tkwinfo("containing", X, Y)
-                                                         BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
-                                                         BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
-                                                         colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
+                                                         colIdx <- as.numeric(tclvalue(tcl(WW, "cget", "-text")))
+#                                                         BKGcolor <- tclvalue(tcl(WW, "cget", "-background"))
+#                                                         BKGcolor <- paste("\\b", BKGcolor, "\\b", sep="") #to match the exact word
+#                                                         colIdx <- grep(BKGcolor, FitColors$CompColor) #index of the selected color
                                                          BKGcolor <- as.character(.Tcl('tk_chooseColor'))
                                                          tkconfigure(FCcolor[[colIdx]], background=BKGcolor)
                                                          FitColors$CompColor[colIdx] <<- BKGcolor
                                                          PlotParameters$FitCol <<- FitColors
+                                                         CtrlPlot()
                                          })
+                                 }
                               }
 
-                              FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=FitColors$FitColor[1])
+                              FTColor <- ttklabel(T3F_Colors, text=as.character(1), width=6, font="Serif 8", background=XPSSettings$FitColor[1])
                               tkgrid(FTColor, row = 1, column = 4, padx = c(12,0), pady = 1, sticky="w")
                               tkbind(FTColor, "<Double-1>", function( ){
                                                 FitColors$FitColor[1] <<- as.character(.Tcl('tk_chooseColor'))
-                                                FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
                                                 tkconfigure(FTColor, background=FitColors$FitColor[1])
+                                                FitColors$FitColor <<- rep(FitColors$FitColor[1], 20)
                                                 PlotParameters$FitCol <<- FitColors
+                                                CtrlPlot()
                                          })
                               SetRainbowCol()
                            }
