@@ -22,7 +22,7 @@ XPSFitInfo <- function(){
       maxNchar <- 0   
       sumCoreLine <- 0
       N_comp <- length(CoreLine@Components) #number of fit components
-cat("\n FitInfo NComp", N_comp)
+      cat("\n FitInfo NComp", N_comp)
 
 
       sumComp <- array(0,dim=N_comp)       #define a dummy vector of zeros
@@ -191,7 +191,6 @@ cat("\n FitInfo NComp", N_comp)
        tkmessageBox(message="No data present: please load and XPS Sample", title="XPS SAMPLES MISSING", icon="error")
        return()
    }
-   activeFName <- get("activeFName", envir = .GlobalEnv)
    FName <- get(activeFName, envir = .GlobalEnv)
    Indx <- get("activeSpectIndx", envir = .GlobalEnv)
    activeSpectName <- get("activeSpectName", envir = .GlobalEnv)

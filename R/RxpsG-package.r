@@ -36,8 +36,9 @@
 #' @importFrom utils capture.output install.packages installed.packages read.table str
 #' @importFrom utils write.csv write.csv2 write.table
 #'
+#' @keywords internal
 "_PACKAGE"
-NULL
+
 
 
 

@@ -25,6 +25,23 @@ XPSExportAscii <- function(){
                          )
                      }
 
+   Reset <- function(){
+      FNameList <<- XPSFNameList()   #get the list of all XPSSamples in .GlobalEnv
+      FName <<- NULL
+      FData <<- NULL
+      filename <<- NULL
+      SpectName <<- NULL
+      tclvalue(XS) <- NULL
+      sapply(EAobj2, function(x) {tkdestroy(x)} )
+      tkgrid( ttklabel(EAframe2, text="     "),
+              row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+      SpectList <- NULL
+      SpectList <<- NULL
+      tclvalue(SpectToSave) <- FALSE
+      plot.new()
+   }
+
+
 
 #--- variabili ---
    activeFName <- get("activeFName", envir = .GlobalEnv)
@@ -35,11 +52,11 @@ XPSExportAscii <- function(){
    FNameList <- XPSFNameList()   #get the list of all XPSSamples in .GlobalEnv
    OutFormat <- c("Raw", "x.x  x.x", "x.x, x.x", "x,x; x,x")
    FName <- NULL
-   SpectList <- " "
+   SpectList <- NULL
    FData <- NULL
    filename <- NULL
    SpectName <- NULL
-#   fmt <- NULL
+   EAobj2 <- list()
 
 
 #--- GUI ---
@@ -56,18 +73,19 @@ XPSExportAscii <- function(){
    XS <- tclVar()
    EAobj1 <- ttkcombobox(EAframe1, width = 25, textvariable = XS, values = FNameList)
    tkbind(EAobj1, "<<ComboboxSelected>>", function(){
-                         ActiveFName <- tclvalue(XS)
-                         FName <<- get(ActiveFName, envir = .GlobalEnv)
-                         SpectList <<- XPSSpectList(ActiveFName)
+                         if (!is.null(SpectList)) { Reset() }
+                         activeFName <<- tclvalue(XS)
+                         FName <<- get(activeFName, envir = .GlobalEnv)
+                         SpectList <<- XPSSpectList(activeFName)
                          SpectList <<- c("All", SpectList) #all option added to save all the XPS Corelines
                          LL <- length(SpectList)
                          spectName <- tmp <- NULL
                          NRow <- ceiling(LL/5) #ii runs on the number of columns
                          for(ii in 1:NRow){
-                             NN <- (ii-1)*7    #jj runs on the number of column_rows
-                             for(jj in 1:7) {
+                             NN <- (ii-1)*5    #jj runs on the number of column_rows
+                             for(jj in 1:5) {
                                  if ((jj+NN) > LL) {break} #exit loop if all FitComp are in RadioBtn
-                                 EAobj2 <- tkcheckbutton(EAframe2, text=SpectList[jj+NN], variable=SpectList[jj+NN], onvalue = SpectList[jj+NN], offvalue = 0,
+                                 EAobj2[[(jj+NN)]] <<- tkcheckbutton(EAframe2, text=SpectList[jj+NN], variable=SpectList[jj+NN], onvalue = SpectList[jj+NN], offvalue = 0,
                                            command=function(){
                                               SpectName <<- sapply(SpectList, function(x) tclvalue(x))
                                               if (SpectName[1] == "All"){
@@ -89,7 +107,7 @@ XPSExportAscii <- function(){
                                               WidgetState(EAframe3, "normal")
                                           })
                                  tclvalue(SpectList[jj+NN]) <- FALSE   #initial cehckbutton setting
-                                 tkgrid(EAobj2, row = ii, column = jj, padx = 5, pady=5, sticky="w")
+                                 tkgrid(EAobj2[[(jj+NN)]], row = ii, column = jj, padx = 5, pady=5, sticky="w")
                              }
                          }
                  })
@@ -116,7 +134,7 @@ XPSExportAscii <- function(){
 
    EAframe4 <- ttklabelframe(EAgroup1, text = "Data Format", borderwidth=3)
    tkgrid(EAframe4, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-   FRMT <- tclVar()
+   FRMT <- tclVar("")
    EAobj4 <- ttkcombobox(EAframe4, width = 15, textvariable = FRMT, values = OutFormat)
    tkgrid(EAobj4, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -124,13 +142,13 @@ XPSExportAscii <- function(){
    tkgrid(EAgroup2, row = 5, column = 1, padx = 0, pady = 0, sticky="w")
 
    SelDirBtn <- tkbutton(EAgroup2, text="SELECT DIR & EXPORT DATA", width=25, command=function(){
-                         FitYesNo <- tclvalue(SpectToSave)
+                         FitYesNo <- as.numeric(tclvalue(SpectToSave))
                          if (FitYesNo == "") {
                             tkmessageBox(message="Please Select if Fit Must be Exported" , title = "WARNING", icon = "warning")
                             return()
                          }
                          fmt <- tclvalue(FRMT)
-                         if (length(fmt) == 0) {
+                         if (fmt == "") {
                             tkmessageBox(message="Please Select the Output Format" , title = "WARNING", icon = "warning")
                             return()
                          }
@@ -185,9 +203,7 @@ XPSExportAscii <- function(){
    tkgrid(SelDirBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    resetBtn <- tkbutton(EAgroup2, text="  RESET  ", width=25, command=function(){
-                            sapply(SpectList, function(x) tclvalue(x) <- FALSE)
-                            plot.new()
-
+                         Reset()
                   })
    tkgrid(resetBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 

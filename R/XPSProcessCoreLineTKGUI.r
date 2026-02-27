@@ -33,17 +33,19 @@ XPSProcessCoreLine <- function(){
       tkSep <- ttkseparator(groupCL, orient="horizontal")
       tkgrid(tkSep, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
 
+      groupRadio <- ttkframe(groupCL, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(groupRadio, row = 3, column = 1, padx = 0, pady = 0, sticky="w")
       selectCL <- tclVar()
       items <- DestSpectList[destIndx]
       LL <- length(DestSpectList[destIndx])
       for(ii in 1:LL){
-          CLRadio <- ttkradiobutton(groupCL, text=items[ii], variable=selectCL, value=items[ii],
+          CLRadio <- ttkradiobutton(groupRadio, text=items[ii], variable=selectCL, value=items[ii],
                                 command=function(){
                                       CoreLine <- tclvalue(selectCL)
                                       CoreLine <- unlist(strsplit(CoreLine, "\\."))   #drop "NUMBER." at beginning of coreLine name
                                       RepCLidx <<- as.numeric(CoreLine[1])
                                 })
-          tkgrid(CLRadio, row = 3, column = ii, padx = 5, pady = 5, sticky="w")
+          tkgrid(CLRadio, row = 1, column = ii, padx = 5, pady = 5, sticky="w")
       }
 
       OKBtn <- tkbutton(groupCL, text="  OK  ", width = 15, command=function(){
@@ -204,6 +206,53 @@ XPSProcessCoreLine <- function(){
    }
 
 
+   Reset <- function(){
+      SelectedFName <- tclvalue(XS1)
+      SourceFName <- get(SelectedFName,envir=.GlobalEnv)  #load the source XPSSample file
+      plot(SourceFName)
+      tclvalue(XS1) <- NULL
+      tclvalue(CL1) <- NULL
+      tclvalue(XS2) <- NULL
+      tclvalue(CL12) <- NULL
+      tclvalue(XX1) <- NULL
+      tclvalue(XX2) <- NULL
+      tclvalue(XS11) <- NULL
+      tclvalue(CL11) <- NULL
+      tclvalue(XS22) <- NULL
+      tclvalue(CL22) <- NULL
+      tclvalue(CC1) <- " ? "
+      tclvalue(CC2) <- " ? "
+      tclvalue(NRMMOD) <- " ? "
+      FNameList <<- XPSFNameList()
+      DestFName <<- NULL
+      RepCLidx <- NULL
+      activeSpectIndx <<- NULL
+      activeSpectName <<- NULL
+      SampID <<- ""
+      SpectList <<- ""
+      CullData <<- NULL  #rangeX of the region to cull
+      prefix <<- ""
+      SpectName <- ""
+      Xlim <<- NULL
+      SelFitComp <<- NULL
+      FCNames <<- NULL
+      NComp <<- 0
+      sapply(CKBtn, function(x) {tkdestroy(x)} )
+      CKBtn <<- list()
+      FtCpLabel <<- ttklabel(FtCpgroup, text="        ", font="Sans 12")
+      tkgrid(FtCpLabel, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+      WidgetState(SaveBtn, "disabled")
+      WidgetState(SaveNewSpect, "disabled")
+      WidgetState(SaveExitBtn, "disabled")
+      WidgetState(AddFrame10, "disabled")
+      WidgetState(FtCpframe, "disabled")
+      WidgetState(AddFrame11, "disabled")
+   }
+
+
+
+
 #----- variables -----
 
 #---load list of file ID and correspondent FileNames
@@ -218,6 +267,11 @@ XPSProcessCoreLine <- function(){
       prefix <- ""
       SpectName <- ""
       Xlim <- NULL
+      SelFitComp <- NULL
+      FCNames <- NULL
+      CKBtn <- list()
+      FtCpLabel <- list()
+      NComp <- 0
 
       tkmessageBox(message=" Remember to save data after each operation \n otherwise you will loss the results", title="SAVE RESULTS", icon="warning")
 
@@ -226,19 +280,19 @@ XPSProcessCoreLine <- function(){
       tkwm.title(ProcessWin,"CORELINE PROCESSING")
       tkwm.geometry(ProcessWin, "+100+50")   #position respect topleft screen corner
 
-      MainGroup <- ttkframe(ProcessWin, borderwidth=0, padding=c(0,0,0,0) )
-      tkgrid(MainGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+      ProcGroup1 <- ttkframe(ProcessWin, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(ProcGroup1, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-      NoteBK <- ttknotebook(MainGroup)
+      NoteBK <- ttknotebook(ProcGroup1)
       tkgrid(NoteBK, row = 1, column = 1, padx = 5, pady = 5, sticky="we")
 
 #--- TAB1
-      T1group <- ttkframe(NoteBK,  borderwidth=2, padding=c(5,5,5,5) )
-      tkadd(NoteBK, T1group, text="CORELINE PROCESSING")
-      T1group1 <- ttkframe(T1group, borderwidth=0, padding=c(0,0,0,0) )
-      tkgrid(T1group1, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+      T1Group1 <- ttkframe(NoteBK,  borderwidth=2, padding=c(5,5,5,5) )
+      tkadd(NoteBK, T1Group1, text="CORELINE PROCESSING")
+      T1Group11 <- ttkframe(T1Group1, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(T1Group11, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
-      AddFrame1 <- ttklabelframe(T1group1, text = "SELECT THE SOURCE XPS-SAMPLE", borderwidth=2)
+      AddFrame1 <- ttklabelframe(T1Group11, text = "Select the Source XPS-Sample", borderwidth=2)
       tkgrid(AddFrame1, row = 1, column = 1, padx = 5, pady = 3, sticky="we")
       XS1 <- tclVar()
       SourceFile1 <- ttkcombobox(AddFrame1, width = 25, textvariable = XS1, values = FNameList)
@@ -252,17 +306,26 @@ XPSProcessCoreLine <- function(){
                                WidgetState(SourceCoreline1, "normal") #enable core line selection
                  })
 
-      AddFrame2 <- ttklabelframe(T1group1, text = " SELECT CORELINE TO PROCESS ", borderwidth=2)
+      AddFrame2 <- ttklabelframe(T1Group11, text = " Select the Core.Line to Process ", borderwidth=2)
       tkgrid(AddFrame2, row = 2, column = 1, padx = 5, pady = 3, sticky="we")
       CL1 <- tclVar()
       SourceCoreline1 <- ttkcombobox(AddFrame2, width = 25, textvariable = CL1, values = SpectList)
       tkgrid(SourceCoreline1, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
       tkbind(SourceCoreline1, "<<ComboboxSelected>>", function(){
-                               WidgetState(DestFileName, "normal") # selection destination file enabled
+                               CoreLine <- tclvalue(CL12) <- tclvalue(CL1)
+                               CoreLine <- unlist(strsplit(CoreLine, "\\."))   #Skip the X. number prior to the CoreLine Name
+                               SpectIndx <- as.integer(CoreLine[1])
+                               SpectName <- CoreLine[2]
+                               tkconfigure(DestCoreline1, values=XPSSpectList(tclvalue(XS1)))
+                               WidgetState(DestFileName, "normal")
+                               WidgetState(AddFrame10, "normal")
+                               WidgetState(AddFrame11, "normal")
+                               WidgetState(FtCpframe, "normal")
+
                  })
       WidgetState(SourceCoreline1, "disabled")
 
-      AddFrame3 <- ttklabelframe(T1group1, text = "SELECT THE DESTINATION FILE NAME", borderwidth=2)
+      AddFrame3 <- ttklabelframe(T1Group11, text = "Select the Destination XPS-Sample", borderwidth=2)
       tkgrid(AddFrame3, row = 3, column = 1, padx = 5, pady = 3, sticky="we")
       XS2 <- tclVar()
       DestFileName <- ttkcombobox(AddFrame3, width = 25, textvariable = XS2, values = FNameList)
@@ -270,12 +333,13 @@ XPSProcessCoreLine <- function(){
       tkbind(DestFileName, "<<ComboboxSelected>>", function(){
                                SourceFile <- tclvalue(XS1)
                                DestFile <- tclvalue(XS2)
-                               SpectName <- tclvalue(CL1)
+                               SpectName <- tclvalue(CL12)
                                SpectName <- unlist(strsplit(SpectName, "\\."))   #split the string at character "."
                                SpectIndx <- as.integer(SpectName[1])
                                SpectName <- SpectName[2]
                                if (SourceFile == DestFile) {
                                   tkmessageBox(message="Warning: Destination File Name == Source File Name" , title = "WARNING: BAD DESTINATION FILE NAME!",  icon = "warning")
+                                  tkconfigure(DestCoreline1, values=XPSSpectList(DestFile))
                                } else {
                                   SourceFile <- get(SourceFile, envir=.GlobalEnv)
                                   DestFile <- get(DestFile, envir=.GlobalEnv)
@@ -295,23 +359,32 @@ XPSProcessCoreLine <- function(){
                                          }
                                      }
                                   }
+                                  tkconfigure(DestCoreline1, values=XPSSpectList(tclvalue(XS2)))
                                   plot(DestFile)
                                   WidgetState(SaveBtn, "normal") # enable saving data if Dest File OK
                                   WidgetState(SaveExitBtn, "normal")
                                }
+                               WidgetState(DestCoreline1, "normal")
                  })
       WidgetState(DestFileName, "disabled") # selection of destination file blocked
 
-      AddFrame4 <- ttklabelframe(T1group1, text = " ADD WHOLE CORELINE ", borderwidth=2)
+      AddFrame4 <- ttklabelframe(T1Group11, text = "Select the Destination Core.Line", borderwidth=2)
       tkgrid(AddFrame4, row = 4, column = 1, padx = 5, pady = 3, sticky="we")
-      Addbutton1 <- tkbutton(AddFrame4, text=" Add New Coreline and Fit ", width=35, command=function(){
+      CL12 <- tclVar()
+      DestCoreline1 <- ttkcombobox(AddFrame4, width = 25, textvariable = CL12, values = " ")
+      tkgrid(DestCoreline1, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
+      WidgetState(DestCoreline1, "disabled")
+
+      AddFrame5 <- ttklabelframe(T1Group11, text = " Add the WHOLE Core.Line ", borderwidth=2)
+      tkgrid(AddFrame5, row = 5, column = 1, padx = 5, pady = 3, sticky="we")
+      Addbutton1 <- tkbutton(AddFrame5, text=" ADD A NEW CORE.LINE AND FIT ", width=35, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- tclvalue(XS2)
                                if (length(SourceCoreline) == 0) {   #No coreline selected
-                                   tkmessageBox(message="Please select the source coreline please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
+                                   tkmessageBox(message="Please Select the Source Core.Line please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
                                } else if (length(DestFile) == 0) {   #No destination file selected
-                                   tkmessageBox(message="Please select the destination file please!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
+                                   tkmessageBox(message="Please Select the Destination XPSSample please!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
                                } else {
                                    SourceFile <- get(SourceFile, envir=.GlobalEnv)
                                    DestFName <<- get(DestFile, envir=.GlobalEnv)
@@ -333,33 +406,35 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(Addbutton1, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
 
-      AddFrame5 <- ttklabelframe(T1group1, text = " ADD BASELINE AND FIT ", borderwidth=2)
-      tkgrid(AddFrame5, row = 5, column = 1, padx = 5, pady = 3, sticky="we")
-      Addbutton2 <- tkbutton(AddFrame5, text="Add Baseline and Fit to Original Coreline", width=35, command=function(){
+      AddFrame6 <- ttklabelframe(T1Group11, text = " Add BaseLine and Fit ", borderwidth=2)
+      tkgrid(AddFrame6, row = 6, column = 1, padx = 5, pady = 3, sticky="we")
+      Addbutton2 <- tkbutton(AddFrame6, text="ADD BASELINE AND FIT TO CORE.LINE", width=35, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- tclvalue(XS2)
                                if (length(SourceCoreline) == 0) {   #no coreline selected
-                                  tkmessageBox(message="Please select the source coreline please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
+                                  tkmessageBox(message="Please Select the Source Core.Line please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
                                } else if (length(DestFile) == 0) {  #no destination file selected
-                                  tkmessageBox(message="Please select the destination file please!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
+                                  tkmessageBox(message="Please Select the Destination XPSSample please!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
                                } else {
                                   SourceFile <- get(SourceFile, envir=.GlobalEnv)
                                   DestSpectList <- XPSSpectList(DestFile)
                                   DestFName <<- get(DestFile, envir=.GlobalEnv)
                                   SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))
-                                  SpectIndx <- as.integer(SourceCoreline[1])
                                   SpectName <- SourceCoreline[2]
+                                  SpectIndx <- as.integer(SourceCoreline[1])
+                                  destName <- tclvalue(CL12)
+                                  destName <- unlist(strsplit(destName, "\\."))   #split the string at character "."
+                                  destName <- destName[2]
                                   CoreLineList <- names(DestFName)
-                                  destIndx <- grep(SpectName, CoreLineList) #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
-
+                                  destIndx <- grep(destName, CoreLineList) #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
                                   if (length(destIndx) > 1){                #The same coreline can be present more than one time
                                      CtrlRepCL(destIndx, SpectName, DestSpectList)
                                      destIndx <- RepCLidx
                                   }
 
                                   if (length(destIndx) == 0) {
-                                      text <- paste(SpectName, "not present in the Destination File: Fit copy stopped")
+                                      text <- paste(SpectName, "not Present in the Destination XPSSample: Fit copy stopped")
                                       tkmessageBox(message=text , title = "FIT COPY TO DESTINATION",  icon = "warning")
                                   } else {
                                       if (length(SourceFile[[SpectIndx]]@RegionToFit) == 0){
@@ -368,7 +443,7 @@ XPSProcessCoreLine <- function(){
                                           return()
                                       }
                                       if (length(DestFName[[destIndx]]@Components) > 0) {  #a fit is present for the selected coreline
-                                          text <- paste("ATTENTION: constraints of ",SpectName, " fit will be kept! Continue?", sep="")
+                                          text <- paste("ATTENTION: Constraints of ",SpectName, " Fit will be Kept! Continue?", sep="")
                                           answ <- tkmessageBox(message=text, type="yesno", title = "WARNING!",  icon = "warning")
                                           if (tclvalue(answ) == "yes") {
                                               DestFName[[destIndx]] <<- XPSremove(DestFName[[destIndx]],"all")
@@ -409,9 +484,9 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(Addbutton2, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
 
-      AddFrame6 <- ttklabelframe(T1group1, text = " ADD FIT ONLY ", borderwidth=2)
-      tkgrid(AddFrame6, row = 6, column = 1, padx = 5, pady = 3, sticky="we")
-      Addbutton3 <- tkbutton(AddFrame6, text=" Add Fit ", width=35, command=function(){
+      AddFrame7 <- ttklabelframe(T1Group11, text = " Add Fit Only ", borderwidth=2)
+      tkgrid(AddFrame7, row = 7, column = 1, padx = 5, pady = 3, sticky="we")
+      Addbutton3 <- tkbutton(AddFrame7, text=" ADD FIT ", width=35, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- tclvalue(XS2)
@@ -426,8 +501,11 @@ XPSProcessCoreLine <- function(){
                                   SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #split string at char "."
                                   SpectName <- SourceCoreline[2]
                                   SpectIndx <- as.integer(SourceCoreline[1])
+                                  destName <- tclvalue(CL12)
+                                  destName <- unlist(strsplit(destName, "\\."))   #split the string at character "."
+                                  destName <- destName[2]
                                   CoreLineList <- names(DestFName)
-                                  destIndx <- grep(SpectName, CoreLineList)  #The selected CoreLine name could be in any posiiton in the Destination XPSSample => source Samp Index could be different from Dest Samp index
+                                  destIndx <- grep(destName, CoreLineList) #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
                                   if (length(destIndx) == 0) {
                                       text <- paste(SpectName, "not present in the Destination File: Fit copy stopped")
                                       tkmessageBox(message=text, title = "FIT COPY TO DESTINATION STOPPED",  icon = "warning")
@@ -484,9 +562,9 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(Addbutton3, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
 
-      AddFrame7 <- ttklabelframe(T1group1, text = " OVERWRITE A CORELINE ", borderwidth=2)
-      tkgrid(AddFrame7, row = 7, column = 1, padx = 5, pady = 3, sticky="we")
-      overbutton <- tkbutton(AddFrame7, text=" Overwrite ", width=35, command=function(){
+      AddFrame8 <- ttklabelframe(T1Group11, text = " Overwrite a Core.Line ", borderwidth=2)
+      tkgrid(AddFrame8, row = 8, column = 1, padx = 5, pady = 3, sticky="we")
+      overbutton <- tkbutton(AddFrame8, text=" OVERWRITE ", width=35, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- tclvalue(XS2)
@@ -501,8 +579,11 @@ XPSProcessCoreLine <- function(){
                                   SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))
                                   SpectName <- SourceCoreline[2]
                                   SpectIndx <- as.integer(SourceCoreline[1])
+                                  destName <- tclvalue(CL12)
+                                  destName <- unlist(strsplit(destName, "\\."))   #split the string at character "."
+                                  destName <- destName[2]
                                   CoreLineList <- names(DestFName)
-                                  destIndx <- grep(SpectName, CoreLineList)  #The selected CoreLine name could be in any posiiton in the Destination XPSSample => source Samp Index could be different from Dest Samp index
+                                  destIndx <- grep(destName, CoreLineList) #The index of the coreline in the destinationFile can be different from that od sourceFile => grep()
                                   if (length(destIndx) > 1){                 #The same coreline can be present more than one time
                                      CtrlRepCL(destIndx, SpectName, DestSpectList)
                                      destIndx <- RepCLidx
@@ -520,16 +601,22 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(overbutton, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
 
-      AddFrame8 <- ttklabelframe(T1group1, text = " REMOVE/DUPLICATE CORELINE ", borderwidth=2)
-      tkgrid(AddFrame8, row = 8, column = 1, padx = 5, pady = 3, sticky="we")
-      delbutton <- tkbutton(AddFrame8, text=" Remove ", width=15, command=function(){
+      AddFrame9 <- ttklabelframe(T1Group11, text = " Remove/Duplicate a Core.Line ", borderwidth=2)
+      tkgrid(AddFrame9, row = 9, column = 1, padx = 5, pady = 3, sticky="we")
+      delbutton <- tkbutton(AddFrame9, text=" REMOVE ", width=15, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
+                               DestCoreline <- tclvalue(CL12)
                                DestFile <- tclvalue(XS2)
                                SpectList <<- XPSSpectList(SourceFile)
                                if (length(SourceCoreline)==0) {   #No coreline selected
                                    tkmessageBox(message="Please select the source coreline please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
                                }
+                               if (SourceCoreline != DestCoreline) {   #No coreline selected
+                                   tkmessageBox(message="Source and Destination Core.Lines Must be the SAME!" , title = "SOURCE/DESTINATION CORELINE SELECTION",  icon = "warning")
+                                   return()
+                               }
+
                                if (length(SourceFile)==0) {   #No Source File selected
                                    tkmessageBox(message="Please select the Source File please!" , title = "SOURCE FILE SELECTION",  icon = "warning")
                                } else {
@@ -564,7 +651,7 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(delbutton, row = 1, column = 1, padx = 5, pady = 3, sticky="we")
 
-      duplibutton <- tkbutton(AddFrame8, text=" Duplicate ", width=15, command=function(){
+      duplibutton <- tkbutton(AddFrame9, text=" DUPLICATE ", width=15, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- tclvalue(XS2)
@@ -607,11 +694,149 @@ XPSProcessCoreLine <- function(){
 
 #---
 
-      AddFrame9 <- ttklabelframe(T1group, text = " PICK UP DATA ", borderwidth=2)
-      tkgrid(AddFrame9, row = 1, column = 2, padx = 5, pady = 3, sticky="we")
+      T1Group12 <- ttkframe(T1Group1, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(T1Group12, row = 1, column = 2, padx = 0, pady = 0, sticky="w")
+
+      AddFrame10 <- ttklabelframe(T1Group12, text = " COPY FIT ", borderwidth=2)
+      tkgrid(AddFrame10, row = 1, column = 2, padx = 5, pady = 3, sticky="we")
+
+      SelectFC <- tkbutton(AddFrame10, text=" SELECT THE FIT COMPONENTS ", width=30, command=function(){
+                               SourceFName <- tclvalue(XS1)
+                               SourceCoreline <- tclvalue(CL1)
+                               if( SourceFName == "" || SourceCoreline == "") {
+                                  tkmessageBox(message="Please select the source XPSSample and Source Core.Line please!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
+                                  return()
+                               }
+                               SourceFName <- get(SourceFName,envir=.GlobalEnv)  #load the source XPSSample file
+                               DestFName <<- SourceFName
+                               SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))
+                               SpectIndx <- as.integer(SourceCoreline[1])
+                               SpectName <- SourceCoreline[2]
+                               tclvalue(XS2) <- activeFName
+                               activeSpectIndx <<- SpectIndx
+                               activeSpectName <<- SpectName
+                               plot(SourceFName[[SpectIndx]])
+                               if (SourceCoreline == "All") {
+                                   tkmessageBox(message="Please select the source Core.Line to process!" , title = "DESTINATION FILE SELECTION",  icon = "warning")
+                                   return()
+                               }
+                               plot(SourceFName[[SpectIndx]])
+                               NComp <<- length(SourceFName[[SpectIndx]]@Components)
+                               if (NComp == 0){
+                                   tkmessageBox(message="No Fit Present on this Core.Line", title="ERROR", icon="error")
+                                   return()
+                               }
+                               FCNames <<- names(SourceFName[[SpectIndx]]@Components)
+                               FCNames <<- c("All", FCNames)
+                               NRow <- ceiling((NComp+1)/5) #ii runs on the number of columns
+                               for(ii in 1:NRow){
+                                   NN <- (ii-1)*5    #jj runs on the number of column_rows
+                                   for(jj in 1:5) {
+                                       if ((jj+NN) > (NComp+1)) {break} #exit loop if all FitComp are in RadioBtn
+                                            CKBtn[[(NN+jj)]] <<- tkcheckbutton(FtCpgroup, text=FCNames[(NN+jj)], variable=FCNames[(NN+jj)],    #onvalue deve avere valori tutti diversi
+                                                          onvalue=FCNames[(NN+jj)], offvalue = FALSE, command=function(){      #offvalue=0 deseleziona TUTTI i checkbox
+                                                          SelFitComp <<- sapply(FCNames, function(x){ tclvalue(x) })
+                                                          SelFitComp <<- intersect(SelFitComp, FCNames) #drop the zeros
+                                                          if (SelFitComp[1] == "All") {
+                                                              SelFitComp <<- NULL
+                                                              SelFitComp <<- seq(1,NComp,1)
+                                                          } else {
+                                                              SelFitComp <<- as.numeric(gsub("[^0-9]", "", SelFitComp))
+                                                          }
+                                                     })
+                                            tclvalue(FCNames[(NN+jj)]) <- "FALSE"
+                                            tkgrid(CKBtn[[(NN+jj)]], row = ii, column = jj, padx = 5, pady=5, sticky="w")
+                                   }
+                               }
+                 })
+      tkgrid(SelectFC, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+      HlpBtn <- tkbutton(AddFrame10, text="  ?  ", width=5, command=function(){
+                               txt <- paste(" The function Copy Fit Components replicates selected Fit Components",
+                                            "\n in a region where the BaseLine is defined.",
+                                            "\n It is useful to replicate the Spin-Orbit fitting components 3/2",
+                                            "\n in the 1/2 region (or viceversa)", sep="")
+                               tkmessageBox(message=txt , title = "COPY FIT COMPONENTS",  icon = "info")
+                 })
+      tkgrid(HlpBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+
+
+      FtCpframe <- ttklabelframe(AddFrame10, text = "Select the Fit Components to Copy", borderwidth=2)
+      tkgrid(FtCpframe, row = 3, column = 1, padx = 5, pady = 5, sticky="we")
+      FtCpgroup <- ttkframe(FtCpframe, borderwidth=0, padding=c(0,0,0,0) )
+      tkgrid(FtCpgroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
+
+      FtCpLabel <- ttklabel(FtCpgroup, text="        ", font="Sans 12 bold")
+      tkgrid(FtCpLabel, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+      CopyBtn <- tkbutton(FtCpframe, text=" COPY THE FIT COMPONENTS ", width=30, command=function(){
+                              if (length(SelFitComp) == 0) {
+                                  tkmessageBox(message="Please Select the Fit Components to Copy!", title="WARNING", icon="warning")
+                                  return()
+                              }
+                              answ <- tkmessageBox(message="Is the BaseLine Present where to Copy the Fit?", type="yesno", title="WARNING", icon="warning")
+                              if (tclvalue(answ) == "no"){
+                                  txt <- paste("Please use Refine Baseline Option to Extend\n",
+                                               "the Baseline in the Region for the Fit Duplicate", sep="")
+                                  tkmessageBox(message=txt, title="WARNING", icon="warning")
+                                  return()
+                              }
+                              tkmessageBox(message="Locate End Points of Duplicate-Fit-Region", title="WARNING", icon="warning")
+                              FCpos <- locator(n=2, type="p", pch=1, cex=1.5, col="red", lwd=2)
+                              SpectIndx <- activeSpectIndx
+                              decr <- FALSE #Kinetic energy set
+                              if (DestFName[[SpectIndx]]@Flags[1] == TRUE) { decr <- TRUE } #Binding Energy set
+                              idx <- order(FCpos$x, decreasing = decr)
+                              FCpos$x <- FCpos$x[idx] #put Pos$X, Pos$y elements in the decreasing order
+                              FCpos$y <- FCpos$y[idx]
+                              idx <- findXIndex(DestFName[[SpectIndx]]@.Data[[1]], FCpos$x[1])  #we must have idx1 < idx2
+                              FCpos$y[1] <- DestFName[[SpectIndx]]@Baseline$y[idx]
+                              idx <- findXIndex(DestFName[[SpectIndx]]@.Data[[1]], FCpos$x[2])  #we must have idx1 < idx2
+                              FCpos$y[2] <- DestFName[[SpectIndx]]@Baseline$y[idx]
+                              SelFitComp <<- sort(SelFitComp, decreasing=FALSE)
+                              LL <- length(SelFitComp)
+                              kk <- SelFitComp[1]
+                              Emin <- DestFName[[SpectIndx]]@Components[[kk]]@param[2,1] #Energy position of Selected Component 1
+                              kk <- SelFitComp[LL]
+                              Emax <- DestFName[[SpectIndx]]@Components[[kk]]@param[2,1] #Energy position of Selected Component LL
+                              Em1 <- Emin + 0.5*(Emax-Emin)
+                              Em2 <- mean(FCpos$x)
+                              dE <- Em2 - Em1
+                              for(ii in SelFitComp){
+                                  FitCompFun <- DestFName[[SpectIndx]]@Components[[ii]]@funcName
+                                  FitCompSig <- DestFName[[SpectIndx]]@Components[[ii]]@param[3,1]
+                                  FCpos$x <- DestFName[[SpectIndx]]@Components[[ii]]@param[2,1] + dE
+                                  idx <- findXIndex(DestFName[[SpectIndx]]@.Data[[1]], FCpos$x)
+                                  FCpos$y <- DestFName[[SpectIndx]]@.Data[[2]][idx]
+                                  if (FitCompFun == "DoniachSunjicGauss" ||
+                                      FitCompFun == "DoniachSunjicGaussTail") {
+                                      FitCompSig2 <- DestFName[[SpectIndx]]@Components[[ii]]@param[4,1]
+                                      DestFName[[SpectIndx]] <<- XPSaddComponent(DestFName[[SpectIndx]], type = FitCompFun,
+                                                                             peakPosition = list(x = FCpos$x, y = FCpos$y), 
+                                                                             sigmaDS=FitCompSig, sigmaG=FitCompSig2)
+                                  } else {
+                                      DestFName[[SpectIndx]] <<- XPSaddComponent(DestFName[[SpectIndx]], type = FitCompFun,
+                                                                             peakPosition = list(x = FCpos$x, y = FCpos$y), 
+                                                                             sigma=FitCompSig)
+                                  }
+                              }
+                              tmp <- sapply(DestFName[[SpectIndx]]@Components, function(z) matrix(data=z@ycoor))  #create a matrix formed by ycoor of all the fit Components
+                              DestFName[[SpectIndx]]@Fit$y <<- ( colSums(t(tmp)) - length(DestFName[[SpectIndx]]@Components)*DestFName[[SpectIndx]]@Baseline$y)
+                              plot(DestFName)
+                              WidgetState(SaveBtn, "normal")
+                              WidgetState(SaveNewSpect, "normal")
+                              WidgetState(SaveExitBtn, "normal")
+                  })
+      tkgrid(CopyBtn, row = 2, column = 1, padx = 5, pady = c(5,20), sticky="we")
+      WidgetState(AddFrame10, "disabled")
+      WidgetState(FtCpframe, "disabled")
+
+
+      AddFrame11 <- ttklabelframe(T1Group12, text = " PICK UP DATA ", borderwidth=2)
+      tkgrid(AddFrame11, row = 2, column = 2, padx = 5, pady = 3, sticky="we")
 
       XX1 <- tclVar("From ? ")  #sets the initial msg
-      CullFrom <- ttkentry(AddFrame9, textvariable=XX1, width=20, foreground="grey")
+      CullFrom <- ttkentry(AddFrame11, textvariable=XX1, width=20, foreground="grey")
       tkbind(CullFrom, "<FocusIn>", function(K){
                                tclvalue(XX1) <- ""
                                tkconfigure(CullFrom, foreground="red")
@@ -623,7 +848,7 @@ XPSProcessCoreLine <- function(){
       tkgrid(CullFrom, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
 
       XX2 <- tclVar("To ? ")  #sets the initial msg
-      CullTo <- ttkentry(AddFrame9, textvariable=XX2, width=20, foreground="grey")
+      CullTo <- ttkentry(AddFrame11, textvariable=XX2, width=20, foreground="grey")
       tkbind(CullTo, "<FocusIn>", function(K){
                                tclvalue(XX2) <- ""
                                tkconfigure(CullTo, foreground="red")
@@ -634,29 +859,29 @@ XPSProcessCoreLine <- function(){
                  })
       tkgrid(CullTo, row = 2, column = 1, padx = 5, pady = 3, sticky="w")
 
-      MouseBtn1 <- tkbutton(AddFrame9, text=" MOUSE ", width=20, command=function(){
+      MouseBtn1 <- tkbutton(AddFrame11, text=" MOUSE ", width=20, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- SourceFile
                                tclvalue(XX1) <<- "From ?"
                                tclvalue(XX2) <<- "To ?"
-                               SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #tolgo il "NUMERO." all'inizio del nome coreline
+                               SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #skip the number at beginning of the CoreLine name
                                SpectIndx <- as.integer(SourceCoreline[1])
                                SpectName <- SourceCoreline[2]
-                               if (length(SourceFile)==0) {   #non e' stata selezionata alcuna coreline
+                               if (length(SourceFile)==0) {
                                    tkmessageBox(message="Please select the Source File please!" , title = "SOURCE FILE SELECTION",  icon = "warning")
                                    return()
                                }
-                               if (length(SourceCoreline)==0) {   #non e' stata selezionata alcuna coreline
+                               if (length(SourceCoreline)==0) {
                                    tkmessageBox(message="Please select the source coreline please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
                                    return()
                                } else {
                                   tclvalue(XS2) <<- SourceFile
                                   DestFName <<- get(SourceFile, envir=.GlobalEnv)
-                                  SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #tolgo il "NUMERO." all'inizio del nome coreline
+                                  SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #skip the number at beginning of the CoreLine name
                                   SpectIndx <- as.integer(SourceCoreline[1])
                                   SpectName <- SourceCoreline[2]
-                                  if (length(DestFName[[SpectIndx]]@RegionToFit)>0) {   #non e' stata selezionata alcuna coreline
+                                  if (length(DestFName[[SpectIndx]]@RegionToFit)>0) {
                                      tkmessageBox(message="Baseline or Fit present. Reset analysis before culling data!" , title = " RESET ANALYSIS ",  icon = "warning")
                                      return()
                                   }
@@ -668,22 +893,22 @@ XPSProcessCoreLine <- function(){
                          })
       tkgrid(MouseBtn1, row = 3, column = 1, padx = 5, pady = 3, sticky="w")
 
-      CullBtn <- tkbutton(AddFrame9, text=" SELECT DATA ", width=20, command=function(){
+      CullBtn <- tkbutton(AddFrame11, text=" SELECT DATA ", width=20, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                DestFile <- SourceFile
-                               if (length(SourceFile)==0) {   #non e' stata selezionata alcuna coreline
+                               if (length(SourceFile)==0) {
                                   tkmessageBox(message="Please select the Source File please!" , title = "SOURCE FILE SELECTION",  icon = "warning")
                                   return()
                                }
-                               if (length(SourceCoreline)==0) {   #non e' stata selezionata alcuna coreline
+                               if (length(SourceCoreline)==0) {
                                   tkmessageBox(message="Please select the source coreline please!" , title = "SOURCE CORELINE SELECTION",  icon = "warning")
                                } else {
-                                  SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))   #tolgo il "NUMERO." all'inizio del nome coreline
+                                  SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))
                                   SpectIndx <- as.integer(SourceCoreline[1])
                                   SpectName <- SourceCoreline[2]
                                   DestFName <<- get(SourceFile, envir=.GlobalEnv)
-                                  if (length(DestFName[[SpectIndx]]@RegionToFit)>0) {   #non e' stata selezionata alcuna coreline
+                                  if (length(DestFName[[SpectIndx]]@RegionToFit)>0) {
                                       tkmessageBox(message="Baseline or Fit present. Reset analysis before culling data!" , title = " RESET ANALYSIS ",  icon = "warning")
                                       return()
                                   }
@@ -712,7 +937,7 @@ XPSProcessCoreLine <- function(){
                          })
       tkgrid(CullBtn, row = 4, column = 1, padx = 5, pady = 3, sticky="w")
 
-      ResetBtn <- tkbutton(AddFrame9, text=" RESET ", width=20, command=function(){
+      ResetBtn <- tkbutton(AddFrame11, text=" RESET ", width=20, command=function(){
                                SourceFile <- tclvalue(XS1)
                                SourceCoreline <- tclvalue(CL1)
                                tclvalue(XS2) <- SourceFile
@@ -724,6 +949,7 @@ XPSProcessCoreLine <- function(){
                                plot(DestFName[[SpectIndx]])
                          })
       tkgrid(ResetBtn, row = 5, column = 1, padx = 5, pady = 3, sticky="w")
+      WidgetState(AddFrame11, "disabled") # selection destination file enabled
 
 
 
@@ -1304,22 +1530,28 @@ XPSProcessCoreLine <- function(){
 
 #---COMMON BUTTONS
 
-      ButtGroup1 <- ttkframe(MainGroup, borderwidth=0, padding=c(0,0,0,0) )
+      ButtGroup1 <- ttkframe(ProcGroup1, borderwidth=0, padding=c(0,0,0,0) )
       tkgrid(ButtGroup1, row = 2, column = 1, padx = 0, pady = 0, sticky="w")
 
-      SaveBtn <- tkbutton(ButtGroup1, text="  SAVE  ", width = 12, command=function(){
+      RstBtn <- tkbutton(ButtGroup1, text="  RESET  ", width = 10, command=function(){
+                               Reset()
+                     })
+      tkgrid(RstBtn, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
+
+
+      SaveBtn <- tkbutton(ButtGroup1, text=" SAVE ", width = 10, command=function(){
                                SaveSpectrum()
                      })
-      tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
+      tkgrid(SaveBtn, row = 1, column = 2, padx = 5, pady = 3, sticky="w")
       WidgetState(SaveBtn, "disabled")
 
       SaveNewSpect <- tkbutton(ButtGroup1, text=" SAVE AS A NEW CORELINE ", width = 25, command=function(){
                                SaveNewSpectrum()
                      })
-      tkgrid(SaveNewSpect, row = 1, column = 2, padx = 5, pady = 3, sticky="w")
+      tkgrid(SaveNewSpect, row = 1, column = 3, padx = 5, pady = 3, sticky="w")
       WidgetState(SaveNewSpect, "disabled")
 
-      SaveExitBtn <- tkbutton(ButtGroup1, text=" SAVE & EXIT ", width = 15, command=function(){
+      SaveExitBtn <- tkbutton(ButtGroup1, text=" SAVE & EXIT ", width = 13, command=function(){
                                if (prefix=="D1." || length(CullData > 0)){  #differentiation was performed
                                    CullData <<- NULL
                                    SaveNewSpectrum()   #for spectral differentiation or culled data saving is forced in a new coreline
@@ -1329,14 +1561,14 @@ XPSProcessCoreLine <- function(){
                                tkdestroy(ProcessWin)
                                XPSSaveRetrieveBkp("save")
                      })
-      tkgrid(SaveExitBtn, row = 1, column = 3, padx = 5, pady = 3, sticky="w")
+      tkgrid(SaveExitBtn, row = 1, column = 4, padx = 5, pady = 3, sticky="w")
       WidgetState(SaveExitBtn, "disabled")
 
-      ExitBtn <- tkbutton(ButtGroup1, text="  EXIT  ", width = 12, command=function(){
+      ExitBtn <- tkbutton(ButtGroup1, text=" EXIT ", width = 8, command=function(){
                                tkdestroy(ProcessWin)
                                XPSSaveRetrieveBkp("save")
                      })
-      tkgrid(ExitBtn, row = 1, column = 4, padx = 5, pady = 3, sticky="w")
+      tkgrid(ExitBtn, row = 1, column = 5, padx = 5, pady = 3, sticky="w")
 
 }
 

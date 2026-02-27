@@ -1,4 +1,4 @@
-## XPSoverPlot   engine to perform overlay of XPSspectra
+## XPSoverlayPlot engine superpose XPS spectra
 
 #' @title XPSovEngine
 #' @description XPSOverlay Engine is a macro called by XPSOverlayGUI
@@ -70,9 +70,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 
 
 #---  rescale a vector so that it lies between the specified minimum and maximum
-    rescale <- function(x, newrange=c(0,1)) {
+    rescale <- function(xx, newrange=c(0,1)) {
 
-	       if (!is.numeric(x) || !is.numeric(newrange)){
+	     if (!is.numeric(xx) || !is.numeric(newrange)){
 	          stop("Must supply numerics for the x and the new scale")
         }
         if (length(newrange) != 2) {
@@ -80,17 +80,17 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
         }
         newmin <- min(newrange)
         newmax <- max(newrange)
-        oldrange <- range(x)
+        oldrange <- range(xx)
         if (oldrange[1] == oldrange[2]) {
            if (newmin==0) {
-              return(x-oldrange[1])
+              return(xx-oldrange[1])
            } else {
              warning("The supplied vector is a constant. Cannot rescale")
-             return(x)
+             return(xx)
            }
 	       } else {
 	          ratio <- (newmax - newmin) / (oldrange[2] - oldrange[1])
-	          return( newmin + (x - oldrange[1]) * ratio )
+	          return( newmin + (xx - oldrange[1]) * ratio )
         }
     }
 
@@ -152,6 +152,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
         if (PlotParameters$OverlayType == "Spectrum+Fit") {
            if (length(FName[[SpectIdx]]@Components) > 0) {
               select[[ii]] <- c("RTF", "BASE", "COMPONENTS", "FIT")
+              if (FName[[SpectIdx]]@Components[[1]]@funcName == "Derivative"){
+                  select[[ii]] <- c("RTF", "BASE")
+              }
            } else if (length(FName[[SpectIdx]]@RegionToFit) > 0) {
               select[[ii]] <- c("RTF", "BASE")
            } else {
@@ -169,7 +172,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
     XPSSampNames <- names(overlayXPSSample)
     Nspettri <- length(XPSSampNames)
     idx <- grep("\U0394", CLnames)
-    if (length(idx) > 0 && !is.na(idx)){  #Control if greek Char DELTA is present in CoreLine names
+    if (length(idx) > 0 && !any(is.na(idx))){  #Control if greek Char DELTA is present in CoreLine names
         idx <- grep("\U0394", CLnames)[1]
         if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
         if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- FName[[idx]]@units[2] }
@@ -183,8 +186,8 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 #--- Now transform XPSSample into a list
 #--- The asList function allows including/skipping fit components, baseline etc. following the select options
 #--- NOTE USE of sapply instead of lapply!!!
-    X <- NULL
-    Y <- NULL
+    X <- x <- NULL
+    Y <- y <- NULL
     for (ii in 1:NXPSSamp){
         tmp <- as.matrix(asList(overlayXPSSample[[ii]], select = select[[ii]]))
         X <- c(X, tmp["x", ])   #X coords of the selected spectra
@@ -234,12 +237,12 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 #--- Here Y alignment
     if (PlotParameters$Align) {
        LL <- length(Y)
-       if ( all( sapply(Y, function(z) !is.na(charmatch("BASE", names(z)))) )) {
+       if ( all( sapply(Y, function(z) !any(is.na(charmatch("BASE", names(z))))) )) {
 			       minybkg <- sapply(Y, function(z) min(z$BASE))
 			       for (idx in 1:LL) {
 			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
 		       	 }
-       } else if(all( sapply(Y, function(z) !is.na(charmatch("RTF", names(z)))) )) {
+       } else if(all( sapply(Y, function(z) !any(is.na(charmatch("RTF", names(z))))) )) {
 			       minybkg <- sapply(Y, function(z) min(z$RTF))
 			       for (idx in 1:LL) {
 			          	Y[[idx]] <- lapply(Y[[idx]], "-", minybkg[idx])
@@ -262,24 +265,24 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 #--- Y normalization == scale c(0,1)
 
     if (PlotParameters$Normalize) {
-			    maxy <- sapply(Y, function(z) max(sapply(z, max))) #here Y is the list of XPSSamples with baseline fitComp...
-			    if (PlotParameters$NormPeak > 0) {
-          yy <- NULL
-          for (idx in 1:XPSSampLen){
-              Ndata <- length(unlist(X[[idx]]))
-              PeakPos <- PlotParameters$NormPeak + offset_sequence[idx]
-			           PeakIdx <- findXIndex(unlist(X[[idx]]),  PeakPos) #data may be acquired with different Estep => each X[[ ]] must be analyzed
-              p1 <- PeakIdx-20
-              p2 <- PeakIdx+20
-              if (p1 < 1) p1 <- 1       #limits the range where to find the peak max to available data
-              if (p2 > Ndata) p2 <- Ndata
-              yy[[idx]] <- lapply(Y[[idx]], function(z) {z[p1:p2]} )
+          maxy <- sapply(Y, function(z) max(sapply(z, max))) #here Y is the list of XPSSamples with baseline fitComp...
+          if (PlotParameters$NormPeak > 0) {
+              yy <- NULL
+              for (idx in 1:XPSSampLen){
+                   Ndata <- length(unlist(X[[idx]]))
+                   PeakPos <- PlotParameters$NormPeak + offset_sequence[idx]
+                   PeakIdx <- findXIndex(unlist(X[[idx]]),  PeakPos) #data may be acquired with different Estep => each X[[ ]] must be analyzed
+                   p1 <- PeakIdx-20
+                   p2 <- PeakIdx+20
+                   if (p1 < 1) p1 <- 1       #limits the range where to find the peak max to available data
+                   if (p2 > Ndata) p2 <- Ndata
+                   yy[[idx]] <- lapply(Y[[idx]], function(z) {z[p1:p2]} )
+              }
+              maxy <- sapply(yy, function(z) max(sapply(z, max))) #here yy is the a region around the selected peak selected for normalization
           }
-		        maxy <- sapply(yy, function(z) max(sapply(z, max))) #here yy is the a region around the selected peak selected for normalization
-       }
-			    for (idx in 1:XPSSampLen) {
-				       Y[[idx]] <- lapply(Y[[idx]], "/", maxy[idx])
-			    }
+          for (idx in 1:XPSSampLen) {
+               Y[[idx]] <- lapply(Y[[idx]], "/", maxy[idx])
+          }
     }
 
 #--- Y offset
@@ -296,10 +299,10 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 
 #--- After processing set Ylim
     if (is.null(Plot_Args$ylim)) {  #non ho fissato ylim per fare lo zoom
-       	Plot_Args$ylim <- range(sapply(Y, sapply, range))
-	       wdth <- Plot_Args$ylim[2]-Plot_Args$ylim[1]
-	       Plot_Args$ylim[1] <- Plot_Args$ylim[1]-wdth/15
-	       Plot_Args$ylim[2] <- Plot_Args$ylim[2]+wdth/15
+        Plot_Args$ylim <- range(sapply(Y, sapply, range))
+	     wdth <- Plot_Args$ylim[2]-Plot_Args$ylim[1]
+	     Plot_Args$ylim[1] <- Plot_Args$ylim[1]-wdth/15
+	     Plot_Args$ylim[2] <- Plot_Args$ylim[2]+wdth/15
     }
     Ylim <- Plot_Args$ylim
 
@@ -393,6 +396,20 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
        Plot_Args$groups	<- unlist(cx)
        graph <- do.call(xyplot, args = Plot_Args)
        plot(graph)
+       if (PlotParameters$OverlayType == "Spectrum+Fit" &&
+           FName[[SpectIdx]]@Components[[1]]@funcName == "Derivative"){
+           xx <- c(FName[[SpectIdx]]@Components[[1]]@param["mu", "min"],
+                      FName[[SpectIdx]]@Components[[1]]@param["mu", "max"])
+           yy <- c(FName[[SpectIdx]]@Components[[1]]@param["h", "min"],
+                      FName[[SpectIdx]]@Components[[1]]@param["h", "max"])
+           points(xx, yy, col="orange", cex=3, lwd=2, pch=3)
+           col <- FitStyle$FitColor[1]
+           graph <- graph + layer(data=list(x=xx, y=yy, type="p", col=col, cex=3, pch=3, lwd=2),
+                                   panel.xyplot(x, y, type="p",  col=col, cex=3, pch=3, lwd=2)
+                                 )
+           plot(graph)
+       }
+
        assign("RxpsGGraph", graph, envir=.GlobalEnv)
     }
 
@@ -428,15 +445,15 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 #in formula y~x is plotted against levx: produces panels showing single XPSSamples
 	      Plot_Args$x	<- formula("y ~ x| factor(levx, labels=PanelTitles)")
 	      Plot_Args$data	<- df
-       Plot_Args$par.settings$strip <- TRUE
+         Plot_Args$par.settings$strip <- TRUE
 
 	      Plot_Args$groups	<- cx
 	      Plot_Args$layout	<- c(Nrow, Ncol)
-       Plot_Args$main	<- NULL
+         Plot_Args$main	<- NULL
 
 	      graph <- do.call(xyplot, args = Plot_Args)
-       plot(graph)
-       assign("RxpsGGraph", graph, envir=.GlobalEnv)
+         plot(graph)
+         assign("RxpsGGraph", graph, envir=.GlobalEnv)
     }
 
 
@@ -553,7 +570,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
        if (length(Plot_Args$main$label) == 0) { Plot_Args$main$label <- SpectName }
 
        idx <- grep("\U0394", XPSSampNames)[1] #Control if greek Char is present in CoreLine names
-       if (length(idx) > 0 && !is.na(idx)){  #Control if greek Char DELTA is present in CoreLine names
+       if (length(idx) > 0 && !any(is.na(idx))){  #Control if greek Char DELTA is present in CoreLine names
            idx <- grep("\U0394", CLnames)[1]
            if (length(Plot_Args$xlab$label) == 0) { Plot_Args$xlab$label <- FName[[idx]]@units[1] }#set the axis labels if not defined
            if (length(Plot_Args$ylab$label) == 0) { Plot_Args$ylab$label <- "Sample" }
@@ -643,7 +660,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
           Cloud_Args$par.settings <- Plot_Args$par.settings
        }
 #---plot commands---
-	      Cloud_Args$x <- formula("z ~ x*y")
+	    Cloud_Args$x <- formula("z ~ x*y")
        Cloud_Args$data <- df
        Cloud_Args$groups	<- unlist(cx)
 
@@ -661,9 +678,9 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
                graph <<- AcceptedGraph
                plot(graph)
                if (! is.null(TextPosition$x) && ! is.null(TextPosition$y)){
-                   graph <<- graph + layer(data=list(x0=TextPosition$x, y0=TextPosition$y, labels=AnnotateText,
+                   graph <<- graph + layer(data=list(x=TextPosition$x, y=TextPosition$y, labels=AnnotateText,
                                        cex=TextSize, col=TextColor),
-                                       panel.text(x0, y0, labels=labels, cex=cex, col=col)
+                                       panel.text(x, y, labels=labels, cex=cex, col=col)
                                       )
 
                }

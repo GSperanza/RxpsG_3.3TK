@@ -1820,7 +1820,6 @@ setMethod("plot", signature(x="XPSSample", y="missing"),
             x <- x[1:12]
             cat("\n ==> Only the first 12 XPSCoreLines are shown.")
       }
-
       ### plot(XPSSample) calls plot(CoreLine)  via lapply()
       par(type="l", lty=1)
       tmp <- lapply(x, plot, ...)

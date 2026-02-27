@@ -43,6 +43,15 @@ XPSCoreLineFitInfo <- function() {
    }
 
 
+   Get_PE <- function(CL){
+      info <- CL@Info[1]   #retrieve info containing PE value
+      xxx <- strsplit(info, "Pass energy")  #extract PE value
+      PE <- strsplit(xxx[[1]][2], "Iris") #PE value
+      PE <- gsub(" ", "", PE[[1]][1]) #PE value
+      return(as.numeric(PE))
+   }
+
+
    SetCLTable <- function() {
       if (length(FName[[Indx]]@Components) > 0){
           activeFName <- get("activeFName", envir=.GlobalEnv)
@@ -248,12 +257,14 @@ XPSCoreLineFitInfo <- function() {
                           SetSpectrum()
                           tclvalue(CL) <- ""
                           SpectList <<- XPSSpectList(activeFName)
+                          PE <- Get_PE(FName[[Indx]])
                           tkconfigure(InfoObj2, value=SpectList)
                           tkdestroy(SpectTbl)  #destroy to correctly reconstruct the tktext window & scrollbars
-                          SpectTbl <<- tktext(Infoframe3, width=72, height=7, background="white")
+                          SpectTbl <<- tktext(Infoframe3, width=72, height=8, background="white")
                           tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
                           txt <- paste("Source Data: ", activeFName, "\n",
                                        "Core-Line:  \n",
+                                       "Pass Energy: ", PE, "\n",
                                        "Fit Parameters: \n",
                                        "Extension of the fit region:  \n",
                                        "Energy Step:  \n",
@@ -278,19 +289,21 @@ XPSCoreLineFitInfo <- function() {
                               fitrng1 <- round(range(FName[[Indx]]@RegionToFit$x),2)
                               fitrng2 <- round(range(FName[[Indx]]@RegionToFit$y),2)
                           }
+                          PE <- Get_PE(FName[[Indx]])
                           EStep <- abs(FName[[Indx]]@.Data[[1]][1]- FName[[Indx]]@.Data[[1]][2])
                           EStep <- round(EStep,3)
                           BLtype <- FName[[Indx]]@Baseline$type[1]
                           txt <- ""
                           txt <- paste(" Source Data: ", FName@Filename, "\n",
                                        "Core-Line:  ",activeSpectName, "\n",
+                                       "Pass Energy: ", PE, "\n",
                                        "Fit Parameters: \n",
                                        "Extension of the fit region:  ", fitrng1[1], " - ", fitrng1[2], "\n",
                                        "Energy Step:  ", EStep, "\n",
                                        "Spectral Intensity Range:  ",fitrng2[1],"-", fitrng2[2], "\n",
                                        "Base Line Type:  ", BLtype, collapse="")
                           tkdestroy(SpectTbl)  #destroy to correctly reconstruct the tktext window & scrollbars
-                          SpectTbl <- tktext(Infoframe3, width=72, height=7, background="white")
+                          SpectTbl <- tktext(Infoframe3, width=72, height=8, background="white")
                           tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
                           tcl(SpectTbl, "insert", "0.0", txt) #cancel previous comments
 
@@ -310,7 +323,7 @@ XPSCoreLineFitInfo <- function() {
 #--- Spectrum Info
    Infoframe3 <- ttklabelframe(InfoGroup1, text="Spectrum Info", borderwidth=0, padding=c(5,5,5,5))
    tkgrid(Infoframe3, row = 3, column = 1, padx = 5, pady = 3, sticky="w")
-   SpectTbl <- tktext(Infoframe3, width=72, height=7, background="white")
+   SpectTbl <- tktext(Infoframe3, width=72, height=8, background="white")
    tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
    tcl("update", "idletasks") #forces SpectTbl to be generated
    fitrng1 <- fitrng2 <- c("  ", "  ")
@@ -321,11 +334,15 @@ XPSCoreLineFitInfo <- function() {
    EStep <- abs(FName[[Indx]]@.Data[[1]][1]- FName[[Indx]]@.Data[[1]][2])
    EStep <- round(EStep,3)
    BLtype <- FName[[Indx]]@Baseline$type[1]
+   PE <- Get_PE(FName[[Indx]])
+cat("\n 1111", PE)
+
 #tkmessageBox(message=" OK")
 
    txt <- ""
    txt <- paste("Source Data: ", FName@Filename, "\n",
                 "Core-Line:  ", activeSpectName, "\n",
+                "Pass Energy: ", PE, "\n",
                 "Fit Parameters: \n",
                 "Extension of the fit region:  ", fitrng1[1], " - ", fitrng1[2], "\n",
                 "Energy Step:  ", EStep, "\n",

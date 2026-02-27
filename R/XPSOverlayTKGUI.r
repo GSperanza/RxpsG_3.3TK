@@ -566,6 +566,7 @@ XPSOverlay <- function(){
        FitColors <- data.frame(BaseColor=XPSSettings$BaseColor, CompColor=rep(XPSSettings$ComponentsColor[1], 20),
                            FitColor=XPSSettings$FitColor, stringsAsFactors=FALSE)
    }
+
 #-------------------------------------------------------------------------------------------------
 #   LType <- c("solid", "dashed", "dotted", "dotdash", "longdash",     #definisco 20 tipi divesi di line pattern
 #            "twodash", "F8", "431313", "22848222", "12126262",
@@ -2620,8 +2621,8 @@ XPSOverlay <- function(){
                               } else {
                                   Ncol <- as.numeric(tclvalue(LEGENCOLUMNS))
                               }
-			                           switch(tclvalue(LEGENDPOS),
-                              "OutsideTop"     = { AutoKey_Args$space <<- NULL
+                                  switch(tclvalue(LEGENDPOS),
+                                      "OutsideTop"     = { AutoKey_Args$space <<- NULL
                                                    AutoKey_Args$corner <<- c(1,0)
                                                    AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
                                                    AutoKey_Args$y <<- 1+Dist },
@@ -2631,7 +2632,7 @@ XPSOverlay <- function(){
 				                          "OutsideLeft"    = { AutoKey_Args$space <<- "left"
 #                                                   Plot_Args$par.settings$layout.widths$left.padding <<- 8-Dist*40
                                                    Plot_Args$par.settings$layout.widths$key.left <<- Dist*10 },
-			                           "OutsideBottom"  = { AutoKey_Args$space <<- NULL
+			                             "OutsideBottom"  = { AutoKey_Args$space <<- NULL
                                                    AutoKey_Args$corner <<- c(0,0)
                                                    AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
                                                    AutoKey_Args$y <<- -1 - Dist },
@@ -2643,14 +2644,15 @@ XPSOverlay <- function(){
                                                    AutoKey_Args$corner <<- c(0,1)
                                                    AutoKey_Args$x <<- Dist
                                                    AutoKey_Args$y <<- 1-Dist },
-                              "InsideBottomRight" = { AutoKey_Args$space <<- NULL
+                                      "InsideBottomRight" = { AutoKey_Args$space <<- NULL
                                                       AutoKey_Args$corner <<- c(1,0)
                                                       AutoKey_Args$x <<- 1-Dist
                                                       AutoKey_Args$y <<- Dist },
 				                          "InsideBottomLeft"  = {	AutoKey_Args$space <<- NULL
                                                       AutoKey_Args$corner <<- c(0,0)
-                                                      AutoKey_Args$x <<- 1.1 - 1/(Ncol+1)
-                                                      AutoKey_Args$y <<- 1-Dist }                              )
+                                                      AutoKey_Args$x <<- Dist #1.1 - 1/(Ncol+1)
+                                                      AutoKey_Args$y <<- Dist #1-Dist } 
+                                  })
                            }
                            CtrlPlot()
                     })

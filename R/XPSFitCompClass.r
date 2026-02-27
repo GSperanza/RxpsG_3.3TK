@@ -308,7 +308,7 @@ Voigt = new("fitComponents",
         row.names = c("h", "mu", "sigma", "lg"),
         start = c(1, NA, 1, 0.2),
         min = c(0, 0, 0.05, 0.01),
-        max = c(Inf, Inf, 10, 1) 	),
+        max = c(Inf, Inf, 10, 0.2) 	),
     ycoor = 0,
 	   rsf = 0,
 	   link = list()
@@ -394,7 +394,7 @@ AsymmVoigt = new("fitComponents",
         row.names = c("h", "mu", "sigma", "lg", "asym"),     #min e max values are set in XPSAddFitComponent()
         start = c(1, NA, 0.4, 0.1, 0.1),
         min = c(0, 0, 0.1, 0.01, 0.01),
-        max = c(Inf, Inf, 10, 1, 1) ),
+        max = c(Inf, Inf, 10, 1, 0.2) ),
 	   ycoor = 0,
 	   rsf = 0,
 	   link = list()
@@ -409,7 +409,7 @@ AsymmGaussLorentz = new("fitComponents",
         row.names = c("h", "mu", "sigma", "lg", "asym"),
         start = c(1, NA, 1, 0.3, 0.45),
         min = c(0, 0, 0.05, 0.4, 1e-5),
-        max = c(Inf, Inf, 5, 1, 0.4)  ),
+        max = c(Inf, Inf, 5, 0.3, 0.4)  ),
     ycoor = 0,
 	   rsf = 0,
   	 link = list()
@@ -423,7 +423,7 @@ AsymmGaussVoigt = new("fitComponents",
         row.names = c("h", "mu", "sigma", "lg", "asym", "gv"),
         start = c(1, NA, 0.6, 0.1, 0.2, 0.4),
         min = c(0, 0, 0.01, 0.01, 0.01, 0.01),
-        max = c(Inf, Inf, 5, 1, 1, 1)  ),
+        max = c(Inf, Inf, 5, 0.2, 1, 1)  ),
     ycoor = 0,
   	 rsf = 0,
   	 link = list()
@@ -437,7 +437,7 @@ AsymmGaussLorentzProd = new("fitComponents",
         row.names = c("h", "mu", "sigma", "asym", "lg"),
         start = c(1, NA, 1, 0.2, 0.8),
         min = c(0, 0, 0.05, 0.1, 1e-5),
-        max = c(Inf, Inf, 5, 1, 0.4)  ),
+        max = c(Inf, Inf, 5, 1, 0.2)  ),
     ycoor = 0,
 	   rsf = 0,
 	   link = list()
@@ -516,7 +516,7 @@ SimplifiedDoniachSunjic = new("fitComponents",
 
 #----- Special Fit Components -----
 
-Linear = new("fitComponents",
+Linear = new("fitComponents",                   #Linear VB fit to define VBtop
     funcName = "Linear",
     description = "Linear Fit",
     label = "Linear",
@@ -572,7 +572,7 @@ Sigmoid = new("fitComponents",
 	   link = list()
     ),
 
-HillSigmoid = new("fitComponents",
+HillSigmoid = new("fitComponents",              #Hill Sigmoid for VB fitting to define VBtop
     funcName = "HillSigmoid",
     description = "Hill Sigmoid function",
     label = "HS",
@@ -586,7 +586,7 @@ HillSigmoid = new("fitComponents",
   	 link = list()
     ),
 
-
+                                                #Hill Sigmoid for VB fitting to define VBtop
 HillSigmoid.KE = new("fitComponents",
     funcName = "HillSigmoid.KE",
     description = "Hill Sigmoid function",
@@ -602,7 +602,7 @@ HillSigmoid.KE = new("fitComponents",
     ),
 
 
-VBFermi = new("fitComponents",
+VBFermi = new("fitComponents",                  #Fermi distribution for VB fitting to define the Fermi Level
     funcName = "VBFermi",
     description = "Fermi Distribution function",
     label = "Ef",

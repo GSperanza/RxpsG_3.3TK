@@ -758,7 +758,7 @@ XPSVBTop <- function() {
 
 #----- Widget -----
   VBwindow <- tktoplevel()
-  tkwm.title(VBwindow,"XPS ANALYSIS")
+  tkwm.title(VBwindow,"VB TOP ANALYSIS")
   tkwm.geometry(VBwindow, "+100+50")   #position respect topleft screen corner
   VBGroup <- ttkframe(VBwindow, borderwidth=0, padding=c(0,0,0,0) )
   tkgrid(VBGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")

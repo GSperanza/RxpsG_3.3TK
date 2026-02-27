@@ -64,7 +64,10 @@ XPSCustomPlot <- function(){
                 RngX <- range(FName[[SpectIndx]]@RegionToFit$x)
                 RngY <- range(FName[[SpectIndx]]@RegionToFit$y)
                 LBLsize <- as.numeric(tclvalue(FCLBLSIZE))
-                yspan <- max(RngY)/20*as.numeric(tclvalue(FCLBLOFST))
+#                yspan <- max(RngY)/20*as.numeric(tclvalue(FCLBLOFST))
+                BaseMeanLevel <- mean(range(FName[[SpectIndx]]@Baseline$y))
+                yspan <- (max(RngY)-BaseMeanLevel)/20*as.numeric(tclvalue(FCLBLOFST))
+
                 LabPosX <- LabPosY <- CompLbl <- NULL
                 for(ii in 1:LL){                    #Control mu != NA  (see linear fit in VBTop
                     LabPosX <- c(LabPosX, FName[[SpectIndx]]@Components[[ii]]@param["mu", "start"])
@@ -1730,7 +1733,7 @@ XPSCustomPlot <- function(){
           row = 2, column = 1, padx = c(WW2+7, 5), pady = 2, sticky="w")
 
        FCLBLOFST  <- tclVar("1")
-       LblOffset <- c(0.6,0.8,1,1.2,1.4,1.6, 1.8, 2)
+       LblOffset <- c(-2,-1.8,-1.6,-1.4,-1.2,-1,-0.8,-0.6,-0.4,0.4,0.6,0.8,1,1.2,1.4,1.6,1.8,2)
        T4_CompLbl_Offset <- ttkcombobox(T4Lblframe, width = 8, textvariable = FCLBLOFST, values = LblOffset)
        tkbind(T4_CompLbl_Offset, "<<ComboboxSelected>>", function(){
                                   SetXYplotData()

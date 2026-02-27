@@ -91,7 +91,7 @@ XPSDepthProfile <- function() {
                                                  })
                      tclvalue(CL.Sym[kk]) <- FALSE   #initial checkbutton setting
                      kk <- kk+1
-                     tkgrid(CoreLineCK[[ii]], row = jj, column = ii, padx = 5, pady=5, sticky="w")
+                     tkgrid(CoreLineCK[[ii]], row = jj, column = ii-NN1+1, padx = 5, pady=5, sticky="w")
                  }
              }
      }
@@ -292,9 +292,9 @@ XPSDepthProfile <- function() {
                     yscale.components = yscale.components.subticks,
                     las=0,
                     par.settings = list(superpose.symbol=list(pch=20,fill=MatCol), #set symbol fill colore
-                                        superpose.line=list(lty=1, col=MatCol), #needed to set legend colors
+                                        superpose.line=list(lty=1, col=MatCol),    #needed to set legend colors
                                         strip=TRUE, par.strip.text=list(cex=1.2),
-                                        strip.background=list(col="grey90") ),          #lightskyblue1
+                                        strip.background=list(col="grey90") ),     #lightGrey
                     auto.key = FALSE,
                     grid = FALSE
                   )
@@ -477,31 +477,45 @@ XPSDepthProfile <- function() {
                                        WidgetState(T1frameBaseline, "disabled")
                                        WidgetState(BLGroup, "disabled")
                                        WidgetState(T1frameProf, "normal")
-                                       XSampTmp <- NULL
-                                       for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
-                                           XSampTmp <- new("XPSSample")  #generate a temporary XPSSample
-                                           Matched <<- match(SelectedCL, CL.Sym) #index of the selected CL among the acquired CL
-                                           for(ii in Matched){         #for now runs only on the selected CL
-                                               idx <- CoreLineList[[ii]][jj]
-                                               Y <- cbind(Y, XPSSample[[idx]]@Baseline$y)
-                                               Colr <- c(Colr, 584)  #Sienna color for the Baselines
+                                       Matched <<- match(SelectedCL, CL.Sym) #index of the selected CL among the acquired CL
+                                       for(ii in Matched){         #for now runs only on the selected CL
+                                           X <- Y <- NULL
+                                           Colr <- NULL
+                                           idx <- CoreLineList[[ii]][1]
+                                           if(length(XPSSample[[idx]]@Baseline) == 0){
+                                              txt <- paste( "Baseline NOT defined for", XPSSample[[idx]]@Symbol, "\nSkip Core.Line?", sep=" ")
+                                              answ <- tkmessageBox(message=txt, type="yesno", title="ERROR", icon="error")
+                                              if (tclvalue(answ) == "yes"){
+                                                  SelectedCL <<- SelectedCL[-ii]
+                                                  tclvalue(CL.Sym[ii]) <- FALSE
+                                              } else {
+                                                  return()
+                                              }
+                                           } else{
+                                              for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
+                                                  idx <- CoreLineList[[ii]][jj]
+                                                  Y <- cbind(Y, XPSSample[[idx]]@Baseline$y)
+                                                  X <- cbind(X, XPSSample[[idx]]@Baseline$x)
+                                                  Colr <- c(Colr, 584)    #Sienna color for the Baselines
+                                              }
+                                              for(jj in 1:N.Cycles){      #for now runs only on the selected CL
+                                                  idx <- CoreLineList[[ii]][jj]
+                                                  Y <- cbind(Y, XPSSample[[idx]]@RegionToFit$y)
+                                                  X <- cbind(X, XPSSample[[idx]]@RegionToFit$x)
+                                              }
+                                              Colr <- c(Colr, MatCol[1:N.Cycles])
+                                              xrange <- range(XPSSample[[idx]]@RegionToFit$x)
+                                              if (XPSSample[[idx]]@Flags[1] == TRUE) { xrange <- sort(xrange, decreasing=TRUE) }
+                                              matplot(X, Y, xlim=xrange, type="l", lty=1, col=Colr, main=CL.Sym[ii], cex.axis=1.25,
+                                                      cex.lab=1.3, xlab=XPSSample[[idx]]@units[1], ylab=XPSSample[[idx]]@units[2])
+                                              tkmessageBox(message="Press OK to continue", title="WARNING", icon="warning")
                                            }
-                                           X <- cbind(X, XPSSample[[idx]]@Baseline$x)
-                                           Colr <- c(Colr, MatCol[1:N.Cycles])
-                                           xrange <- range(XPSSample[[idx]]@RegionToFit$x)
-                                           if (XPSSample[[idx]]@Flags[1]) xrange <- sort(xrange, decreasing=TRUE)
-                                           matplot(X, Y, xlim=xrange, type="l", lty=1, col=Colr, main=CL.Sym[ii], cex.axis=1.25,
-                                                   cex.lab=1.3, xlab=XPSSample[[idx]]@units[1], ylab=XPSSample[[idx]]@units[2])
-                                           tkmessageBox(message="Press OK to continue", title="WARNING", icon="warning")
-
-
                                        }
                                    } else {
                                        BLDone <<- FALSE
                                        WidgetState(T1frameBaseline, "normal")
                                        WidgetState(BLGroup, "normal")
                                    }
-
                                 })
      tkgrid(AnalCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -684,8 +698,7 @@ XPSDepthProfile <- function() {
                                           if (XPSSample[[idx]]@Flags[1]) xrange <- sort(xrange, decreasing=TRUE)
                                           matplot(X, Y, xlim=xrange, type="l", lty=1, col=Colr, main=CL.Sym[ii], cex.axis=1.25,
                                                   cex.lab=1.3, xlab=XPSSample[[idx]]@units[1], ylab=XPSSample[[idx]]@units[2])
-                                          #-----
-
+#-----
                                           answ <- tclvalue(tkmessageBox(message="BaseLine OK?", type="yesno", title="BASELINE CTRL", icon="info"))
                                           if(answ == "no"){
                                              tclvalue(BL) <- FALSE
@@ -719,12 +732,12 @@ XPSDepthProfile <- function() {
      tkgrid(T1frameProf, row = 6, column = 1, padx = 5, pady = 5, sticky="we")
      ConcButt <- tkbutton(T1frameProf, text=" CONCENTRATION PROFILE ", command=function(){
 #among the elements determine the max number of acquired CL. Likely same number of CL for all elements = N Cycles etching
-                                QntMat <- matrix(data=NA, ncol=N.CL, nrow=N.Cycles)
+                                LL <- length(SelectedCL)
+                                QntMat <- matrix(data=NA, ncol=LL, nrow=N.Cycles)
                                 if (length(SelectedCL) == 0){
                                     tkmessageBox(message="Select Elements to Profile first!", title="WARNING", icon="warning")
                                     return()
                                 }
-
                                 idx <- CoreLineList[[1]][1] #it is supposed all the Core.Lines are acquired using the same PE
                                 ReferencePE <- Get_PE(XPSSample[[idx]])
                                 for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
@@ -752,7 +765,6 @@ XPSDepthProfile <- function() {
                                                return()
                                            }
                                            XSampTmp[[kk]] <- XPSSample[[idx]] #load only the selected coreline at etch cycle / tilt angle ii
-
                                         }
                                     }
 #cannot load directly quantification results into QntMat because acquisition of some coreline could be stopped
@@ -781,9 +793,8 @@ XPSDepthProfile <- function() {
                                    X <- matrix(X, nrow=N.Cycles, ncol=1)
                                 }
                                 xx <- min(X)
-                                yy <- 1.2*max(QntMat)
+                                yy <- 1.2*max(na.omit(QntMat))
                                 SymIdx <- c(19,15,17,25,18,1,0,2,6,5,4,8,7,10,9,11,12,14,13,3)
-
                                 matplot(X, QntMat, ylim=c(0,yy), type="b", lty=1, lwd=2, pch=SymIdx, col=MatCol,
                                         cex=1.2, cex.axis=1.3, cex.lab=1.35, xlab=Xlab, ylab="Concentration (%)")
                                 legend(x=xx, y=yy, xjust=0, legend=Lgnd, ncol=(N.CL+1), lty=1, pch=SymIdx,
@@ -913,7 +924,7 @@ XPSDepthProfile <- function() {
                                           Y <<- c(Y, XPSSample[[idx]]@RegionToFit$y)
                                           LevX <<- c(LevX, rep(ii, length(XPSSample[[idx]]@RegionToFit$x))) #LevX distingish among the Core-Lines
                                           CX <<- c(CX, rep(1, length(XPSSample[[idx]]@RegionToFit$x))) #CX distinguish among the Cycles
-
+print(c(X[1], X[2], X[3]))
                                           Plot_Args$data <<- data.frame(x = X, y = Y)
                                 }
 
@@ -975,7 +986,7 @@ XPSDepthProfile <- function() {
                                 SaveGroup <- ttkframe(SaveWindow, borderwidth=0, padding=c(0,0,0,0) )
                                 tkgrid(SaveGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="news")
 
-                                XSframe <- ttklabelframe(SaveGroup, text = "Existing XPSSample", borderwidth=5)
+                                XSframe <- ttklabelframe(SaveGroup, text = "Existing XPSSamples", borderwidth=5)
                                 tkgrid(XSframe, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
 
                                 XS <- tclVar()
@@ -1032,7 +1043,11 @@ XPSDepthProfile <- function() {
                                                      XSampToSave@Comments[1] <- paste("Profiled Core.Lines: ", paste(SelectedCL, collapse=", "), sep="")
                                                      XSampToSave@Comments[2] <- paste("Sputtering Cycle: ", Cycl, sep="")
                                                  }
-
+                                                 LL <- length(XSampToSave)
+                                                 if (XSampToSave[[LL]]@.Data[[1]][1] == XSampToSave[[LL]]@.Data[[1]][2]){ #the two first X coords are the same
+                                                     XSampToSave[[LL]]@.Data[[1]] <- XSampToSave[[LL]]@.Data[[1]][-1] #eliminate first X data
+                                                     XSampToSave[[LL]]@.Data[[2]] <- XSampToSave[[LL]]@.Data[[2]][-1] #eliminate first Y data
+                                                 }
                                                  XSampToSave@Filename <- saveFName #save the new FileName in the relative XPSSample slot
                                                  assign(saveFName, XSampToSave, envir=.GlobalEnv)  #change the activeFName in the .GlobalEnv
                                                  remove(XSampToSave, envir=.GlobalEnv)  #needed to get a correct UpdateXS_Tbl
@@ -1066,6 +1081,7 @@ XPSDepthProfile <- function() {
                                 ResetVars()
                                 tclvalue(BL) <- FALSE
                                 tclvalue(DP) <- FALSE
+                                tclvalue(BLDONE) <- FALSE
                                 for(ii in 1:6){
                                     WidgetState(BLRadio[[ii]], "disabled")
                                 }
@@ -1076,23 +1092,25 @@ XPSDepthProfile <- function() {
                            })
      tkgrid(ResButt, row = 2, column = 1, padx = 5, pady = 5,  sticky="we")
 
-     SaveExitButt <- tkbutton(DPGroup2, text=" SAVE & EXIT ", command=function(){
+     SaveExitButt <- tkbutton(DPGroup2, text=" SAVE ", command=function(){
                                 for(jj in 1:N.Cycles){
                                     for(ii in Matched){
+                                        idx <- CoreLineList[[ii]][jj]
                                         if(DPrflType == "ARXPS"){
-                                           Info <- paste("   ::: ARXPS Take-off Angle (deg.): ", TkoffAngles[jj], sep="")
+                                           Info <- XPSSample[[idx]]@Info
+                                           LL <- length(Info) + 1
+                                           XPSSample[[idx]]@Info[LL] <- paste("   ::: ARXPS Take-off Angle (deg.): ", TkoffAngles[jj], sep="")
                                         }
                                         if(DPrflType == "Sputt. Dpth-Prof."){
-                                           Info <- paste("   ::: Sputter Depth-Profile Cycle N.", jj, sep="")
+                                           Info <- XPSSample[[idx]]@Info
+                                           LL <- length(Info) + 1
+                                           XPSSample[[idx]]@Info[LL] <- paste("   ::: Sputter Depth-Profile Cycle N.", jj, sep="")
                                         }
-                                        idx <- CoreLineList[[ii]][jj]
-                                        XPSSample[[idx]]@Info <<- Info
                                     }
                                 }
                                 assign(activeFName, XPSSample, envir = .GlobalEnv)
                                 XPSSaveRetrieveBkp("save")
                                 options(warn = 0)
-#     	                          tkdestroy(DPwin)
                            })
      tkgrid(SaveExitButt, row = 3, column = 1, padx = 5, pady = 5,  sticky="we")
 

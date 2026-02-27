@@ -74,33 +74,33 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
    }
 
 #modified Giorgio 5-2-2019
-	  if (type=="Generic"){  #creation of an empty component
-	      num <- length(names(Object@Components)) + 1
-   	   slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+   if (type=="Generic"){  #creation of an empty component
+	    num <- length(names(Object@Components)) + 1
+       slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
        names(Object@Components)[num] <- paste("C",as.character(num),sep="")
-	      return(Object)
+	    return(Object)
    }
 
 
-	  if (type=="Linear"){   #creation of an empty component of type Linear
-	      num <- length(names(Object@Components)) + 1
-   	   slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
-	      # Now set h, mu for first call
-	      # set Amplitude:start,min,max
-	      m <-(peakPosition$y[2]-peakPosition$y[1])/(peakPosition$x[1]-peakPosition$x[2]) #line slope
-	      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="m", value = c(m, -Inf, Inf)) #Intensity and position set in XPSAnalysis.r with mouse
-	      # set xCenter: start,min,max
-	      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="c",value = c(0, -Inf, Inf))
-	      # label (used in the plot) # #1, #2, ...
-	      slot(Object@Components[[num]],"label") <-  paste("#", as.character(num),sep="")  #labels of the components in the plot
-   	   # name of this component
-	      names(Object@Components)[num] <- paste("C",as.character(num),sep="") # C1, C2, ...
-   	   # add the y values for this component
-	      Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=Object@RegionToFit$x, y=Object@Baseline$y)
-	      # now set the rsf for this component
-	      # if Object@RSF is not set then call XPSsetRSF
-	      if ( slot(Object,"RSF") != 0 ) {slot(Object@Components[[num]],"rsf") <- slot(Object,"RSF")}
-	      return(Object)
+   if (type=="Linear"){   #creation of an empty component of type Linear
+       num <- length(names(Object@Components)) + 1
+  	    slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+       # Now set h, mu for first call
+       # set Amplitude:start,min,max
+       m <- (peakPosition$y[2]-peakPosition$y[1])/(peakPosition$x[1]-peakPosition$x[2]) #line slope
+       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="m", value = c(m, -Inf, Inf)) #Intensity and position set in XPSAnalysis.r with mouse
+       # set xCenter: start,min,max
+       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="c",value = c(0, -Inf, Inf))
+       # label (used in the plot) # #1, #2, ...
+       slot(Object@Components[[num]],"label") <-  paste("#", as.character(num),sep="")  #labels of the components in the plot
+  	    # name of this component
+       names(Object@Components)[num] <- paste("C",as.character(num),sep="") # C1, C2, ...
+  	    # add the y values for this component
+       Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=Object@RegionToFit$x, y=Object@Baseline$y)
+       # now set the rsf for this component
+       # if Object@RSF is not set then call XPSsetRSF
+       if ( slot(Object,"RSF") != 0 ) {slot(Object@Components[[num]],"rsf") <- slot(Object,"RSF")}
+       return(Object)
    }
 
 
@@ -130,14 +130,14 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="A",value = c(peakPosition$y[1], 0.5*peakPosition$y[1], 1.5*peakPosition$y[1]))
       # set B: start,min,max
       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="B",value = c(peakPosition$y[3], -1, 1.5*peakPosition$y[3]))
-	     # Now just set the component identifier
-	     # label (used in the plot)
-	     slot(Object@Components[[num]],"label") <-"HS"   #Label indicating Hill Sigmoid in the plot
-	     # name of this component
-	     names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
-	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=XXX, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
+	   # Now just set the component identifier
+	   # label (used in the plot)
+	   slot(Object@Components[[num]],"label") <-"HS"   #Label indicating Hill Sigmoid in the plot
+	   # name of this component
+	   names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
+	   Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=XXX, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
       Object@Fit <- list(x=XXX, y=Object@Components[[num]]@ycoor, idx=idx)  #save new absissas and index of flexpoint
-	     return(Object)
+	   return(Object)
    }
 
    if (type=="HillSigmoid.KE"){   #creation of an empty component of type VBtop: needed to store VBtop Position
@@ -167,12 +167,12 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="A",value = c(peakPosition$y[1], 0.5*peakPosition$y[1], 1.5*peakPosition$y[1]))
       # set B: start,min,max
       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="B",value = c(peakPosition$y[3], -1, 1.5*peakPosition$y[3]))
-	     # Now just set the component identifier
-	     # label (used in the plot)
-	     slot(Object@Components[[num]],"label") <-"HS"   #Label indicating Hill Sigmoid in the plot
-	     # name of this component
-	     names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
-	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=XXX, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
+	   # Now just set the component identifier
+	   # label (used in the plot)
+	   slot(Object@Components[[num]],"label") <-"HS"   #Label indicating Hill Sigmoid in the plot
+	   # name of this component
+	   names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
+	   Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=XXX, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
       Object@Fit <- list(x=XXX, y=NULL, idx=idx)  #save new absissas and index of flexpoint
 	   return(Object)
    }
@@ -180,50 +180,50 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 
    #modified Giorgio 20-12-2020
    if (type=="VBFermi"){   #creation of an empty component of type VBFermi: needed to store VBFermi Position
-      num <- length(names(Object@Components)) + 1
-      # Set the x,y coord
-      X <- peakPosition$x
+       num <- length(names(Object@Components)) + 1
+       # Set the x,y coord
+       X <- peakPosition$x
 
-      # substract the baseline value correspondent to the X position
-      idx <- findXIndex(Object@Baseline$x, X)
-      Y <- peakPosition$y - Object@Baseline$y[idx]
-      RTF_x <- Object@RegionToFit$x
-      slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
-      # set Amplitude:start,min,max
-      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="h", value = c(Y, 0, 10*Y))
-      # set Ef: start,min,max
-      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="mu",value = c(X, -2, 2))
-      # set k: start,min,max
-      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="k",value = c(1, 0, 5))
-      # Now just set the component identifier
-	     # label (used in the plot)
-	     slot(Object@Components[[num]],"label") <-"Ef"   #Label indicating the Fermi Edge in the plot
-	     # name of this component
-	     names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
-	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=RTF_x, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
-      Object@Fit <- list(x=XXX, y=NULL, idx=idx)  #save new absissas and index of flexpoint
-	     return(Object)
+       # substract the baseline value correspondent to the X position
+       idx <- findXIndex(Object@Baseline$x, X)
+       Y <- peakPosition$y - Object@Baseline$y[idx]
+       RTF_x <- Object@RegionToFit$x
+       slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+       # set Amplitude:start,min,max
+       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="h", value = c(Y, 0, 10*Y))
+       # set Ef: start,min,max
+       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="mu",value = c(X, -2, 2))
+       # set k: start,min,max
+       slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="k",value = c(1, 0, 5))
+       # Now just set the component identifier
+	    # label (used in the plot)
+	    slot(Object@Components[[num]],"label") <-"Ef"   #Label indicating the Fermi Edge in the plot
+	    # name of this component
+	    names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
+	    Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=RTF_x, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
+       Object@Fit <- list(x=XXX, y=NULL, idx=idx)  #save new absissas and index of flexpoint
+	    return(Object)
    }
 
 #modified Giorgio 17-1-2017
   	if (type=="VBtop"){   #creation of an empty component of type VBtop: needed to store VBtop Position
 	     num <- length(names(Object@Components)) + 1
 	     #now call the prototype function relative to funct_name defined in XPSFitCompClass
-     	slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
-     	#now compute the fit function and add the  values for this component see XPSFitCompClass
+        slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+     	  #now compute the fit function and add the  values for this component see XPSFitCompClass
 	     Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=Object@RegionToFit$x, y=Object@Baseline$y)
 	     # Now just set the component identifier
 	     # label (used in the plot) # #1, #2, ...
- 	    slot(Object@Components[[num]],"label") <-"VBtop"   #Label indicating the VBtop in the plot
- 	    # name of this component
- 	    names(Object@Components)[num] <- paste("C",as.character(num),sep="") # V name of the VBtop component
-  	   return(Object)
+        slot(Object@Components[[num]],"label") <-"VBtop"   #Label indicating the VBtop in the plot
+ 	     # name of this component
+ 	     names(Object@Components)[num] <- paste("C",as.character(num),sep="") # V name of the VBtop component
+  	     return(Object)
    }
 
 	  if (type=="Derivative"){   #creation of an empty component of type VBtop: needed to store VBtop Position
 	     num <- length(names(Object@Components)) + 1
-     	slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
-     	# add the y values for this component: in this case a series of NA (see XPSFitAlgorithms.r)
+     	  slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+     	  # add the y values for this component: in this case a series of NA (see XPSFitAlgorithms.r)
 	     # Now just set the component identifier
 	     # label (used in the plot)
 	     slot(Object@Components[[num]],"label") <-"D1"   #Label indicating the Derivate in the plot
@@ -243,7 +243,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	  # Set the x,y coord
 	  X <- peakPosition$x   #this corresponds to the mu parameter = position of the fitting comp.
 	  # substract the baseline value correspondent to the X position
-   idx <- findXIndex(Object@Baseline$x, X)
+     idx <- findXIndex(Object@Baseline$x, X)
 	  Y <- peakPosition$y - Object@Baseline$y[idx]
 
 	  # increase the number of components
@@ -251,7 +251,8 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 
 	  # add the new component: recall the fitAlgorithm with all the preset parameters (start, min, max) values
 	  # and fill the slots Component@param,  Component@rsf, Component@ycoor, Component@link
-	  slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
+	  slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]] #this call to fitAlgorithms defined the slot "param"
+
 	  # Now set h, mu for first call
 	  # set Amplitude:start,min,max
 	  slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="h", value = c(Y, 0, Y*range_h))
@@ -260,9 +261,15 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	  slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="mu",value = c(X, X-range_mu, X+range_mu))
 
 	  # needed new value of sigma passed through ... to AddFitComponent()
-   if("sigma" %in% names(dot.args)){
+     if("sigma" %in% names(dot.args)){
 	      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="sigma",value = c(dot.args$sigma, 0, 10))
-   }
+     }
+     if("sigmaDS" %in% names(dot.args)){
+	      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="sigma",value = c(dot.args$sigma, 0, 10))
+     }
+     if("sigmaG" %in% names(dot.args)){
+	      slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="sigma",value = c(dot.args$sigma, 0, 10))
+     }
 
    # label (used in the plot) # #1, #2, ...
 	  slot(Object@Components[[num]],"label") <- paste("#", as.character(num),sep="")
@@ -271,8 +278,8 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 #--- Compute the conversion factor to obtain a component intensity == mouse position (add component in XPSAnalysis.r)
 #    NB: this operation works if all the slots of the new component are defined
 
-   Yfactor <- GetHvalue(Object, num, type, 1)  #computes the intensity of the fit function selected for the new fitComponent
-   #--- Re-set Amplitude
+     Yfactor <- GetHvalue(Object, num, type, 1)  #computes the intensity of the fit function selected for the new fitComponent
+#--- Re-set Amplitude
 	  slot(Object,"Components")[[num]] <- setParam(Object@Components[[num]],variable="h", value = c(Yfactor*Y, 0, Yfactor*Y*range_h))
 
 	  # name of this component
@@ -285,7 +292,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	  slot(Object@Components[[num]],"rsf") <- slot(Object,"RSF")
   
 	  ## sort the Components slot
-  	Object <- sortComponents(Object)
+   	Object <- sortComponents(Object)
 	  return(Object)
 }
 

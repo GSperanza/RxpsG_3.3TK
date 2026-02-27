@@ -1145,7 +1145,7 @@ XPSAnalysis <- function() {
   tcl(nbComponents,"select", 0)  #Set NB page=1, Select works on base 0
   tcl(NB,"select", 0)  #Set NB page=1, Select works on base 0
   tcl("update", "idletasks") #Complete the idle tasks
-  tkwait.window(MainWindow)
+#  tkwait.window(MainWindow)
 }
 
 

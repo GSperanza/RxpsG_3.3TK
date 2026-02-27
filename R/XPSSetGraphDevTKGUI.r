@@ -178,6 +178,7 @@ XPSSetGraphDev <- function() {
                         tkconfigure(WS_Slider, variable=7)
                         tkconfigure(WSvalue, text=paste("Graphical Window size: ", 7, sep=""))
                         XPSSettings$General[4] <<- 7
+                        plot.new()
           })
    tkgrid(ResetBtn, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 

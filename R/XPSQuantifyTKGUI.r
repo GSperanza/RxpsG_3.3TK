@@ -40,6 +40,33 @@
 
 XPSQuant <- function(){
 
+   CntrlCL <- function(ii){
+      FuncNames <- c("Linear", "ExpDecay", "PowerDecay", "Sigmoid", "HillSigmoid", "VBFermi", "VBtop", "Derivative", "FitProfile")
+      stopQuant <- FALSE
+      N_CL <- length(XPSSample)
+      txt <- ""
+      for (ii in 1:N_CL){
+           if (hasBaseline(XPSSample[[ii]]) || hasFit(XPSSample[[ii]])) {
+               CompFuncNames <- sapply(XPSSample[[ii]]@Components, function(x) x@funcName)
+               idx <- 0
+               FName <- intersect(CompFuncNames, FuncNames)
+               if(length(FName) > 0 ){
+                  idx <- grep(FName, CompFuncNames)
+                  txt <- paste(txt ,"=> ", XPSSample[[ii]]@Symbol, "\n", sep="")
+                  if (length(idx) > 0) {
+                      cat("\n Cannot Apply Quantification to", XPSSample[[ii]]@Symbol)
+                  }
+               }
+           }
+      }
+      if (txt != ""){
+          txt <- paste("Cannot use the following Core.Lines for Quantification:\n", txt, sep="")
+          tkmessageBox(message=txt)
+          stopQuant <- TRUE
+      }
+      return(stopQuant)
+   }
+
 #Extract PE from each slot @Info of the XPSSample spectra
    RetrivePE <- function(CL=NULL){  #Retrieve the PE value from the CL coreline information slot
       PEnergy <- NULL
@@ -121,8 +148,7 @@ XPSQuant <- function(){
 # from the survey and a proportion coeff. is computed
 # This proportion coeff. is used to normalize Corelines acquired at different PE.
 
-#variables
-                                   
+
       GetArea <- function(Object, Idx){
          BaseLine <- NULL
          Idx <- sort(Idx, decreasing=FALSE)
@@ -197,6 +223,7 @@ XPSQuant <- function(){
       idx1 <- 1
       idx2 <- length(XPSSample[[RefIdx]]@RegionToFit$x)
       Area1 <- GetArea(XPSSample[[RefIdx]]@RegionToFit, c(idx1, idx2))
+      FuncNames <- c("Linear", "ExpDecay", "PowerDecay", "Sigmoid", "HillSigmoid", "VBFermi", "VBtop", "Derivative", "FitProfile")
 
 
       #Now find the same Reference CL in survey and compute the Area2
@@ -349,9 +376,8 @@ XPSQuant <- function(){
 
 #XPScalc() function cannot be applied since here you can select fit components and their RSF
    quant <- function(CoreLineComp){
-      N_CL <- length(CoreLineComp)
+      N_CL <- length(CoreLineComp) #CoreLineComp[[ii]][jj] ii runs on the selected corelines, jj runs on the fit components
       maxFitComp <- 0
-
       for(ii in 1:length(CoreLineComp)){
          LL <- length(CoreLineComp[[ii]])
          if (LL > maxFitComp) { maxFitComp <- LL }
@@ -683,6 +709,7 @@ XPSQuant <- function(){
       tkgrid(QuantGroup, row = 1, column = 1, padx = 0, pady = 0, sticky="w")
 
       QuantBtn <- tkbutton( QuantGroup, text=" QUANTIFY ", command=function(){
+                           if (CntrlCL() == TRUE) { return() }  #controls the Core.Lines that quantification can be applied
                            SetRSF()
 
                            #extract indexes of CoreLines selected for quantification
@@ -693,7 +720,6 @@ XPSQuant <- function(){
                                                   return(x)
                                                })
                            CheckedCL <- as.integer(CheckedCL)
-
                            #Control on the Pass Energies
                            CK.PassE <- PassE[CheckedCL] #extracts PE values corresponding to the elements selected for quantification
                            idx <- unname(which(CK.PassE != CK.PassE[1])) #are the selected elements acquired at different PE?
@@ -928,24 +954,37 @@ XPSQuant <- function(){
    NmaxFitComp <- 0
    QTabTxt <- ""    #text containing Quantification results for the Qtable gtext()
    TabTxt <- ""     #text containing Quantification results for the RStudio consolle
+   EXIT <- FALSE
 
    jj <- 1
-   for(ii in 1:NCoreLines){ #Baseline MUST be defined for the quantification
-      if (length(XPSSample[[ii]]@RegionToFit) > 0){ #a baseline is defined
-         CoreLineNames[jj] <- SpectList[ii]  #Save the coreline name where a baseline is defined
-         CoreLineIndx[jj] <- ii              #vector containing indexes of the corelines where a baseline is defined
-         jj <- jj+1
-         NFC <- length(XPSSample[[ii]]@Components)
-         if (NFC > NmaxFitComp) {NmaxFitComp <- NFC}
-      }
+   for(ii in 1:NCoreLines){
+       #If XPSSample is a Depth Profile EXIT XPSQuant()
+       if (length(grep("Sputter Depth-Profile", XPSSample[[ii]]@Info))){
+           tkmessageBox(message="Cannot use Quantification for Depth-Profiles! \nUse the ' Depth Profile ' Option",
+                        title="WARNING", icon="warning")
+           EXIT <- TRUE
+           break()
+       }
+       tkmessageBox(message="OK")
+       #Baseline MUST be defined for the quantification
+       if (length(XPSSample[[ii]]@RegionToFit) > 0){ #a baseline is defined
+           CoreLineNames[jj] <- SpectList[ii]  #Save the coreline name where a baseline is defined
+           CoreLineIndx[jj] <- ii              #vector containing indexes of the corelines where a baseline is defined
+           jj <- jj+1
+           NFC <- length(XPSSample[[ii]]@Components)
+           if (NFC > NmaxFitComp) {NmaxFitComp <- NFC}
+       }
    }
+   if (EXIT) { return() }
+
    if (length(CoreLineIndx) == 0){
       tkmessageBox(message="WARNING: NO Core.Line BaseLine found in this XPS Sample", title = "WARNING", icon = "warning")
       return()
    }
    NCoreLines <- length(CoreLineIndx) #now only the corelines with baseline are considered for the quantification
 
-
+   for(ii in 1:NCoreLines) {
+   }
 #===== GUI =====
    Qwin <- tktoplevel()
    tkwm.title(Qwin," QUANTIFICATION FUNCTION ")

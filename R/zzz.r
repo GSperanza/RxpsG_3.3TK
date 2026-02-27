@@ -1,7 +1,7 @@
 #Loads the autoscroll.tcl library to manage the scrollbars added to widgets
 #run the RxpsG software
 
-.onLoad <- function(libname, pkgname){
+.onLoad <- function(libname, pkgname){ #Attention: (libname, pkgname) needed in the .onload function
 #---GlobalVar initialization
    assign("activeFName", NULL, envir=.GlobalEnv)
    assign("activeSpectIndx", NULL, envir=.GlobalEnv)
