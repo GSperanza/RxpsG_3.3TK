@@ -29,6 +29,23 @@ XPSSpectNameChange <- function(){
             }
       }
    }
+   
+   ResetVars <- function(){
+      FNameList <- XPSFNameList()  #list of the XPSSample loaded in the Global Env
+      FName <<- get(XPSSampName, envir=.GlobalEnv)  #load in FName the XPSSample data
+      OldSpectList <<- list(items=names(FName))
+      SpectList <<- unname(sapply(FName, function(z) z@Symbol))
+      if(identical(OldSpectList$items,SpectList) == FALSE) {
+         cat("\n CL_Names:  ",OldSpectList$items, sep="  ")
+         cat("\n Stored:    ",SpectList, sep="  ")
+         txt <- " Check Core Line Names Please. \n Inconsistency with the Stored Name-List"
+         tkmessageBox(message=txt, title="WARNING", icon="warning")
+      }
+      OldSpectList <<- data.frame(OldSpectList, stringsAsFactors=FALSE)
+      SpectList <<- OldSpectList
+      stopLoop <<- FALSE
+   }
+
 
 #--- Global variables definition ---
    XPSSampName <- get("activeFName", envir = .GlobalEnv)
@@ -49,6 +66,7 @@ XPSSpectNameChange <- function(){
    OldSpectList <- data.frame(OldSpectList, stringsAsFactors=FALSE)
    SpectList <- OldSpectList
    stopLoop <- FALSE
+   assign("SpectList", SpectList, .GlobalEnv)
 
 
 
@@ -65,6 +83,7 @@ XPSSpectNameChange <- function(){
    XS <- tclVar(activeFName)
    LabXS <- ttkcombobox(LabFrame1, width = 25, textvariable = XS, values = FNameList)
    tkbind(LabXS, "<<ComboboxSelected>>", function(){
+#                        ResetVars()
                         stopLoop <<- TRUE
                         activeFName <<- tclvalue(XS)  #save the XPSSample name
                         tclvalue(XSNM) <<- activeFName
@@ -74,22 +93,12 @@ XPSSpectNameChange <- function(){
                         SpectList <<- list(items=names(FName))
                         SpectList <<- data.frame(SpectList, stringsAsFactors=FALSE)
                         OldSpectList <<- SpectList
+                        assign("SpectList", SpectList, .GlobalEnv)
                         plot(FName)
                         clear_widget(LabFrame2)
-                        DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
-                                               Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,
+                        SpectList <<- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
+                                               Width=15, Modify=TRUE, Env=.GlobalEnv, parent=LabFrame2,
                                                Row=1, Column=1, Border=c(10, 10, 10, 10))
-                        SpectList <<- get("SpectList", envir=environment())
-                        for (ii in 1:length(FName)){
-                             if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
-                                 FName[[ii]]@Symbol <<- SpectList$items[ii]
-                                 FName[[ii]]@RSF <<- 0 #otherwise XPSClass does not set RSF (see next row)
-                                 FName[[ii]] <<- XPSsetRSF(FName[[ii]])
-                             }
-                        }
-                        FName@names <<- unname(unlist(SpectList))
-                        stopLoop <<- FALSE
-                        SpectListCtrl()
                })
    tkgrid(LabXS, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -97,7 +106,7 @@ XPSSpectNameChange <- function(){
    tkgrid(LabFrame2, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
 
    SpectList <- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
-                         Width=15, Modify=TRUE, Env=environment(), parent=LabFrame2,
+                         Width=15, Modify=TRUE, Env=.GlobalEnv, parent=LabFrame2,
                          Row=1, Column=1, Border=c(10, 10, 10, 10))
 
    LabFrame3 <- ttklabelframe(LabGroup, text = " Set the New XPS-Sample Name ", borderwidth=2)
@@ -106,7 +115,6 @@ XPSSpectNameChange <- function(){
    XSNM <- tclVar(activeFName)  #sets the initial msg
    XSName <- ttkentry(LabFrame3, textvariable=XSNM, foreground="grey")
    tkbind(XSName, "<FocusIn>", function(K){
-#                        tclvalue(XSNM) <<- ""
                         tkconfigure(XSName, foreground="red")
                })
    tkbind(XSName, "<Key-Return>", function(K){
@@ -134,7 +142,7 @@ XPSSpectNameChange <- function(){
    tkgrid(BtnGroup, row = 5, column = 1, padx = 0, pady = 0, sticky="w")
 
    SaveBtn <- tkbutton(BtnGroup, text="SAVE", width=10, command=function(){
-                        SpectList <<- get("SpectList", envir=environment())
+                        SpectList <<- get("SpectList", envir=.GlobalEnv)
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
                                  FName[[ii]]@Symbol <<- SpectList$items[ii]
@@ -144,21 +152,22 @@ XPSSpectNameChange <- function(){
                         }
                         FName@names <<- unname(unlist(SpectList))
                         stopLoop <<- FALSE
+                        OldSpectList <<- SpectList
                         SpectListCtrl()
-                        if( activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
-       	                assign("activeFName", XPSSampName, envir=.GlobalEnv)
-       	                assign(XPSSampName, FName, envir=.GlobalEnv)
-       	                FNameList <- XPSFNameList()
-       	                tkconfigure(LabXS, values = FNameList)
+                        if (activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
+                        assign("activeFName", XPSSampName, envir=.GlobalEnv)
+    	                  assign(XPSSampName, FName, envir=.GlobalEnv)
+   	                  FNameList <- XPSFNameList()
+   	                  tkconfigure(LabXS, values = FNameList)
                         plot(FName)
-      	                 XPSSaveRetrieveBkp("save")
-      	                 stopLoop <<- TRUE
-      	                 UpdateXS_Tbl()
+      	               XPSSaveRetrieveBkp("save")
+      	               stopLoop <<- TRUE
+      	               UpdateXS_Tbl()
                })
    tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
    SaveExitBtn <- tkbutton(BtnGroup, text=" SAVE & EXIT ", width=15, command=function(){
-                        SpectList <<- get("SpectList", envir=environment())
+                        SpectList <<- get("SpectList", envir=.GlobalEnv)
                         for (ii in 1:length(FName)){
                              if (SpectList$items[ii] != OldSpectList$items[ii] || SpectList$items[ii] != FName[[ii]]@Symbol){
                                  FName[[ii]]@Symbol <<- SpectList$items[ii]
@@ -169,14 +178,15 @@ XPSSpectNameChange <- function(){
                         FName@names <<- unname(unlist(SpectList))
                         stopLoop <<- FALSE
                         SpectListCtrl()
-                        if( activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
-       	                assign("activeFName", XPSSampName, envir=.GlobalEnv)
-       	                assign(XPSSampName, FName, envir=.GlobalEnv)
+                        if (activeFName != XPSSampName){ rm(list=activeFName, envir=.GlobalEnv) }
+                        assign("activeFName", XPSSampName, envir=.GlobalEnv)
+       	               assign(XPSSampName, FName, envir=.GlobalEnv)
                         plot(FName)
-      	                 tkdestroy(LabWin)
-      	                 XPSSaveRetrieveBkp("save")
-      	                 stopLoop <<- TRUE
-      	                 UpdateXS_Tbl()
+                        rm(list="SpectList", envir=.GlobalEnv)
+      	               tkdestroy(LabWin)
+      	               XPSSaveRetrieveBkp("save")
+      	               stopLoop <<- TRUE
+      	               UpdateXS_Tbl()
                })
    tkgrid(SaveExitBtn, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
    SpectList <- OldSpectList

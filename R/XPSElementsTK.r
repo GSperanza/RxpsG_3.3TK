@@ -176,7 +176,7 @@ XPSDefineRSF <- function(Object=NULL, Symbol=NULL){
      MakeRSFTbl <- function(){
         Element <<- as.data.frame(Element)
         RSFWindow <- tktoplevel()
-        tkwm.title(RSFWindow,"XPS ANALYSIS")
+        tkwm.title(RSFWindow,"SET RSF")
         tkwm.geometry(RSFWindow, "+100+50")   #position respect topleft screen corner
 
         MainGroup <- ttkframe(RSFWindow, borderwidth=0, padding=c(0,0,0,0) )

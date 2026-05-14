@@ -417,7 +417,8 @@ sapply(NeededPckgs, function(x) { if (is.na(match(x, Pkgs)) == TRUE){  #check if
       })
 
       tkadd(FileMenu, "command", label = "   Remove Current XPS-Sample", command = function() {
-            answ <- tkmessageBox(message="Removing the XPS Samples: all data/analyses will be lost. Proceed anyway?", type="yesno", title="Confirm Remove XPSSample", icon="warning")
+            txt <-  paste("Removing", activeFName,"XPS-Sample: \nall data/analyses will be lost. Proceed anyway?", sep=" ")
+            answ <- tkmessageBox(message=txt, type="yesno", title="Confirm Remove XPSSample", icon="warning")
             if (tclvalue(answ) == "yes"){
                XPSSample <- get("activeFName",envir=.GlobalEnv)
                remove(list=XPSSample,pos=1,envir=.GlobalEnv)
@@ -469,7 +470,7 @@ sapply(NeededPckgs, function(x) { if (is.na(match(x, Pkgs)) == TRUE){  #check if
       })
 
       tkadd(FileMenu, "command", label = "   Remove All XPS-Samples", command = function() {
-            answ <- tkmessageBox(message="Removing all the XPS Samples: all data/analyses will be lost. Proceed anyway?", type="yesno", title="Confirm Remove XPSSample", icon="warning")
+            answ <- tkmessageBox(message=" Removing all the XPS-Samples: \n all data/analyses will be lost. Proceed anyway?", type="yesno", title="Confirm Remove XPSSample", icon="warning")
             if (tclvalue(answ) == "yes"){
                FNameList <- XPSFNameList(warn=TRUE)
                LL=length(FNameList)

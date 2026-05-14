@@ -153,7 +153,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
       LL <- length(RTF_x)
       XXX <- NULL
       for (ii in 1:LL){        #new X coords: Step and number of absissas are equal to the original ones
-          XXX[ii]<-dx*(ii-1)
+          XXX[ii]<- dx*(ii-1)
       }
       newX <- XXX[idx]
       slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
@@ -187,6 +187,8 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
        # substract the baseline value correspondent to the X position
        idx <- findXIndex(Object@Baseline$x, X)
        Y <- peakPosition$y - Object@Baseline$y[idx]
+cat("\n aaaa",idx, Object@Baseline$y[idx], peakPosition$x, peakPosition$y)
+
        RTF_x <- Object@RegionToFit$x
        slot(Object,"Components")[[num]] <- fitAlgorithms[[funct]]
        # set Amplitude:start,min,max
@@ -201,7 +203,7 @@ XPSaddComponent <- function(Object, type, range_h=5, range_mu=1.5, peakPosition=
 	    # name of this component
 	    names(Object@Components)[num] <- "C1"  # The name of the HillSigmoid component
 	    Object@Components[[num]] <- Ycomponent(Object@Components[[num]], x=RTF_x, y=Object@Baseline$y) #Ycomponent saves the fitting component but does not modify the RegionToFit$x
-       Object@Fit <- list(x=XXX, y=NULL, idx=idx)  #save new absissas and index of flexpoint
+       Object@Fit <- list(x=X, y=NULL, idx=idx)  #save new absissas and index of flexpoint
 	    return(Object)
    }
 

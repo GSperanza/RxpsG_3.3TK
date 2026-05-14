@@ -456,8 +456,18 @@ setMethod("XPSsetRegionToFit", signature(object="XPSCoreLine"),
      } else {
         slot(object,"Boundaries") <- limits
      }
-     index <- which( unlist(object@.Data[1]) >= min(limits$x) & unlist(object@.Data[1]) <= max(limits$x) )
-     slot(object, "RegionToFit") <- list(x=object[[1]][index], y=object[[2]][index])
+cat("\n @@@@@"); print(object@Baseline$x)
+     if (length(object@Baseline$x) == 0) {
+         index <- which( unlist(object@.Data[1]) >= min(limits$x) & unlist(object@.Data[1]) <= max(limits$x) )
+         slot(object, "RegionToFit") <- list(x=object[[1]][index], y=object[[2]][index])
+     }
+     if (length(object@Baseline$x) > 0) { #If baseline present force Baseline$x, $y to be the same as those of RegionToFit
+         index <- which( unlist(object@Baseline$x) >= min(limits$x) & unlist(object@Baseline$x) <= max(limits$x) )
+         object@Baseline <- list(x=object@Baseline$x[index], y=object@Baseline$y[index]) #operates on the baseline
+         object@RegionToFit <- list(x=object@Baseline$x[index], y=object[[2]][index])  #generates the new RegionToFit from Raw Data
+     }
+cat("\n @@@@@"); print(object@Baseline$x)
+cat("\n @@@@@"); print(object@Baseline$y)
      return(object)
   }
 )
@@ -1179,6 +1189,12 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
 #           YY <- YY[,1:2]  #selects original and Baseline data
            xlim <- range(XX)
            ylim <- range(YY)
+cat("\nVBVBVBVB", is.na(X[, 1]))
+print(str(X[,1]))
+print(str(X[,2]))
+print(xlim)
+print(ylim)
+
            if (is.null(ylim) == TRUE || any(is.na(ylim)) == TRUE){ ylim <- range(X[,2]) }
            if (x@Flags[1]) { xlim <- rev(xlim) } ## reverse x-axis
            if (NComp > 0) {
@@ -1218,6 +1234,7 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
                          x@Components[[idx]]@param["h", "max"])
            }
            points(pos$x, pos$y, col="orange", cex=3, lwd=2, pch=3)
+
        } else if (length(grep("\U0394.", x@Symbol)) > 0 || length(grep("d.D.", x@Symbol)) > 0){  #CoreLine name contains greek symbol DELTA
 #--- Plot Derivative Max Min
            XX <- X[,1]  ## x-axis vector first column

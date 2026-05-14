@@ -14,9 +14,6 @@
 #CMPCK[[ii]] <<- valori componenti selezionate == "C1", "C3", "C4"...
 
 
-
-
-
 #Function to perform quantifications on XPS spectra
 #allowing selection of corelines and fit components
 #for the computation of the atomic concentrations.
@@ -965,7 +962,6 @@ XPSQuant <- function(){
            EXIT <- TRUE
            break()
        }
-       tkmessageBox(message="OK")
        #Baseline MUST be defined for the quantification
        if (length(XPSSample[[ii]]@RegionToFit) > 0){ #a baseline is defined
            CoreLineNames[jj] <- SpectList[ii]  #Save the coreline name where a baseline is defined

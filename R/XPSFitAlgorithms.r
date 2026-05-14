@@ -616,7 +616,7 @@ HillSigmoid <- function(x, h, mu, pow, A, B) { #decreases with incresing x value
 
 VBFermi <- function(x, h, mu, k) {
 
-    return( h/(1+exp(-k*(x - mu)/(8.617333262145*1e-5*295))) )
+    return(2*h/(1+exp(-k*(x - mu)/(8.617333262145*1e-5*295))) )
 }
 
 ## =======================================================================

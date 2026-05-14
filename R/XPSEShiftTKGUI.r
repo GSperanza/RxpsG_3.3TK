@@ -14,20 +14,13 @@
 
 XPSEshift <- function(){
 
-Widget_State <- function(widget, state = c("normal", "disabled")) {
-  state <- match.arg(state)
-  childID <- tclvalue(tkwinfo("children",widget))
-  selected <- sapply(unlist(strsplit(childID, " ")), function(x) {
-  tkconfigure(x, "-state", state)})
-}
-
   GetCurPos <- function(SingClick){
-       Widget_State(Frame01,"disabled") #prevent exiting Analysis if locatore active
-       Widget_State(Frame2,"disabled")
-       Widget_State(Frame3,"disabled")
-       Widget_State(Frame4,"disabled")
-       Widget_State(Frame5,"disabled")
-       Widget_State(Frame6,"disabled")
+       WidgetState(Frame1,"disabled") #prevent exiting Analysis if locatore active
+       WidgetState(Frame2,"disabled")
+       WidgetState(Frame3,"disabled")
+       WidgetState(Frame4,"disabled")
+       WidgetState(Frame5,"disabled")
+       WidgetState(Frame6,"disabled")
        tcl("update", "idletasks")
        EXIT <- FALSE
        LocPos <<- list(x=0, y=0)
@@ -36,21 +29,27 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
        while(EXIT == FALSE){  #if pos1 not NULL a mouse butto was pressed
             LocPos <<- locator(n=Nclk, type="p", pch=3, cex=1.5, col="blue", lwd=2) #to modify the zoom limits
             if (is.null(LocPos)) {
-                Widget_State(Frame01,"normal") #prevent exiting Analysis if locatore active
-                Widget_State(Frame2,"normal")
-                Widget_State(Frame3,"normal")
-                Widget_State(Frame4,"normal")
-                Widget_State(Frame5,"normal")
-                Widget_State(Frame6,"normal")
+                if (length(FitCompList) > 0){
+                    WidgetState(Frame1,"normal") #prevent exiting Analysis if locatore active
+                }
+                WidgetState(Frame1,"normal")
+                WidgetState(Frame2,"normal")
+                WidgetState(Frame3,"normal")
+                WidgetState(Frame4,"normal")
+                WidgetState(Frame5,"normal")
+                WidgetState(Frame6,"normal")
                 EXIT <- TRUE
             } else {
                 if (SingClick == 1){
-                    Widget_State(Frame01,"normal") #prevent exiting Analysis if locatore active
-                    Widget_State(Frame2,"normal")
-                    Widget_State(Frame3,"normal")
-                    Widget_State(Frame4,"normal")
-                    Widget_State(Frame5,"normal")
-                    Widget_State(Frame6,"normal")
+                    if (length(FitCompList) > 0){
+                        WidgetState(Frame1,"normal") #prevent exiting Analysis if locatore active
+                    }
+                    WidgetState(Frame1,"normal")
+                    WidgetState(Frame2,"normal")
+                    WidgetState(Frame3,"normal")
+                    WidgetState(Frame4,"normal")
+                    WidgetState(Frame5,"normal")
+                    WidgetState(Frame6,"normal")
                     EXIT <- TRUE
                 } else if (ZOOM==TRUE) {
                     if (SingClick == 2) {
@@ -130,6 +129,13 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
    LocPos <- list(x=NULL, y=NULL)
    Corners <- list(x=NULL, y=NULL)
    ZOOM <- FALSE
+   Eobj2 <- list()
+   Frame1 <- list()
+   Frame2 <- list()
+   Frame3 <- list()
+   Frame4 <- list()
+   Frame5 <- list()
+   Frame6 <- list()
 
 
 #----- Widget ---
@@ -144,10 +150,10 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     ESGroup <- ttkframe(ESWin, borderwidth=0, padding=c(0,0,0,0))
     tkgrid(ESGroup, row=1, column=1, padx = 5, pady=5, sticky="news")
 
-    Frame01 <- ttklabelframe(ESGroup, text = "Select the XPSSample and Core Line", borderwidth=2, padding=c(5,5,5,5))
-    tkgrid(Frame01, row=1, column=1, padx = 5, pady=5, sticky="news")
+    Frame1 <- ttklabelframe(ESGroup, text = "Select the XPSSample and Core Line", borderwidth=2, padding=c(5,5,5,5))
+    tkgrid(Frame1, row=1, column=1, padx = 5, pady=5, sticky="news")
     XS <- tclVar(activeFName)
-    Eobj0 <- ttkcombobox(Frame01, width = 20, textvariable = XS, values = FNameList)
+    Eobj0 <- ttkcombobox(Frame1, width = 20, textvariable = XS, values = FNameList)
     tkbind(Eobj0, "<<ComboboxSelected>>", function(){
                       activeFName <<- tclvalue(XS)
                       FName <<- get(activeFName,envir=.GlobalEnv)
@@ -162,17 +168,27 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
     tkgrid(Eobj0, row=1, column=1, padx=5, pady=5)
 
     CL <- tclVar("")
-    Eobj1 <- ttkcombobox(Frame01, width = 20, textvariable = CL, values = SpectList)
+    Eobj1 <- ttkcombobox(Frame1, width = 20, textvariable = CL, values = SpectList)
     tkbind(Eobj1, "<<ComboboxSelected>>", function(){
                       SpectName <- tclvalue(CL)
                       SpectName <- unlist(strsplit(SpectName, "\\."))   #skip the number at beginning of string
                       SpectIndx <<- as.numeric(SpectName[1])
+                      XYrange$x <<- range(FName[[SpectIndx]]@.Data[[1]])
+                      XYrange$y <<- range(FName[[SpectIndx]]@.Data[[2]])
                       plot(FName[[SpectIndx]])
                       FitCompList <<- names(FName[[SpectIndx]]@Components)
 #now update the VALUES of combobox Eobj2 initially void
 #tkconfigure ensures the handler of Eobj2 is working properly
-                      tkconfigure(Eobj2, values=FitCompList)
-           })
+                      if (length(FitCompList) > 0){
+                          WidgetState(Eobj2,"normal")
+                          tkconfigure(Eobj2, values=FitCompList)
+                          tkconfigure(NC_Info, text="   ")
+                      } else {
+                          txt <- paste("No Fit Present in ", FName[[SpectIndx]]@Symbol, sep="")
+                          tkconfigure(NC_Info, text=txt)
+                          WidgetState(Eobj2,"disabled") #prevent selecting Components when CoreLine not defined
+                      }
+          })
     tkgrid(Eobj1, row=1, column=2, padx=5, pady=5)
 
     Frame2 <- ttklabelframe(ESGroup, text = "Select the Fit Component", borderwidth=2, padding=c(5,5,5,5))
@@ -198,7 +214,11 @@ Widget_State <- function(widget, state = c("normal", "disabled")) {
                           XYrange$x <<- rev(XYrange$x)
                       }
           })
-    tkgrid(Eobj2, row=2, column=1, padx=5, pady=5)
+    tkgrid(Eobj2, row = 1, column = 1, padx = 5, pady = 5)
+    WidgetState(Eobj2,"disabled") #prevent selecting Components when CoreLine not defined
+
+    NC_Info <- ttklabel(Frame2, text="   ", font="Serif 10 bold")
+    tkgrid(NC_Info, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
 
     Frame3 <- ttklabelframe(ESGroup, text="Apply Shift", borderwidth=2, padding=c(5,5,5,5))
     tkgrid(Frame3, row = 3, column=1, padx = 5, pady=5, sticky="news")

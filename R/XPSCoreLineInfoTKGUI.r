@@ -258,7 +258,7 @@ XPSCoreLineFitInfo <- function() {
                           tclvalue(CL) <- ""
                           SpectList <<- XPSSpectList(activeFName)
                           PE <- Get_PE(FName[[Indx]])
-                          tkconfigure(InfoObj2, value=SpectList)
+                          tkconfigure(InfoObj2, values=SpectList)
                           tkdestroy(SpectTbl)  #destroy to correctly reconstruct the tktext window & scrollbars
                           SpectTbl <<- tktext(Infoframe3, width=72, height=8, background="white")
                           tkgrid(SpectTbl, row = 1, column = 1, padx = 5, pady = 3, sticky="w")

@@ -966,6 +966,10 @@ XPSAnalysis <- function() {
   FF <- tclVar("")
   fitFunction <- ttkcombobox(T2Frame1, width = 20, textvariable = FF, values = FitFunct)
   tkbind(fitFunction, "<<ComboboxSelected>>", function(){
+                      if (hasBaseline(Object[[coreline]]) == FALSE){
+                          tkmessageBox(message="Please add BaseLine first!", title="ERROR", icon="error")
+                          return()
+                      }
                       cat("\n Selected Fit Function: ", tclvalue(FF))
                 })
   tkgrid(fitFunction, row = 1, column = 1, padx=5, pady=5, sticky="w")

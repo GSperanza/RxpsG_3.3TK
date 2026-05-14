@@ -37,6 +37,8 @@ XPSVBFermi <- function() {
          return()
      }
      plot(Object)   #replot spectrum of the selected component
+     WidgetState(FunctionFrame, "normal")
+
   }
 
 
@@ -70,6 +72,7 @@ XPSVBFermi <- function() {
      }
      ObjectBKP <<- Object[[coreline]]
      plot(Object[[coreline]])
+     WidgetState(FunctionFrame, "normal")
   }
 
 
@@ -87,9 +90,9 @@ XPSVBFermi <- function() {
   }
 
   SelectRegion <- function(h, ...){
-      txt <- c("1) Left mouse button define the opposite corners of the VB-Near-Fermi region",
-               "2) Left mouse button click near markers to modify the zoom area extension",
-               "3) Right mouse button to exit")
+      txt <- paste("\n 1) Left mouse button define the opposite corners of the VB-Near-Fermi region",
+                   "\n 2) Left mouse button click near markers to modify the zoom area extension",
+                   "\n 3) Right mouse button to exit", sep="")
       tkmessageBox(message=txt , title = "WARNING",  icon = "warning")
       pos <- locator(n=2, type="p", pch=3, col="blue", lwd=2) #first the two corners are drawn
       Xlim1 <- min(range(Object[[coreline]]@.Data[[1]]))   #limits coordinates in the Spectrum Range
@@ -110,8 +113,8 @@ XPSVBFermi <- function() {
       if (pos$y[2] > Ylim2 ) {pos$y[2] <- Ylim2}
       rect(pos$x[1], pos$y[1], pos$x[2], pos$y[2])  #marker-Corners are ordered with ymin on Left and ymax on Right
       Object[[coreline]]@Boundaries <<- pos
-# 			  idx1 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x[1])
-# 			  idx2 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x[2])
+# 		 idx1 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x[1])
+# 		 idx2 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x[2])
 #      Object[[coreline]]@RegionToFit$x <<- Object[[coreline]]@.Data[[1]][idx1:idx2]  #Define RegionToFit see XPSClass.r
 #      Object[[coreline]]@RegionToFit$y <<- Object[[coreline]]@.Data[[2]][idx1:idx2]  #Define RegionToFit see XPSClass.r
       Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])
@@ -125,33 +128,40 @@ XPSVBFermi <- function() {
       YY <- c(Object[[coreline]]@Baseline$y[idx1], Object[[coreline]]@Baseline$y[idx2])
       points(XX, YY, type="p", pch=9, cex=1.5, col="red", lwd=1.5)
 
+
+
       pos <- list(x=0, y=0)
-      while (length(pos) > 0) {      #if pos not NULL a mouse button was pressed
-         pos <- locator(n=1) #to modify the zoom limits
+      while (length(pos) > 0) {   #if pos not NULL a mouse button was pressed
+         pos <- locator(n=1)      #to modify the zoom limits
          if (length(pos$x) > 0) { #if the right mouse button NOT pressed
             dX1 <- abs(XX[1] - pos$x)
             dX2 <- abs(XX[2] - pos$x)
-            if (dX1 < dX2) {
+            if (dX1 < dX2) { #clicked near the low X limit (higher BE or lower KE)
                 XX[1] <- pos$x
                 idx1 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x)
                 YY[1] <- Object[[coreline]]@Baseline$y[idx1]
                 Object[[coreline]]@Boundaries$x[1] <<- XX[1]
                 Object[[coreline]]@Boundaries$y <<- range(Object[[coreline]]@RegionToFit$y[idx1:idx2])
             }
-            if (dX2 < dX1) {
+            if (dX2 < dX1) { #clicked near the bigger X limit (lower BE or higher KE)
                 XX[2] <- pos$x
                 idx2 <- findXIndex(Object[[coreline]]@Baseline$x, pos$x)
                 YY[2] <- Object[[coreline]]@Baseline$y[idx2]
                 Object[[coreline]]@Boundaries$x[2] <<- XX[2]
                 Object[[coreline]]@Boundaries$y <<- range(Object[[coreline]]@RegionToFit$y[idx1:idx2])
             }
-            plot(Object[[coreline]], xlim=XX, ylim=Object[[coreline]]@Boundaries$y)  #refresh graph
+            Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])
+            Object[[coreline]]@Baseline$x <<- Object[[coreline]]@RegionToFit$x
+            Object[[coreline]]@Baseline$y <<- rep(yy, length(Object[[coreline]]@Baseline$x))
+            plot(Object[[coreline]], xlim=Object[[coreline]]@Boundaries$x, ylim=Object[[coreline]]@Boundaries$y)  #refresh graph
             points(XX, YY, type="p", pch=9, cex=1.5, col="red", lwd=1.5)
          }
       }
       pos$x <- c(XX[1], XX[2])
       pos$y <- c(YY[1], YY[2])
       Object[[coreline]]@Boundaries <<- pos
+
+
       Object[[coreline]] <<- XPSsetRegionToFit(Object[[coreline]])  #Define RegionToFit see XPSClass.r
       Object[[coreline]] <<- XPSbaseline(Object[[coreline]], "linear", deg=1, splinePoints=NULL )
       plot(Object[[coreline]])
@@ -166,7 +176,7 @@ XPSVBFermi <- function() {
      if (coreline != 0 && hasBaseline(Object[[coreline]])) {
 #Fit parameter are set in XPSAddComponent()
          Object[[coreline]] <<- XPSaddComponent(Object[[coreline]], type = "VBFermi",
-                                             peakPosition = list(x = pos$x, y = 2*pos$y), ...)
+                                             peakPosition = list(x = pos$x, y = pos$y), ...)
          Object[[coreline]]@Fit$y <<- Object[[coreline]]@Components[[1]]@ycoor-Object[[coreline]]@Baseline$y #subtract the Baseline
          Object[[coreline]]@RegionToFit$x <- ObjectBKP@RegionToFit$x #restore original abscissas changed in XPSAddComponent()
          plot(Object[[coreline]])
@@ -232,8 +242,13 @@ XPSVBFermi <- function() {
 #Fit parameters and X coords are set in XPSAddComponent()
 #also the FermiSigmoid was defined using the X coords
              Object[[coreline]] <<- XPSFitLM(Object[[coreline]], plt=FALSE, verbose=FALSE)   #Levenberg Marquardt fit
-             if (tclvalue(PLT) == "normal") plot(Object[[coreline]])
-             if (tclvalue(PLT) == "residual") XPSresidualPlot(Object[[coreline]])
+             if (tclvalue(PLT) == "normal") {
+                 plot(Object[[coreline]])
+             } else if (tclvalue(PLT) == "residual") {
+                 XPSresidualPlot(Object[[coreline]])
+             } else {
+                 plot(Object[[coreline]])
+             }
          } else if (reset.fit==TRUE){
              Object[[coreline]] <<- XPSremove(Object[[coreline]],"fit")
              Object[[coreline]] <<- XPSremove(Object[[coreline]],"components")
@@ -251,11 +266,11 @@ XPSVBFermi <- function() {
       Ef.Posx <- round(Ef.Posx, digits=3)
       idx <- findXIndex(Object[[coreline]]@RegionToFit$x, Ef.Posx)
       bkg <- Object[[coreline]]@Baseline$y[idx]
-      Ef.Posy <- h/2 + bkg   #Ef.Posy correspondent to Ef.Posx
+      Ef.Posy <- h + bkg   #Ef.Posy correspondent to Ef.Posx
       Object[[coreline]]@Components[[1]]@label <<- "VBFermi"  #Label indicating the VBFermi in the plot
       Object[[coreline]]@Components[[1]]@param[1,1] <<- Ef.Posy  # VBFermi stored in param "h"
       plot(Object[[coreline]])
-      lines(x=c(Ef.Posx, Ef.Posx), y=c(0,h+1), col="blue")
+      lines(x=c(Ef.Posx, Ef.Posx), y=c(0,2*h), col="blue")
       points(Ef.Posx, Ef.Posy, col="orange", cex=2, lwd=2, pch=3)
       txt <- paste("==> Estimated position of Fermi Level : ", Ef.Posx, sep="")
       tkconfigure(FermiLevl, text=txt)
@@ -289,10 +304,12 @@ XPSVBFermi <- function() {
      BaseLevel <- mean(XPSSample[[coreline]]@.Data[[2]][(LL-5):LL])
      Object[[coreline]]@Baseline$x <<- XPSSample[[coreline]]@.Data[[1]]
      Object[[coreline]]@Baseline$y <<- rep(BaseLevel, LL)
+     Object[[coreline]]@Components <<- list()
 
      VBbkgOK <<- FALSE
      VBlimOK <<- FALSE
      tkconfigure(FermiLevl, text="Estimated position of VB top : ")
+
      plot(Object[[coreline]])
      return()
   }

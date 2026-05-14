@@ -23,11 +23,13 @@ XPSMoveComp <- function(){
             if (is.null(LocPos)) {
                 WidgetState(MCFrame3, "normal")
                 WidgetState(MCFrame4, "normal")
+                tclvalue(FC) <- NULL
                 EXIT <<- TRUE
             } else {
                 if (SingClick && SetZoom == FALSE){
                      WidgetState(MCFrame3, "normal")
                      WidgetState(MCFrame4, "normal")
+                     tclvalue(FC) <- NULL
                      EXIT <<- TRUE
                 }
                 if (SetZoom == TRUE) {  #define zoom area
@@ -111,12 +113,12 @@ XPSMoveComp <- function(){
          points(x=coords[1], y=coords[2], col=2, cex=1.2, lwd=2.5, pch=1)  # if refresh==FALSE plot spectrum with component marker
      } else if (SetZoom == TRUE){   #set zoom area corners
 	        if (point.index < 3) {    #normal plot
- 	           plot(Object)
-             points(point.coords, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
+ 	            plot(Object)
+               points(point.coords, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
   	      } else if (point.index == 3){  #plot zoom area corners
- 	           plot(Object, xlim=Xlimits, ylim=Ylimits)
-             points(Corners, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
-             rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
+ 	            plot(Object, xlim=Xlimits, ylim=Ylimits)
+               points(Corners, type="p", col=4, cex=1.2, lwd=2.5, pch=3)
+               rect(point.coords$x[1], point.coords$y[1], point.coords$x[2], point.coords$y[2])
          }
      } else {
          plot(Object, xlim=Xlimits, ylim=Ylimits)
@@ -317,14 +319,17 @@ XPSMoveComp <- function(){
                                              "\n=> Left click with the mouse to enter the cursor coordinates.",
                                              "\n=> Right click to stop position selection and cursor position reading when not required.",
                                              "\n",
-                                             "=> Show the WARNING Messages Again? ", sep="")
+                                             "Selection of the component to move defines which component fit_parameters to show", sep="")
                                 tkmessageBox(message=txt, title="INFO", icon="info")
                        })
        tkgrid(HelpBtn, row = 1, column = ii+1, padx = c(20, 5), pady = 5, sticky="w")
   }
 
   LoadCoreLine <- function(){
+      activeFName <<- get("activeFName", envir=.GlobalEnv)
       XPSSample <<- get(activeFName, envir=.GlobalEnv)       #load XPSdata values from main memory
+      SpectList <<-  XPSSpectList(activeFName)
+      tkconfigure(Core.Lines, values = SpectList)
       Indx <<- activeSpectIndx
       Object <<- XPSSample[[Indx]]
       Xlimits <<- range(Object@RegionToFit$x)
@@ -446,7 +451,7 @@ XPSMoveComp <- function(){
      if(activeSpectIndx > length(XPSSample)) { Indx <- 1 }
      OldXPSSample <- XPSSample
      Object <- XPSSample[[Indx]]
-     SpectName <- activeSpectName
+     SpectName <- paste(activeSpectIndx, ".", activeSpectName, sep="")
      ComponentList <- names(Object@Components)
      FNameList <- XPSFNameList()
      SpectList <- XPSSpectList(activeFName)
@@ -522,12 +527,15 @@ XPSMoveComp <- function(){
                            XPSSample <<- get(activeFName, envir=.GlobalEnv)
                            ResetVars()
                            tkconfigure(Core.Lines, values = SpectList)
+                           tclvalue(CL) <<- " "
+                           clear_widget(MCFrame3)
+                           if (Check.PE() == FALSE) { return() }
                            refresh <<- FALSE #now plot also the component marker
                            Xlimits <<- range(Object@RegionToFit$x)
                            Ylimits <<- range(Object@RegionToFit$y)
                            Object@Boundaries$x <<- Xlimits
                            Object@Boundaries$y <<- Ylimits
-                           plot(Object)
+                           plot(XPSSample)
                  })
 
      MCFrame2 <- ttklabelframe(SelectGroup, text = " Core-Lines ", borderwidth=2)
@@ -686,21 +694,29 @@ XPSMoveComp <- function(){
      tkgrid(RSTbutton, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
 
      RLDbutton <- tkbutton(MCFrame4, text=" RE-LOAD DATA ", width=20, command=function(){
-                           tclvalue(FC) <- ComponentList[[1]]
-                           UpdateCompMenu <<- FALSE
+                           UpdateCompMenu <<- TRUE
                            LoadCoreLine()
+                           tclvalue(XS) <- XPSSample@Filename
                            tclvalue(FC) <- ComponentList[[1]]
+                           tclvalue(CL) <- SpectList[Indx]
                            OldXPSSample <<- XPSSample
                   })
      tkgrid(RLDbutton, row = 4, column = 2, padx = 5, pady = 5, sticky="w")
 
      SAVbutton <- tkbutton(MCFrame4, text=" SAVE ", width=20, command=function(){
                            tclvalue(FitComp) <- ""
-                           Indx <- get("activeSpectIndx", envir=.GlobalEnv)
+                           tclvalue(FC) <- NULL                           
+                           CoreLine <- tclvalue(CL)
+                           CoreLine <- unlist(strsplit(CoreLine, "\\."))   #remove number at CoreLine beginning
+                           Indx <<- as.numeric(CoreLine[1])
+                           SpectName <- CoreLine[2]
                            XPSSample[[Indx]] <<- Object
                            OldXPSSample[[Indx]] <<- XPSSample[[Indx]]
-                           assign("Object", XPSSample[[Indx]], envir = .GlobalEnv)
+#                           assign("Object", XPSSample[[Indx]], envir = .GlobalEnv)
+                           assign("activeFName", XPSSample@Filename, envir = .GlobalEnv)
                            assign(activeFName, XPSSample, envir = .GlobalEnv)
+                           assign("activeSpectIndx", Indx, envir = .GlobalEnv)
+                           assign("activeSpectName", SpectName, envir = .GlobalEnv)
                            replot()
                            XPSSaveRetrieveBkp("save")
                            UpdateXS_Tbl()
