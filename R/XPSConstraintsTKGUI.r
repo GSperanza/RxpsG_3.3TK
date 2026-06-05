@@ -671,6 +671,52 @@ XPSConstraints <- function(){
               tclvalue(SelFitComp2) <<- FALSE
           }
     } #End ResetLinks()
+    
+    
+#---------- SelectCL ----------
+#   Select a Core.Line when active SpectIndx and activeSpectname aer undefined
+
+    SelectCL <- function(){
+         NoCLWin <- tktoplevel()
+         tkwm.title(NoCLWin," SELECT CORE-LINE ")
+         tkwm.geometry(NoCLWin, "+100+50")   #SCREEN POSITION from top-left corner
+
+         NoCLGroup <- ttkframe(NoCLWin,  borderwidth=2, padding=c(5,5,5,5) )
+         tkgrid(NoCLGroup, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+         txt <- paste(" ATTENTION: No Core.Line Selected ", activeSpectName, "\n Select a Core Line to Continue!")
+         tkgrid( ttklabel(NoCLGroup, text=txt, font="Sans 12 normal" ),
+                 row = 2, column = 1, padx = 5, pady=5, pady = 5, sticky="w")
+         tkgrid( ttkseparator(NoCLGroup, orient="horizontal"),
+                 row = 3, column = 1, padx = 5, pady = 10, sticky="we")
+
+         NoCLFrame <- ttklabelframe(NoCLGroup, text="SELECT CORE LINE", borderwidth=2, padding=c(5,5,5,5) )
+         tkgrid(NoCLFrame, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
+         NoCL <- tclVar(" ")
+         NoCLCombo <- ttkcombobox(NoCLFrame, width = 15, textvariable = NoCL, values = SpectList)
+         tkbind(NoCLCombo, "<<ComboboxSelected>>", function(){
+                        SourceCoreline <- tclvalue(NoCL)
+                        SourceCoreline <- unlist(strsplit(SourceCoreline, "\\."))
+                        SpectName <<- SourceCoreline[2]
+                        SpectIndx <<- as.integer(SourceCoreline[1])
+                        plot(FName[[SpectIndx]])
+                     })
+         tkgrid(NoCLCombo, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+
+         OKButt <- tkbutton(NoCLFrame, text=" SET & EXIT ", width=12, command=function(){
+                        if (tclvalue(NoCL) == "") {
+                            tkmessageBox(message="Please Select the Core.Line", title="ERROR", icon="error")
+                            return()
+                        }
+                        SpectName <<- names(FName)[SpectIndx]
+                        assign("activeSpectIndx", SpectIndx, envir=.GlobalEnv)
+                        assign("activeSpectName", SpectName, envir=.GlobalEnv)
+                        tkdestroy(NoCLWin)
+                     })
+         tkgrid(OKButt, row = 1, column = 2, padx = 5, pady = 5, sticky="w")
+         tkwait.window(NoCLWin)
+    } #End SelectCL()
+
 
 #---------- FitPresent ----------
 #   Ctrl on the active coreline if fit is present or selection of a new core line.
@@ -681,18 +727,18 @@ XPSConstraints <- function(){
             tkwm.title(NoFitWin," NO FITTED CORE-LINES ")
             tkwm.geometry(NoFitWin, "+100+50")   #SCREEN POSITION from top-left corner
 
-            NFGroup <- ttkframe(NoFitWin,  borderwidth=2, padding=c(5,5,5,5) )
-            tkgrid(NFGroup, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+            NoFGroup <- ttkframe(NoFitWin,  borderwidth=2, padding=c(5,5,5,5) )
+            tkgrid(NoFGroup, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
             txt <- paste(" ATTENTION: no fit found in ", activeSpectName, "\n Change core line please!")
-            tkgrid( ttklabel(NFGroup, text=txt, font="Sans 12 normal" ),
+            tkgrid( ttklabel(NoFGroup, text=txt, font="Sans 12 normal" ),
                     row = 2, column = 1, padx = 5, pady=5, pady = 5, sticky="w")
-            tkgrid( ttkseparator(NFGroup, orient="horizontal"),
+            tkgrid( ttkseparator(NoFGroup, orient="horizontal"),
                     row = 3, column = 1, padx = 5, pady = 10, sticky="we")
 
-            NoFitFrame <- ttklabelframe(NFGroup, text="SELECT CORE LINE", borderwidth=2, padding=c(5,5,5,5) )
+            NoFitFrame <- ttklabelframe(NoFGroup, text="SELECT CORE LINE", borderwidth=2, padding=c(5,5,5,5) )
             tkgrid(NoFitFrame, row = 4, column = 1, padx = 5, pady = 5, sticky="w")
-            FittedCL <- tclVar()
+            FittedCL <- tclVar(" ")
             NoFitCombo <- ttkcombobox(NoFitFrame, width = 15, textvariable = FittedCL, values = SpectList)
             tkbind(NoFitCombo, "<<ComboboxSelected>>", function(){
                         SourceCoreline <- tclvalue(FittedCL)
@@ -709,7 +755,7 @@ XPSConstraints <- function(){
                         if (tclvalue(FittedCL) == "") {
                             tkmessageBox(message="Please select the Core.Line", title="ERROR", icon="error")
                             return()
-                        }
+                        }      
                         SpectName <<- names(FName)[SpectIndx]
                         if (NComp==0){
                             txt <- paste(" ATTENTION: no fit found in ", SpectName, "\n Change core line please!")
@@ -733,17 +779,16 @@ XPSConstraints <- function(){
       OldFName <<- FName
       SpectIndx <<- get("activeSpectIndx", envir=.GlobalEnv)
       if (is.na(activeSpectIndx) || is.null(activeSpectIndx) || length(activeSpectIndx)==0){
-          activeSpectIndx <<- 1
-          activeSpectName <<- names(FName)[1]
-          SpectName <<- activeSpectName
+          SelectCL()
       } else {
-          if (SpectIndx > length(FName) ) { 
-              SpectIndx <<- 1 
+          if (SpectIndx > length(FName) ) {
+              SpectIndx <<- 1
               assign("activeSpectIndx", 1, envir=.GlobalEnv)
           }
           activeSpectName <<- names(FName)[SpectIndx]
           SpectName <<- activeSpectName
       }
+
       SpectList <<- XPSSpectList(activeFName)
       NComp <<- length(FName[[SpectIndx]]@Components)
 
@@ -798,16 +843,15 @@ XPSConstraints <- function(){
        return()
    }
    FName <- get(activeFName,envir=.GlobalEnv)
+   SpectList <- XPSSpectList(activeFName)
    OldFName <- FName
    SpectIndx <- get("activeSpectIndx", envir=.GlobalEnv)
    if (is.na(activeSpectIndx) || is.null(activeSpectIndx) || length(activeSpectIndx)==0){
-       activeSpectIndx <<- 1
-       activeSpectName <<- names(FName)[1]
+       SelectCL()
    } else {
        activeSpectName <<- names(FName)[SpectIndx]
        SpectName <- activeSpectName
    }
-   SpectList <- XPSSpectList(activeFName)
    NComp <- length(FName[[SpectIndx]]@Components)
 
    FitComp1 <- names(FName[[SpectIndx]]@Components)
@@ -838,9 +882,9 @@ XPSConstraints <- function(){
    NewRSF <- NULL
    Saved <- FALSE
    SigmaCtrl <- list(FitComp=c(1:NComp), CompLnkd=NULL, ToComp=NULL, Expression=NULL)
+   FitPresent()
    plot(FName[[SpectIndx]])
 
-   FitPresent()
 
 #--- Widget
       mainFCwin <- tktoplevel()
