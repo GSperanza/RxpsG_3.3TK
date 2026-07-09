@@ -86,7 +86,7 @@ XPSCoreLineFitInfo <- function() {
                  BE <- rbind(BE,round(FName[[Indx]]@Components[[jj]]@param["mu","start"], 2)) #BE component jj
                  Conc  <- rbind(Conc, "//")
              } else {
-                 FitFnctn <- rbind(FitFnctn, unlist(FName[[Indx]]@Components[[jj]]@funcName))
+                FitFnctn <- rbind(FitFnctn, unlist(FName[[Indx]]@Components[[jj]]@funcName))
                  Area <- rbind(Area,round(sumComp[jj], 2))
                  if (fnName[jj] == "GaussLorentzProd" ||
                       fnName[jj] == "GaussLorentzSum" ||
@@ -98,9 +98,9 @@ XPSCoreLineFitInfo <- function() {
                       fnName[jj] == "AsymmGaussLorentzProd" ||
                       fnName[jj] == "DoniachSunjicGauss" ||
                       fnName[jj] == "DoniachSunjicGaussTail" ) { 
-                          FWHM <- ComponentWidth(FName[[Indx]], jj)
+                      FWHM <- ComponentWidth(FName[[Indx]], jj)
                  } else {
-                          FWHM <- rbind(FWHM,round(FName[[Indx]]@Components[[jj]]@param[3,1], 2)) #FWHM component jj
+                      FWHM <- rbind(FWHM,round(FName[[Indx]]@Components[[jj]]@param[3,1], 2)) #FWHM component jj
                  }
                  RSF <- rbind(RSF,unlist(FName[[Indx]]@Components[[jj]]@rsf)) #RSF component jj
                  BE <- rbind(BE,round(FName[[Indx]]@Components[[jj]]@param["mu","start"], 2)) #BE component jj
@@ -335,7 +335,6 @@ XPSCoreLineFitInfo <- function() {
    EStep <- round(EStep,3)
    BLtype <- FName[[Indx]]@Baseline$type[1]
    PE <- Get_PE(FName[[Indx]])
-cat("\n 1111", PE)
 
 #tkmessageBox(message=" OK")
 

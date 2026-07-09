@@ -59,7 +59,7 @@ XPSCompare <- function(){
                              paste("Xmax (max=", axMax, "): ", sep=""),
                              "N. ticks")
                axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames, 
-                                      Width=15, Modify=TRUE, Env=environment())
+                                      Width=15, Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                axParam <- as.numeric(unlist(axParam[[1]]))
                axMin <- axParam[1]     #X or Y scale min value
                axMax <- axParam[2]     #X or Y scale max value
@@ -1453,7 +1453,7 @@ XPSCompare <- function(){
                              Tick.Increment <- as.data.frame(Tick.Increment, stringsAsFactors=FALSE)
                              Tick.Increment <- DFrameTable(Data="Tick.Increment", Title="SET X TICK INCREMENT",
                                                     ColNames=c("Core-Lines", "Increment"), RowNames="",
-                                                    Width=18, Modify=TRUE, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                              Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
                              x_at <- list()
                              x_labels <- list()
@@ -1499,7 +1499,7 @@ XPSCompare <- function(){
                              PanelTitles <- as.data.frame(FNamesCoreLines$CoreLines)
                              Plot_Args$PanelTitles <<- DFrameTable(Data=PanelTitles, Title="EDIT TITLES",
                                                                    ColNames="Titles", RowNames="", Width=20,
-                                                                   Modify=TRUE, Env=environment())
+                                                                   Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                  })
    tkgrid(T4_PanelTitles, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -1517,7 +1517,7 @@ XPSCompare <- function(){
                              Tick.Increment <- as.data.frame(Tick.Increment, stringsAsFactors=FALSE)
                              Tick.Increment <- DFrameTable(Data="Tick.Increment", Title="SET Y TICK INCREMENT",
                                                     ColNames=c("Core-Lines", "Increment"), RowNames="",
-                                                    Width=18, Modify=TRUE, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                              Tick.Increment <- as.numeric(unlist(Tick.Increment[2])) #first element of Tick.Increment is the CL-names
                              y_at <- list()
                              y_labels <- list()
@@ -1682,7 +1682,7 @@ XPSCompare <- function(){
                              Legends <- as.data.frame(Legends, stringsAsFactors=FALSE)
                              Legends <- DFrameTable(Data="Legends", Title="XPS SAMPLE LEGENDS",
                                                     ColNames=c("Core-Lines", "Legends"), RowNames="",
-                                                    Width=18, Modify=TRUE, Env=environment())
+                                                    Width=18, Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                              Legends <- unlist(Legends[2]) #first element of Legends is the XS-names
                              Plot_Args$auto.key$text <<- Legends
                              CtrlPlot()

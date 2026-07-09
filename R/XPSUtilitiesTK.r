@@ -76,11 +76,11 @@ addScrollbars <- function(parent, widget, type = c("x", "y"), Row=1, Col=1, Px=0
       xscrl <- ttkscrollbar(parent, orient = "horizontal",
                             command = function(...) tkxview(widget, ...))
       tkgrid(xscrl, row = Row+1, column = Col, padx = Px, pady = Py, sticky = "nwe")
-#      tkgrid.rowconfigure(parent, 0, weight=1)
       tkconfigure(widget, xscrollcommand = function(...) tkset(xscrl, ...))
       if (length(grep("wrap", tkconfigure(widget))) > 0 ){
           tkconfigure(widget, wrap="none")
       }
+#      tkgrid.rowconfigure(parent, 0, weight=1)
       tcl("autoscroll::autoscroll", xscrl)
       tkgrid.propagate(parent, FALSE)
       return(xscrl)
@@ -89,16 +89,35 @@ addScrollbars <- function(parent, widget, type = c("x", "y"), Row=1, Col=1, Px=0
       yscrl <- ttkscrollbar(parent, orient = "vertical",
                             command = function(...) tkyview(widget, ...))
       tkgrid(yscrl, row = Row, column = Col+1, padx = Px, pady = Py, sticky = "wns")
-#      tkgrid.columnconfigure(parent, 0, weight=1)
       tkconfigure(widget, yscrollcommand = function(...) tkset(yscrl, ...))
       if (length(grep("wrap", tkconfigure(widget))) > 0 ){
           tkconfigure(widget, wrap="none")
       }
+#      tkgrid.rowconfigure(parent, 0, weight = 1)
       tcl("autoscroll::autoscroll", yscrl)
       tkgrid.propagate(parent, FALSE)
       return(yscrl)
    }
 }
+
+#' @title treeview_insert
+#' @description adds the data.frame items to a treeview
+#' @param widget widget where to add data
+#' @param where is an integer or "end" indicating where to insert the item
+#' @param items a data.frame containing the data to insert. items MUST have the same n.col of the widget
+#' @export
+treeview_insert <- function(widget, where = "end", items) {
+    # items MUST be data.frame with the same n.col of the widget
+    # where=integer insert data starting from the indicated index
+    # where="end" appends data to existing treeview elements
+    if (is.data.frame(items)) {
+      idx <- apply(items, 1, function(x) {
+        tkinsert(widget, "", where, values = unname(x))
+        # tcl(widget, "insert", "", where, values = unname(x) ) 
+      })
+    } else warning("In 'treeview_insert' : items must be a data.frame!!")
+}
+
 
 #' @title get_common_list Common XPS coreline for different XPS Samples
 #' @description get_common_list gets the list of common XPSCoreline for different XPSSamples GUI
@@ -307,12 +326,15 @@ XPSTable <- function(parent, items, NRows=0, ColNames, Width) {
 
 
 DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=TRUE, Env,
-                        parent=NULL, Row=NULL, Column=NULL, Border=c(10,10,10,10)){
+                        parent=NULL, Row=NULL, Column=NULL, Border=c(3,3,3,3)){
+
+#ATTENTION: if parent is defined   data    MUST be a "character" and  data  must be assigned in .GlobalEnv
+#           if parent is undefined   data  MUST be a data.frame()
 
   EditItem <- function(Idx, width){  #Idx == index of the selected TableList column
        MWx <- as.numeric(tclvalue(tkwinfo("rootx", DFFrame)))  #coord X of DFrameWin
        MWy <- as.numeric(tclvalue(tkwinfo("rooty", DFFrame)))
-       LBx <- as.numeric(tclvalue(tkwinfo("rootx", ListBox[[Idx]])))  #coord X of LBox
+       LBx <- as.numeric(tclvalue(tkwinfo("rootx", ListBox[[Idx]])))  #coord X of LBox  6 is the half of character dimension
        LBy <- as.numeric(tclvalue(tkwinfo("rooty", ListBox[[Idx]])))
 
        ItemIdx <- tclvalue(tcl(ListBox[[Idx]], "curselection"))
@@ -382,15 +404,17 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
    if(is.data.frame(Data) == FALSE){
       tkmessageBox(message="ATTENTION: 'data.frame' is the required format for TableList",
                 title="ERROR", icon="error")
+                rm("DFWinExists", envir=.GlobalEnv)
                 return(Data)
    }
-
 
 #--- Widget ---
 
    # Create a frame to hold the TkListbox and scrollbars
-   DFFrame <- ttkframe(DFrameWin, padding=Border)
-   tkgrid(DFFrame, row = Row, column = Column)
+   MainFrame <- ttkframe(DFrameWin, padding=Border)
+   tkgrid(MainFrame, row = Row, column = Column, sticky="w")
+   DFFrame <- ttkframe(MainFrame, padding=Border)
+   tkgrid(DFFrame, row = 1, column = 1, sticky="w")
    tkbind(DFrameWin, "<Destroy>", function(){
                        if (exists("DFWinExists", envir=.GlobalEnv) == TRUE){
                            remove("DFWinExists", envir=.GlobalEnv)
@@ -409,7 +433,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
        RNW <- max(sapply(RowNames, function(x) nchar(x)))+1
        #insert a blank cells at the top of the column of RowNames
        if (ColNames[1] != ""){
-           BlankCell <- tklistbox(RowFrame, selectmode = "single", font="Serif 10 bold",
+           BlankCell <- tklistbox(RowFrame, selectmode = "single", font="Sans 12 bold",
                             height=1, width = RNW,
                             background="#E0E0E0", borderwidth=0)
            tkgrid(BlankCell, row=RR, column=1, padx=0, pady=0)
@@ -417,7 +441,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
            RR <- 2
        }
        #now insert the other cells = RowNames
-       RWNames <- tklistbox(RowFrame, selectmode = "single", font="Serif 10 bold",
+       RWNames <- tklistbox(RowFrame, selectmode = "single", font="Sans 12 bold",
                             height=length(RowNames), width = RNW,
                             background="#E0E0E0", borderwidth=0)
        tkgrid(RWNames, row=RR, column=1, padx=0, pady=0)
@@ -442,7 +466,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
           #row containing column names
           if (ColNames[1] != ""){
               CLNames <- tklistbox(ColFrame, selectmode = "single",
-                                  height=1, width = Width[ii], font="Serif 10 bold",
+                                  height=1, width = Width[ii], font="Sans 12 bold",
                                   background="#E0E0E0", borderwidth=0)
               tcl(CLNames, "insert", "end", ColNames[ii])
               tkgrid(CLNames, row=1, column=ii, padx=0, pady=0,  sticky="w") #sticky="news")
@@ -486,7 +510,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
        BtnFrame <- ttkframe(DFrameWin, padding=c(0,0,0,0))
        tkgrid(BtnFrame, row = 2, column = 1, sticky="w")
 
-       SaveBtn <- tkbutton(BtnFrame, text="  SAVE & EXIT  ", width=12, command=function(){
+       SaveBtn <- tkbutton(BtnFrame, text=" SAVE & EXIT ", command=function(){
                             tkdestroy(DFrameWin)
                             remove("DFWinExists", envir=.GlobalEnv)
                             XPSSaveRetrieveBkp("save")
@@ -494,7 +518,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
        tkgrid(SaveBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
        xx <- as.numeric(tkwinfo("reqwidth", SaveBtn))+10
 
-       CancelButt <- tkbutton(BtnFrame, text="  CANCEL  ", width=10, command=function(){
+       CancelButt <- tkbutton(BtnFrame, text=" CANCEL ", command=function(){
                             tkdestroy(DFrameWin)
                             remove("DFWinExists", envir=.GlobalEnv)
                             XPSSaveRetrieveBkp("save")
@@ -510,8 +534,7 @@ DFrameTable <- function(Data, Title, ColNames="", RowNames="", Width=10, Modify=
        return(Data)
    } else {
        if (Modify == TRUE){
-
-           SetBtn <- tkbutton(DFFrame, text=" SET CHANGES ", command=function(){
+           SetBtn <- tkbutton(MainFrame, text=" SET CHANGES ", command=function(){
                             remove("DFWinExists", envir=.GlobalEnv)
                             ClassFilter <- function(x) inherits(get(x), "XPSSample" )
                             if (length(Filter(ClassFilter, ls(.GlobalEnv))) > 0){

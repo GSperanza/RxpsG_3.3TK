@@ -98,7 +98,7 @@ XPSSpectNameChange <- function(){
                         clear_widget(LabFrame2)
                         SpectList <<- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
                                                Width=15, Modify=TRUE, Env=.GlobalEnv, parent=LabFrame2,
-                                               Row=1, Column=1, Border=c(10, 10, 10, 10))
+                                               Row=1, Column=1, Border=c(3, 3, 3, 3))
                })
    tkgrid(LabXS, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
@@ -107,7 +107,7 @@ XPSSpectNameChange <- function(){
 
    SpectList <- DFrameTable(Data="SpectList", Title="", ColNames="CL.Names", RowNames="",
                          Width=15, Modify=TRUE, Env=.GlobalEnv, parent=LabFrame2,
-                         Row=1, Column=1, Border=c(10, 10, 10, 10))
+                         Row=1, Column=1, Border=c(3, 3, 3, 3))
 
    LabFrame3 <- ttklabelframe(LabGroup, text = " Set the New XPS-Sample Name ", borderwidth=2)
    tkgrid(LabFrame3, row = 3, column = 1, padx = 5, pady = 5, sticky="we")

@@ -405,7 +405,7 @@ XPSConstraints <- function(){
        fitParam <<- as.matrix(fitParam)
        fitParam <<- as.data.frame(fitParam, stringsAsFactors=FALSE) #in the dataframe add a column with variable names
        fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames,
-                               Width=15, Modify=TRUE, Env=environment(), parent=NULL)
+                               Width=15, Modify=TRUE, Env=environment(), parent=NULL, Border=c(3, 3, 3, 3))
        FName[[SpectIndx]]@Components[[CompIndx]]@param <<- fitParam #save parameters in the slot of XPSSample
        operation <<- "edit"
        component1 <<- selectedComp

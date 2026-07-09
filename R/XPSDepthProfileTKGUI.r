@@ -330,6 +330,8 @@ XPSDepthProfile <- function() {
              if((jj+NN) > LL) {break}
              SourceXS <- tkcheckbutton(T1frameFName, text=FNameList[(jj+NN)], variable=FNameList[(jj+NN)], onvalue = FNameList[(jj+NN)], offvalue = 0,
                            command=function(){
+                               WidgetState(DepthPrflCK[[1]], "normal")
+                               WidgetState(DepthPrflCK[[2]], "normal")
                                if (Warn == 0){
                                    Warn <<- 1
 #%%%                                   tkmessageBox(message="Attention: Selected XPS-Samples MUST \nhave the SAME Number of Core.Lines", title="WARNING", icon="warning")
@@ -352,6 +354,8 @@ XPSDepthProfile <- function() {
      for(ii in 1:2){
           DepthPrflCK[[ii]] <- tkcheckbutton(T1frameDPType, text=txt[ii], variable=DP, onvalue=txt[ii], offvalue=0,
                                 command=function(){
+                                   WidgetState(CoreLineCK, "normal")
+                                   WidgetState(AnalCK, "normal")
                                    DPrflType <<- tclvalue(DP)
                                    N.XS <<- length(SelectedXPSSamp)
                                    if (length(SelectedXPSSamp) == 0){
@@ -366,13 +370,14 @@ XPSDepthProfile <- function() {
                                       CLnames <<- XPSSample@names
                                    } else if (N.XS > 1){  #Different XPSSample for different tilt angles
                                       Filename <- NULL
-                                      tmp <<- get(SelectedXPSSamp[1], envir=.GlobalEnv)   #load the active XPSSample in memory
+                                      tmp <- get(SelectedXPSSamp[1], envir=.GlobalEnv)   #load the active XPSSample in memory
                                       LLref <- length(tmp)
                                       for(ii in 1:(N.XS*LLref)){ #Define the new XPSSample where to save all the ARXPS data
                                           XPSSample[[ii]] <<- new("XPSCoreLine")
                                       }
                                       LL2 <- 0
                                       CLnames <<- NULL
+
                                       for(ii in 1:N.XS){
                                           tmp <- get(SelectedXPSSamp[ii], envir=.GlobalEnv)
                                           LL1 <- length(tmp)
@@ -392,8 +397,8 @@ XPSDepthProfile <- function() {
                                           XPSSample@names <<- CLnames
                                       }
                                       XPSSample@Project <<- ""
-                                      XPSSample@Sample <<- dirname(tmp@Sample)
-                                      XPSSample@Comments <<- paste(DPrflType, Filename, spe=" ")
+                                      XPSSample@Sample <<- tmp@Sample  #important for defining the path to file
+                                      XPSSample@Comments <<- paste(DPrflType, Filename, sep=" ")
                                       XPSSample@User <<- ""
                                       if (DPrflType == "ARXPS"){  #assign the filename to save the analysis in a unique datafile
                                           XPSSample@Filename <<- "ARXPS.RData"
@@ -405,7 +410,6 @@ XPSDepthProfile <- function() {
                                    }
 
                                    CK.Elmts()
-
                                    if (DPrflType == "ARXPS"){
                                        if (N.XS == 1){
                                            NAng <- max(sapply(CoreLineList, function(x) length(x))) #All tilt in just one XPSSample
@@ -415,6 +419,7 @@ XPSDepthProfile <- function() {
                                        winTKAng <- tktoplevel()
                                        tkwm.title(winTKAng,"ARXPS TILT ANGLES")
                                        tkwm.geometry(winTKAng, "+200+200")   #position respect topleft screen corner
+
                                        txt <- paste("Please enter the values of the ", NAng, " Take-off Angles", sep="")
                                        FrameTKAng <- ttklabelframe(winTKAng, text=txt, borderwidth=5, padding=c(5,5,5,5))
                                        tkgrid(FrameTKAng, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
@@ -436,6 +441,7 @@ XPSDepthProfile <- function() {
                                                           })
                                            tkgrid(TkOff[[ii]], row = ii, column = 2)
                                        })
+
                                        savexitBtn <- tkbutton(FrameTKAng, text="SAVE & EXIT", width=15, command=function(){
                                                              tkdestroy(winTKAng)
                                                           })
@@ -451,8 +457,9 @@ XPSDepthProfile <- function() {
                            })
           tclvalue(DP) <- FALSE
           tkgrid(DepthPrflCK[[ii]], row = 1, column = ii, padx = 10, pady = 2, sticky="w")
+          WidgetState(DepthPrflCK[[ii]], "disabled")
      }
-     
+
      DProfHlp <- tkbutton(T1frameDPType, text="  ?  ", width=5, command=function(){
                                 txt <- paste("Depth Profiles can be generated by ARXPS or etching the sample by ion gun sputtering.\n",
                                              "To start the analysis you have to define which kind of experiment was performed\n",
@@ -466,6 +473,7 @@ XPSDepthProfile <- function() {
      tkgrid(T1frameCoreLines, row = 3, column = 1, padx = 5, pady = 5, sticky="we")
      CoreLineCK <- ttklabel(T1frameCoreLines, text="            ")
      tkgrid(CoreLineCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+     WidgetState(CoreLineCK, "disabled")
 
      T1frameAnalysis <- ttklabelframe(DPGroup1, text = "Baseline defined on ALL Core Lines?", borderwidth=5)
      tkgrid(T1frameAnalysis, row = 4, column = 1, padx = 5, pady = 5, sticky="we")
@@ -479,6 +487,7 @@ XPSDepthProfile <- function() {
                                        WidgetState(T1frameProf, "normal")
                                        Matched <<- match(SelectedCL, CL.Sym) #index of the selected CL among the acquired CL
                                        for(ii in Matched){         #for now runs only on the selected CL
+                                           xrange <- NULL
                                            X <- Y <- NULL
                                            Colr <- NULL
                                            idx <- CoreLineList[[ii]][1]
@@ -492,19 +501,26 @@ XPSDepthProfile <- function() {
                                                   return()
                                               }
                                            } else{
+                                              Y <- list()
+                                              X <- list()
+                                              LL <- 0
                                               for(jj in 1:N.Cycles){ #N.Cycles runs on the DpthProf cycles or on the ARXPS tilt angles
                                                   idx <- CoreLineList[[ii]][jj]
-                                                  Y <- cbind(Y, XPSSample[[idx]]@Baseline$y)
-                                                  X <- cbind(X, XPSSample[[idx]]@Baseline$x)
+                                                  X[[jj]] <- cbind(XPSSample[[idx]]@Baseline$x)
+                                                  Y[[jj]] <- cbind(XPSSample[[idx]]@Baseline$y)
                                                   Colr <- c(Colr, 584)    #Sienna color for the Baselines
                                               }
                                               for(jj in 1:N.Cycles){      #for now runs only on the selected CL
                                                   idx <- CoreLineList[[ii]][jj]
-                                                  Y <- cbind(Y, XPSSample[[idx]]@RegionToFit$y)
-                                                  X <- cbind(X, XPSSample[[idx]]@RegionToFit$x)
+                                                  X[[(jj+N.Cycles)]] <- cbind(XPSSample[[idx]]@RegionToFit$x)
+                                                  Y[[(jj+N.Cycles)]] <- cbind(XPSSample[[idx]]@RegionToFit$y)
+                                                  xrange <- range(xrange, range(XPSSample[[idx]]@RegionToFit$x))
+                                                  LL <- max(LL, length(XPSSample[[idx]]@Baseline$x))
                                               }
+                                              #X, Y are lists of 2*N.Cycles columns, the following sapply() runs on the columns of X and Y NOT the rows!
+                                              X <- sapply(X, function(z) {z <- c(z, rep(NA, LL-length(z))) } ) #needed to insert since RegionToFit may have different legths, NA are inserted
+                                              Y <- sapply(Y, function(z) {z <- c(z, rep(NA, LL-length(z))) } ) #matplot() requires a square matrix of data
                                               Colr <- c(Colr, MatCol[1:N.Cycles])
-                                              xrange <- range(XPSSample[[idx]]@RegionToFit$x)
                                               if (XPSSample[[idx]]@Flags[1] == TRUE) { xrange <- sort(xrange, decreasing=TRUE) }
                                               matplot(X, Y, xlim=xrange, type="l", lty=1, col=Colr, main=CL.Sym[ii], cex.axis=1.25,
                                                       cex.lab=1.3, xlab=XPSSample[[idx]]@units[1], ylab=XPSSample[[idx]]@units[2])
@@ -518,6 +534,7 @@ XPSDepthProfile <- function() {
                                    }
                                 })
      tkgrid(AnalCK, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
+     WidgetState(AnalCK, "disabled")
 
      BL_DefHlp <- tkbutton(T1frameAnalysis, text="  ?  ", width=5, command=function(){
                                 txt <- paste("The program can work on pre-analyzed samples where Baseline and Core.Line Fit are already defined.\n",
@@ -917,14 +934,13 @@ XPSDepthProfile <- function() {
      SliderS <- tkscale(T1frameSpect, from=1, to=SSS, tickinterval=3,
                         variable=SLD, showvalue=TRUE, orient="horizontal", length=250)
      tkbind(SliderS, "<ButtonRelease>", function(K){
-          
+                                ii <- tclvalue(SLD)
                                 MakeXY1 <- function(ii, Cycl){
                                           idx <- CoreLineList[[ii]][Cycl]
                                           X <<- c(X, XPSSample[[idx]]@RegionToFit$x)
                                           Y <<- c(Y, XPSSample[[idx]]@RegionToFit$y)
                                           LevX <<- c(LevX, rep(ii, length(XPSSample[[idx]]@RegionToFit$x))) #LevX distingish among the Core-Lines
                                           CX <<- c(CX, rep(1, length(XPSSample[[idx]]@RegionToFit$x))) #CX distinguish among the Cycles
-print(c(X[1], X[2], X[3]))
                                           Plot_Args$data <<- data.frame(x = X, y = Y)
                                 }
 
@@ -990,9 +1006,9 @@ print(c(X[1], X[2], X[3]))
                                 tkgrid(XSframe, row = 2, column = 1, padx = 5, pady = 5, sticky="we")
 
                                 XS <- tclVar()
-                                XPSSample <- ttkcombobox(XSframe, width = 30, textvariable = XS, values = FNameList)
-                                tkgrid(XPSSample, row = 1, column = 1, padx = 5, pady = 3)
-                                tkbind(XPSSample, "<<ComboboxSelected>>", function(){
+                                XSSamp <- ttkcombobox(XSframe, width = 30, textvariable = XS, values = FNameList)
+                                tkgrid(XSSamp, row = 1, column = 1, padx = 5, pady = 3)
+                                tkbind(XSSamp, "<<ComboboxSelected>>", function(){
                                               saveFName <<- tclvalue(XS)
                                               saveFName <<- unlist(strsplit(saveFName, "\\."))     #not known if extension will be present
                                               saveFName <<- paste(saveFName[1], ".RData", sep="")  #Compose the new FileName, adding .RData extension
@@ -1033,15 +1049,21 @@ print(c(X[1], X[2], X[3]))
                                                          }
                                                          XSampToSave <- ExistXSamp
                                                          XSampToSave@Comments <- c(ExistXSamp@Comments, paste("Sputtering Cycle: ", Cycl, sep=""))
-
+                                                         XSampToSave@Sample <- ExistXSamp@Sample
+                                                         XSampToSave@Filename <- ExistXSamp@Filename
                                                      } else {
                                                          tkmessageBox(message="Please change File Name to save data", title="WARNING", icon="warning")
                                                          return()
                                                      }
                                                  } else {
                                                      names(XSampToSave) <- SelectedCL
-                                                     XSampToSave@Comments[1] <- paste("Profiled Core.Lines: ", paste(SelectedCL, collapse=", "), sep="")
-                                                     XSampToSave@Comments[2] <- paste("Sputtering Cycle: ", Cycl, sep="")
+                                                     XSampToSave@Comments[1] <- XPSSample@Comments
+                                                     XSampToSave@Comments[2] <- paste("Profiled Core.Lines: ", paste(SelectedCL, collapse=", "), sep="")
+                                                     XSampToSave@Comments[3] <- paste("Sputtering Cycle: ", Cycl, sep="")
+                                                     XSampToSave@Filename <- saveFName
+                                                     Sample <- dirname(XPSSample@Sample)
+                                                     Sample <- paste(Sample, "/", saveFName, sep="")
+                                                     XSampToSave@Sample <- Sample
                                                  }
                                                  LL <- length(XSampToSave)
                                                  if (XSampToSave[[LL]]@.Data[[1]][1] == XSampToSave[[LL]]@.Data[[1]][2]){ #the two first X coords are the same

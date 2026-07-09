@@ -22,7 +22,7 @@ XPSFitInfo <- function(){
       maxNchar <- 0   
       sumCoreLine <- 0
       N_comp <- length(CoreLine@Components) #number of fit components
-      cat("\n FitInfo NComp", N_comp)
+      cat("\n FitInfo: NComp", N_comp)
 
 
       sumComp <- array(0,dim=N_comp)       #define a dummy vector of zeros

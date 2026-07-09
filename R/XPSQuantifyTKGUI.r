@@ -24,7 +24,7 @@
 #'   for a selected XPS-Sample. Provides a userfriendly interface 
 #'   with the list of Corelines of the selected XPS-Sample
 #'   Each Coreline can be count/omit from the elemental quantification.
-#'   If peak fitting is present also each of the fitting component 
+#'   If peak fitting is present also each of the fitting component
 #'   can be count/omit from the elemental quantification.
 #'   Finally also relative RSF of the coreline or individual fitting 
 #'   components can be modified.
@@ -42,17 +42,20 @@ XPSQuant <- function(){
       stopQuant <- FALSE
       N_CL <- length(XPSSample)
       txt <- ""
-      for (ii in 1:N_CL){
-           if (hasBaseline(XPSSample[[ii]]) || hasFit(XPSSample[[ii]])) {
-               CompFuncNames <- sapply(XPSSample[[ii]]@Components, function(x) x@funcName)
-               idx <- 0
-               FName <- intersect(CompFuncNames, FuncNames)
-               if(length(FName) > 0 ){
-                  idx <- grep(FName, CompFuncNames)
-                  txt <- paste(txt ,"=> ", XPSSample[[ii]]@Symbol, "\n", sep="")
-                  if (length(idx) > 0) {
-                      cat("\n Cannot Apply Quantification to", XPSSample[[ii]]@Symbol)
-                  }
+
+      for (ii in 1:NCoreLines){
+           if (CLCK[[ii]] == TRUE){
+              if (hasBaseline(XPSSample[[ii]]) || hasFit(XPSSample[[ii]])) {
+                   CompFuncNames <- sapply(XPSSample[[ii]]@Components, function(x) x@funcName)
+                   idx <- 0
+                   FName <- intersect(CompFuncNames, FuncNames)
+                   if(length(FName) > 0 ){
+                      idx <- grep(FName, CompFuncNames)
+                      txt <- paste(txt ,"=> ", XPSSample[[ii]]@Symbol, "\n", sep="")
+                      if (length(idx) > 0) {
+                          cat("\n Cannot Apply Quantification to", XPSSample[[ii]]@Symbol)
+                      }
+                   }
                }
            }
       }
@@ -620,6 +623,7 @@ XPSQuant <- function(){
                                      tkgrid(CLboxBtn[[ii]], row=1, column=1, padx=5, pady=5)
                                  })
           CMPCK[[ii]] <<- ""
+
           if (NoComp == "FALSE"){   #Coreline has fit
               CMPframe[[ii]] <- ttklabelframe(Qgroup[[ii]], text=" COMPONENTS ", borderwidth=2)
               tkgrid(CMPframe[[ii]], row = 1, column = 2, padx=5, pady=5, sticky="w")
@@ -782,7 +786,7 @@ XPSQuant <- function(){
                  })
       tkgrid(QuantBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 #      ww <- as.numeric(tkwinfo("reqwidth", QuantBtn)) + 15
-      
+
       ClipBrdBtn <- tkbutton(QuantGroup, text=" COPY TO CLIPBOARD ", command=function(){
                            CBrd1 <<- data.frame(A="File Name: ", B=XPSSample@Filename, stringsAsFactors=FALSE)
                            CBrd1 <<- rbind(CBrd1, c(" ", " "))

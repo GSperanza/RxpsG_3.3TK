@@ -405,7 +405,7 @@ XPSPreferences <- function() {
    DFrameTable(Data="GStyleParam", Title=" LINETYPE & SYMBOLS", # <<- needed to save modified GStyleParam
                                ColNames=c("LineType", "Symbols"), RowNames="",
                                Width=15, Modify=TRUE, Env=environment(),
-                               parent=group5, Row=1, Column=1)
+                               parent=group5, Row=1, Column=1, Border=c(3,3,3,3))
 
    SetBtn <- tkbutton(group3, text=" SAVE as DEFAULT and EXIT ", command=function(){
    #--- get System info and apply correspondent XPS Settings ---

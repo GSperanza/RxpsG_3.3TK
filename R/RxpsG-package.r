@@ -7,13 +7,13 @@
 #'
 #' @import latticeExtra minpack.lm signal SparseM tcltk
 #'
-#' @importFrom graphics grconvertX grconvertY arrows axTicks axis box grid
+#' @importFrom graphics barplot grconvertX grconvertY arrows axTicks axis box grid
 #' @importFrom graphics layout legend lines locator matlines matplot mtext par plot.new
 #' @importFrom graphics points rect segments text
 #'
 #' @importFrom grDevices dev.copy dev.cur dev.next dev.prev dev.print dev.set dev.size
 #' @importFrom grDevices graphics.off bmp jpeg pdf png postscript tiff 
-#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11  
+#' @importFrom grDevices recordGraphics recordPlot replayPlot x11 X11 quartz 
 #'
 #' @importFrom lattice cloud panel.arrows panel.identify panel.points panel.segments panel.superpose
 #' @importFrom lattice panel.text panel.xyplot xyplot xscale.components.default yscale.components.default
@@ -36,9 +36,8 @@
 #' @importFrom utils capture.output install.packages installed.packages read.table str
 #' @importFrom utils write.csv write.csv2 write.table
 #'
-#' @keywords internal
 "_PACKAGE"
-
+NULL
 
 
 

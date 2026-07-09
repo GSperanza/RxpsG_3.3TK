@@ -40,7 +40,7 @@ XPSOverlay <- function(){
                              paste("Xmax (max=", axMax, "): ", sep=""),
                              "N. ticks")
                axParam <- DFrameTable(axParam, Title, ColNames=ColNames, RowNames=RowNames,
-                                      Width=15, Modify=TRUE, Env=environment())
+                                      Width=15, Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                axParam <- as.numeric(unlist(axParam[[1]]))
                axMin <- axParam[1]     #X or Y scale min value
                axMax <- axParam[2]     #X or Y scale max value
@@ -2700,8 +2700,8 @@ XPSOverlay <- function(){
                                RowNames <- c(RowNames, txt)
                            }
                            Legends <- DFrameTable(Legends, Title=Title,
-                                                            ColNames=ColNames, RowNames=RowNames,
-                                                            Width=15, Modify=TRUE, Env=environment())
+                                                  ColNames=ColNames, RowNames=RowNames, Width=15,
+                                                  Modify=TRUE, Env=environment(), Border=c(3,3,3,3))
                            AutoKey_Args$text <<- unname(unlist(Legends))
                            CtrlPlot()
                     })

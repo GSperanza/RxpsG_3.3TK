@@ -1176,7 +1176,6 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
 #--- Plot VBtop markers
            XX <- X[,1]  ## x-axis vector first column
            YY <- X[,-1] ## y values matrix: it is the X matrix without the abscissas
-#           YY <- YY[,1:2]  #selects original and Baseline data
            xlim <- range(XX)
            ylim <- range(YY)
            if (is.null(ylim) == TRUE || any(is.na(ylim)) == TRUE){ ylim <- range(X[,2]) }
@@ -1202,10 +1201,18 @@ setMethod("plot", signature(x="XPSCoreLine", y="missing"),
            pos <- list(x=NULL, y=NULL)
            TestName <- NULL
            TestName <- sapply(x@Components, function(z) c(TestName, z@funcName))
-           if(length(idx <- grep("VBtop", TestName)) > 0){
+           if(length(idx <- grep("VBtop", TestName) ) > 0){
 #--- plot VB Top position
               pos$x <- x@Components[[idx]]@param["mu", "start"]
               pos$y <- x@Components[[idx]]@param["h", "start"]
+              if (is.na(pos$y) || is.null(pos$y)){
+                  ii <- findXIndex(x@.Data[[1]], pos$x)
+                  pos$y <- x@.Data[[2]][ii]
+              }
+           } else if (length(idx <- grep("HillSigmoid", TestName)) > 0){
+              pos$x <- x@Components[[idx]]@param["mu", "start"]
+              ii <- findXIndex(x@.Data[[1]], pos$x)
+              pos$y <- x@.Data[[2]][ii]
            } else if (length(idx <- grep("VBFermi", TestName)) > 0){
 #--- plot VB Fermi position
               pos$x <- x@Components[[idx]]@param["mu", "start"]

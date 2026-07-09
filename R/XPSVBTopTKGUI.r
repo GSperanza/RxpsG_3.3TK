@@ -449,7 +449,7 @@ XPSVBTop <- function() {
                           newFitParam <<- FitParam
                           ClearWidget(GDFGroup)
                           FitParam <<- DFrameTable(Data="FitParam", Title="Fit Comp. Parameters", ColNames=c("Start", "min", "max"), RowNames=VarNames,
-                                                   Width=10, Modify=TRUE, Env=environment(), parent=GDFGroup, Row=1, Column=1, Border=c(10, 10, 10, 10))
+                                                   Width=10, Modify=TRUE, Env=environment(), parent=GDFGroup, Row=1, Column=1, Border=c(3, 3, 3, 3))
                     })
 
      GDFGroup <- ttkframe(FitCompframe, borderwidth=0, padding=c(0,0,0,0) )
@@ -611,7 +611,7 @@ XPSVBTop <- function() {
          #VBtop is stored in component3  param mu
          Object[[coreline]]@Components[[3]]@param["mu", "start"] <<- VBtopX
          Object[[coreline]]@Components[[3]]@param["h", "start"] <<- VBtopY
-         Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
+         Object[[coreline]]@Info[4] <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
      }
      if ((tab1 == 2) && (tab2 == 2) ){ #VB Fit tab, NON-Linear Fit
          VBTop <<- TRUE #set the VBTop graphic mode (see draw.plot()
@@ -644,7 +644,7 @@ XPSVBTop <- function() {
              LL <- length(Object[[coreline]]@Components)
              Object[[coreline]]@Components[[LL]]@param["mu", "start"] <<- VBtopX  # VBtop stored in param "mu"
              Object[[coreline]]@Components[[LL]]@param["h", "start"] <<- VBtopY  # VBtop stored in param "mu"
-             Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
+             Object[[coreline]]@Info[4] <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
          }
      }
      if ((tab1 == 2) && (tab2 == 3) ){ #VB Fit tab, Hill Sigmoid Fit
@@ -677,7 +677,7 @@ XPSVBTop <- function() {
          LL <- length(Object[[coreline]]@Components)
          Object[[coreline]]@Components[[LL]]@param["mu", "start"] <<- VBtopX  # VBtop stored in param "mu"
          Object[[coreline]]@Components[[LL]]@param["h", "start"] <<- VBtopY  # VBtop stored in param "mu"
-         Object[[coreline]]@Info <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")      
+         Object[[coreline]]@Info[4] <<- paste("   ::: VBtop: x=", VBtopX,"  y=", VBtopY, sep="")
       }
       VBtEstim <<- TRUE
       replot()

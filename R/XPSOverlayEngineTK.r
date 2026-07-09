@@ -203,7 +203,7 @@ XPSovEngine <-  function(PlotParameters, Plot_Args, SelectedNames, Xlim, Ylim) {
 	      wdth<-Plot_Args$xlim[2]-Plot_Args$xlim[1]
 	      Plot_Args$xlim[1] <- Plot_Args$xlim[1]-wdth/15
 	      Plot_Args$xlim[2] <- Plot_Args$xlim[2]+wdth/15
-       Xlim <- Plot_Args$xlim    #Original Xlim must be used
+         Xlim <- Plot_Args$xlim    #Original Xlim must be used
     }
     if (PlotParameters$Reverse) Plot_Args$xlim <- sort(Plot_Args$xlim, decreasing=TRUE)
 

@@ -371,7 +371,7 @@ XPSMoveComp <- function(){
       fitParam <<- as.matrix(fitParam) #this is needed to construct correctly the data.frame
       fitParam <<- data.frame(fitParam, stringsAsFactors=FALSE) #in the dataframe add a column with variable names
       fitParam <<- DFrameTable(Data=fitParam, Title=TT, ColNames=CNames, RowNames=ParNames,
-                               Width=15, Modify=TRUE, Env=environment(), parent=NULL)
+                               Width=15, Modify=TRUE, Env=environment(), parent=NULL, Border=c(3,3,3,3))
 #--- Save changes ---
       Object@Components[[FComp]]@param <<- fitParam #save parameters in the slot of XPSSample
       XPSSample[[Indx]] <<- Object

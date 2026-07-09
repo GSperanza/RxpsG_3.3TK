@@ -201,10 +201,13 @@ XPSSaveData <- function() {
           })
    tkgrid(DirBtn, row = 2, column = 1, padx = 5, pady = 3, sticky="w")
 
-   SourceFrame <- ttklabelframe(SaveGroup, text = " Source XPSSample ", borderwidth=2)
-   tkgrid(SourceFrame, row = 2, column = 1, padx = 20, pady = 5, sticky="w")
+   SaveFrame <- ttkframe(SaveGroup, borderwidth=2, padding=c(0,0,0,0))
+   tkgrid(SaveFrame, row = 2, column = 1, padx = 20, pady = 5, sticky="w")
+
+   SourceFrame <- ttklabelframe(SaveFrame, text = " Source XPSSample ", borderwidth=2)
+   tkgrid(SourceFrame, row = 2, column = 1, padx = 20, pady = 5, sticky="we")
    XS <- tclVar()
-   XPSSample <- ttkcombobox(SourceFrame, width = 30, textvariable = XS, values = FNameList)
+   XPSSample <- ttkcombobox(SourceFrame, width = 28, textvariable = XS, values = FNameList)
    tkgrid(XPSSample, row = 1, column = 1, padx = 5, pady = 3, sticky="w")
    tkbind(XPSSample, "<<ComboboxSelected>>", function(){
                       ResetVars()
@@ -250,10 +253,10 @@ XPSSaveData <- function() {
                       plot(FName)
                   })
 
-   DestFrame <- ttklabelframe(SaveGroup, text = " Destination File Name ", borderwidth=2)
-   tkgrid(DestFrame, row = 3, column = 1, padx = 20, pady = 5, sticky="w")
+   DestFrame <- ttklabelframe(SaveFrame, text = " Destination File Name ", borderwidth=2)
+   tkgrid(DestFrame, row = 3, column = 1, padx = 20, pady = 5, sticky="we")
    DFN <- tclVar("?")  #sets the initial msg
-   DestFName <- ttkentry(DestFrame, textvariable=DFN, width=30, foreground="grey")
+   DestFName <- ttkentry(DestFrame, textvariable=DFN, width=28, foreground="grey")
    tkbind(DestFName, "<FocusIn>", function(K){
 #                          tclvalue(DFN) <- ""
                           tkconfigure(DestFName, foreground="red")
@@ -272,7 +275,7 @@ XPSSaveData <- function() {
        tkgrid(FMTRadio, row = 2, column = ii, padx = 5, pady = 3, sticky="w")
    }
 
-   SaveBtn <- tkbutton(DestFrame, text=" Save Selected XPS-Sample ", width=30, command=function(){
+   SaveBtn <- tkbutton(DestFrame, text=" Save Selected XPS-Sample ", width=28, command=function(){
                           SaveSingle()
                           FNameList <<- XPSFNameList()
 #--- update XPSSample list with extension .RData
@@ -281,17 +284,17 @@ XPSSaveData <- function() {
                       })
    tkgrid(SaveBtn, row = 3, column = 1, padx = 5, pady = 3, sticky="w")
 
-   SaveSepFrame <- ttklabelframe(SaveGroup, text = " Save All XPS-Samples Separated ", borderwidth=2)
-   tkgrid(SaveSepFrame, row = 4, column = 1, padx = 20, pady = 5, sticky="w")
-   SaveAllBtn <- tkbutton(SaveSepFrame, text="  Save All XPS-Samples  ", width=30, command=function(){
+   SaveSepFrame <- ttklabelframe(SaveFrame, text = " Save All XPS-Samples Separated ", borderwidth=2)
+   tkgrid(SaveSepFrame, row = 4, column = 1, padx = 20, pady = 5, sticky="we")
+   SaveAllBtn <- tkbutton(SaveSepFrame, text="  Save All XPS-Samples  ", width=28, command=function(){
                           SaveAll()
                       })
    tkgrid(SaveAllBtn, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   SaveGroupFrame <- ttklabelframe(SaveGroup, text = " Save All XPS-Samples Together ", borderwidth=2)
-   tkgrid(SaveGroupFrame, row = 5, column = 1, padx = 20, pady = 5, sticky="w")
+   SaveGroupFrame <- ttklabelframe(SaveFrame, text = " Save All XPS-Samples Together ", width=28,  borderwidth=2)
+   tkgrid(SaveGroupFrame, row = 5, column = 1, padx = 20, pady = 5, sticky="we")
    GN <- tclVar("?")  #sets the initial msg
-   GroupName <- ttkentry(SaveGroupFrame, textvariable=GN, width=30, foreground="grey")
+   GroupName <- ttkentry(SaveGroupFrame, textvariable=GN, width=28, foreground="grey")
    tkbind(GroupName, "<FocusIn>", function(K){
                           tclvalue(GN) <- ""
                           tkconfigure(GroupName, foreground="red")
@@ -302,16 +305,16 @@ XPSSaveData <- function() {
                       })
    tkgrid(GroupName, row = 1, column = 1, padx = 5, pady = 5, sticky="w")
 
-   SaveGroupBtn <- tkbutton(SaveGroupFrame, text=" Group All XPS-Samples and Save", width=30, command=function(){
+   SaveGroupBtn <- tkbutton(SaveGroupFrame, text=" Group All XPS-Samples and Save ", width=28, command=function(){
                           GroupAndSave()
                       })
    tkgrid(SaveGroupBtn, row = 2, column = 1, padx = 5, pady = 5, sticky="w")
 
-   exitBtn <- tkbutton(SaveGroup, text="  EXIT  ", width=30, command=function(){
+   exitBtn <- tkbutton(SaveFrame, text="  EXIT  ", width=28, command=function(){
                           tkdestroy(SaveWindow)
                           return()
                       })
-   tkgrid(exitBtn, row = 6, column = 1, padx = 29, pady = c(5,10), sticky="w")
+   tkgrid(exitBtn, row = 6, column = 1, padx = 28, pady = c(5,10), sticky="w")
 
    tkwait.window(SaveWindow) #set Modal
 
